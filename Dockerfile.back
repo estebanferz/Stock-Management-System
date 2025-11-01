@@ -1,0 +1,48 @@
+# --- FASE 1: "BUILDER" (La Cocina) ---
+# Usamos la imagen completa para compilar
+FROM oven/bun:1 AS builder
+
+# 1. Instalar dependencias del SO
+RUN apt update && apt install python3 python3-pip make g++ -y
+
+# 2. Establecer el directorio de trabajo
+WORKDIR /app
+
+# 3. Copiar solo los package.json para aprovechar la caché
+# Si estos archivos no cambian, Docker no vuelve a instalar
+COPY package.json bun.lock ./
+COPY packages/backend/package.json ./packages/backend/
+
+# (Agrega aquí los COPY de package.json de otros paquetes si los tienes)
+
+# 4. Instalar dependencias
+RUN bun install
+
+# 5. Copiar el resto del código fuente
+# (Gracias al .dockerignore, esto ya no copia node_modules ni .git)
+COPY . .
+
+# 6. Construir el binario
+WORKDIR /app/packages/backend
+# (Nos aseguramos de que la carpeta build exista)
+RUN mkdir -p ./build
+RUN bun run build 
+# Tu build (bun build ... --outfile ./build/server) genera el binario
+
+
+# --- FASE 2: "FINAL" (El Plato Servido) ---
+# Usamos la imagen "slim", que es mucho más pequeña y segura
+FROM oven/bun:1-slim
+
+WORKDIR /app
+
+# 7. Copiar SOLO el binario compilado de la fase "builder"
+COPY --from=builder /app/packages/backend/build/server ./server
+
+# 8. Exponer el puerto
+ENV HOST=0.0.0.0
+ENV PORT=3000
+EXPOSE 3000
+
+# 9. Ejecutar el binario. No se necesita node ni bun.
+CMD ["./server"]

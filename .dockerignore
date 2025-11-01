@@ -1,0 +1,13 @@
+# Ignorar dependencias locales y de Git
+node_modules
+packages/backend/node_modules
+packages/frontend/node_modules
+.git
+
+# Ignorar archivos sensibles
+.env
+*.env.local
+
+# Ignorar salidas de build locales
+build
+dist

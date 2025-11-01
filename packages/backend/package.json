@@ -1,0 +1,29 @@
+{
+  "name": "my-app",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "bun run --watch src/index.ts",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "migrate": "bun drizzle-kit generate && bun drizzle-kit migrate",
+    "docker:dev": "bun install && bun dev",
+    "build": "bun build src/index.ts --minify-whitespace --minify-syntax --target bun --compile --outfile ./build/server",
+    "docker:prod": "bun install && bun run build && ./build/server"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@typescript-eslint/eslint-plugin": "^8.46.2",
+    "@typescript-eslint/parser": "^8.46.2",
+    "dotenv": "^17.2.3",
+    "drizzle-kit": "^0.31.6",
+    "eslint": "^9.38.0",
+    "eslint-config-prettier": "^10.1.8",
+    "prettier": "^3.6.2"
+  },
+  "peerDependencies": {
+    "typescript": "^5.9.3"
+  }
+}

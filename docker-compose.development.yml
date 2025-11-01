@@ -1,0 +1,61 @@
+name: stock-management-development
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.back
+    command: bun run docker:dev
+    volumes:
+      - ./:/app
+      - /app/packages/backend/node_modules
+    ports:
+      - 3000:3000
+    depends_on:
+      postgres:
+        condition: service_started
+    working_dir: /app/packages/backend
+    environment:
+      - NODE_ENV=development
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.front
+    command: bun run docker:dev
+    volumes:
+      - ./:/app
+      - /app/packages/frontend/node_modules
+    ports:
+      - 4321:4321
+    depends_on:
+      backend:
+        condition: service_started
+    working_dir: /app/packages/frontend
+    environment:
+      - NODE_ENV=development
+    
+  postgres:
+    image: postgres:15-alpine
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_DB: StockManagement
+      POSTGRES_PASSWORD: admin
+      POSTGRES_USER: admin
+    volumes:
+      - postgres_data:/var/lib/postgresql/data # <-- Buena práctica: persistir datos
+  
+  pgadmin:
+    image: dpage/pgadmin4
+    ports:
+      - 5050:80
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    depends_on:
+      - postgres
+  
+  # Define el volumen nombrado para la base de datos
+volumes:
+  postgres_data:

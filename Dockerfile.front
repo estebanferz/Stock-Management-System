@@ -1,0 +1,62 @@
+# --- FASE 1: "BUILDER" (La Cocina) ---
+# Usamos la imagen completa con todas las herramientas de build
+FROM oven/bun:1 AS builder
+
+# 1. Instalar dependencias del SO (si son necesarias para el build)
+RUN apt update && apt install python3 python3-pip make g++ -y
+
+# 2. Establecer el directorio de trabajo
+WORKDIR /app
+
+# 3. Copiar solo los manifests de dependencias
+# Esto optimiza la caché de Docker. 'bun install' solo se re-ejecuta
+# si estos archivos cambian.
+COPY package.json bun.lock ./
+COPY packages/frontend/package.json ./packages/frontend/
+# (Si tienes más paquetes en tu monorepo, copia sus package.json aquí)
+
+# 4. Instalar TODAS las dependencias (incluyendo devDependencies)
+# Las necesitamos para poder 'construir' (build) el proyecto.
+RUN bun install
+
+# 5. Copiar el resto del código fuente
+# (Recuerda tener un .dockerignore para excluir node_modules, .git, .env)
+COPY . .
+
+# 6. Construir la aplicación de frontend
+WORKDIR /app/packages/frontend
+RUN bun run build
+# Esto creará la carpeta 'dist' (o similar) con tu app SSR compilada
+
+
+# --- FASE 2: "FINAL" (El Plato Servido) ---
+# Empezamos desde una imagen limpia y ligera
+FROM oven/bun:1-slim
+
+# Establecer el entorno a producción (buena práctica para Node.js/Bun)
+ENV NODE_ENV=production
+WORKDIR /app
+
+# 1. Copiar solo los manifests de dependencias OTRA VEZ
+COPY --from=builder /app/bun.lock ./
+COPY --from=builder /app/package.json ./
+COPY --from=builder /app/packages/frontend/package.json ./packages/frontend/
+
+# 2. Instalar SOLAMENTE dependencias de PRODUCCIÓN
+# Esto crea una carpeta node_modules limpia y pequeña, sin devDependencies.
+RUN bun install
+
+# 3. Copiar la aplicación compilada desde la fase "builder"
+COPY --from=builder /app/packages/frontend/dist ./packages/frontend/dist
+
+# 4. Mover al directorio de trabajo final
+WORKDIR /app/packages/frontend
+
+# 5. Exponer el puerto
+ENV HOST=0.0.0.0
+ENV PORT=4321
+EXPOSE 4321
+
+# 6. Comando de inicio
+# Usamos 'bun' para ejecutar el servidor, ya que estamos en una imagen de bun.
+CMD ["bun", "./dist/server/entry.mjs"]
