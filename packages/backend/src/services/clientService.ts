@@ -58,3 +58,16 @@ export const addClient = async (newClient: {
 
     return result;
 }
+
+export const deleteClient = async (client_id: number) => {
+    const result = await db
+        .delete(clientTable)
+        .where(eq(clientTable.client_id, client_id))
+        .returning();
+
+    if (result.length > 0) {
+        return true;
+    } else {
+        return false;
+    }
+}
