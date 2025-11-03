@@ -73,7 +73,7 @@ export const repairTable = pgTable("repair", {
         .references(() => technicianTable.technician_id)
         .notNull(),
     device_id: 
-        varchar({ length: 100 })
+        integer()  
         .references(() => phoneTable.device_id)
         .notNull(),
 });
