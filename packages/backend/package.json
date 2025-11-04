@@ -1,5 +1,5 @@
 {
-  "name": "my-app",
+  "name": "backend",
   "module": "index.ts",
   "type": "module",
   "private": true,
@@ -32,6 +32,7 @@
     "drizzle-orm": "^0.44.7",
     "drizzle-typebox": "^0.3.3",
     "elysia": "latest",
+    "libphonenumber-js": "^1.12.25",
     "pg": "^8.16.3",
     "postgres": "^3.4.7"
   }

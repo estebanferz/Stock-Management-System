@@ -14,8 +14,8 @@ export const technicianTable = pgTable("technician", {
   name: varchar({ length: 255 }).notNull(),
   email: varchar({ length: 255 }),
   phone_number: varchar({ length: 16 }),
-  speciality: varchar({ length: 255 }),
-  birth_date: date(),
+  speciality: varchar({ length: 255 }).notNull(),
+  state: varchar({ length: 100 }).notNull(),
 });
 
 export const providerTable = pgTable("provider", {                          
@@ -31,7 +31,7 @@ export const expenseTable = pgTable("expense", {
     datetime: timestamp().notNull(),
     catergory: varchar({ length: 255 }).notNull(),
     description: varchar({ length: 255 }),
-    amount: numeric({precision: 2, scale: 12}).notNull(),
+    amount: numeric({precision: 12, scale: 2}).notNull(),
     payment_method: varchar({ length: 50 }).notNull(),
     receipt_number: varchar({ length: 100 }).unique(),
     provider_id: 
@@ -41,16 +41,17 @@ export const expenseTable = pgTable("expense", {
 
 export const phoneTable = pgTable("phone", {
     device_id: integer().primaryKey().generatedAlwaysAsIdentity(),
+    datetime: timestamp().notNull().defaultNow(),
     name: varchar({ length: 255 }).notNull(),
     brand: varchar({ length: 100 }).notNull(),
     imei: varchar({ length: 100 }).unique().notNull(),
-    device_type: varchar({ length: 100 }), // e.g., "Just one", "wholesaler"
+    device_type: varchar({ length: 100 }).notNull(), // e.g., "Just one", "wholesaler"
     battery_health: integer(),
     storage_capacity: integer(),
     color: varchar({ length: 50 }),
     category: varchar({ length: 100 }).notNull(), // e.g., "As is", "Refurbished", "New"
-    price: numeric({precision: 2, scale: 12}).notNull(),
-    buy_cost: numeric({precision: 2, scale: 12}).notNull(),
+    price: numeric({precision: 12, scale: 2}).notNull(),
+    buy_cost: numeric({precision: 12, scale: 2}).notNull(),
     deposit: varchar({length: 255}).notNull(),
     sold: boolean().default(false).notNull(),
 });
@@ -62,8 +63,8 @@ export const repairTable = pgTable("repair", {
     priority: varchar({ length: 50 }).notNull(), // e.g., "Low", "Medium", "High"
     description: varchar({ length: 255 }).notNull(),
     diagnostic: varchar({ length: 255 }),
-    client_cost: numeric({precision: 2, scale: 12}).notNull(),
-    internal_cost: numeric({precision: 2, scale: 12}).notNull(),
+    client_cost: numeric({precision: 12, scale: 2}).notNull(),
+    internal_cost: numeric({precision: 12, scale: 2}).notNull(),
     client_id: 
         integer()
         .references(() => clientTable.client_id)
@@ -81,10 +82,10 @@ export const repairTable = pgTable("repair", {
 export const saleTable = pgTable("sale", {
     sale_id: integer().primaryKey().generatedAlwaysAsIdentity(),
     datetime: timestamp().notNull(),
-    total_amount: numeric({precision: 2, scale: 12}).notNull(),
+    total_amount: numeric({precision: 12, scale: 2}).notNull(),
     payment_method: varchar({ length: 50 }).notNull(),
     debt: boolean().default(false).notNull(),
-    debt_amount: numeric({precision: 2, scale: 12}).notNull(),
+    debt_amount: numeric({precision: 12, scale: 2}).notNull(),
     client_id: 
         integer()
         .references(() => clientTable.client_id),
