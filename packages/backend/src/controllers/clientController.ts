@@ -24,8 +24,8 @@ export const clientController = new Elysia({prefix: '/client'})
         },
         {
             detail: {
-                summary: "Get all commerces in DB",
-                tags: ["commerces"],
+                summary: "Get all clients in DB",
+                tags: ["clients"],
             },
         },
     )
@@ -95,7 +95,7 @@ export const clientController = new Elysia({prefix: '/client'})
             const clientIdNum = Number(client_id);
             if (!Number.isInteger(clientIdNum) || clientIdNum <= 0) {
                 set.status = 400;
-                return { error: 'ID de cliente inválido' };
+                return false;
             }
 
             const result = await deleteClient(clientIdNum);
