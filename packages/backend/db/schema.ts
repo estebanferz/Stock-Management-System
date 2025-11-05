@@ -28,8 +28,8 @@ export const providerTable = pgTable("provider", {
 
 export const expenseTable = pgTable("expense", {
     expense_id: integer().primaryKey().generatedAlwaysAsIdentity(),
-    datetime: timestamp().notNull(),
-    catergory: varchar({ length: 255 }).notNull(),
+    datetime: timestamp().notNull().defaultNow(),
+    category: varchar({ length: 255 }).notNull(), // e.g., "Marketing", "Utilities", "Repairs"
     description: varchar({ length: 255 }),
     amount: numeric({precision: 12, scale: 2}).notNull(),
     payment_method: varchar({ length: 50 }).notNull(),

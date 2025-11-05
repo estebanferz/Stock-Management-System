@@ -15,6 +15,20 @@
       "when": 1762267059090,
       "tag": "0001_complete_captain_britain",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1762311704684,
+      "tag": "0002_rich_medusa",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1762311915150,
+      "tag": "0003_late_firestar",
+      "breakpoints": true
     }
   ]
 }
