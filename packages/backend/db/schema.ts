@@ -58,7 +58,7 @@ export const phoneTable = pgTable("phone", {
 
 export const repairTable = pgTable("repair", {
     repair_id: integer().primaryKey().generatedAlwaysAsIdentity(),
-    datetime: timestamp().notNull(),
+    datetime: timestamp().notNull().defaultNow(),
     repair_state: varchar({ length: 100 }).notNull(),   // e.g., "Pending", "In Progress", "Completed"
     priority: varchar({ length: 50 }).notNull(), // e.g., "Low", "Medium", "High"
     description: varchar({ length: 255 }).notNull(),
