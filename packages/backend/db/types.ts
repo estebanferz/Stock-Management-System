@@ -1,4 +1,4 @@
-import { clientTable, technicianTable, phoneTable, providerTable } from './schema';
+import { clientTable, technicianTable, phoneTable, providerTable, expenseTable } from './schema';
 import { createInsertSchema } from 'drizzle-typebox';
 import { t } from 'elysia';
 
@@ -18,3 +18,7 @@ export const phoneUpdateDTO = t.Omit(phoneSchema, ["device_id"]);
 export const providerSchema = createInsertSchema(providerTable);
 export const providerInsertDTO = t.Omit(providerSchema, ["provider_id"]);
 export const providerUpdateDTO = t.Omit(providerSchema, ["provider_id"]);   
+
+export const expenseSchema = createInsertSchema(expenseTable);
+export const expenseInsertDTO = t.Omit(expenseSchema, ["expense_id"]);
+export const expenseUpdateDTO = t.Omit(expenseSchema, ["expense_id"]);
