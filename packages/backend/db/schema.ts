@@ -101,7 +101,9 @@ export const saleTable = pgTable("sale", {
 export const sellerTable = pgTable("seller", {                                   //PREGUNTAR
     seller_id: integer().primaryKey().generatedAlwaysAsIdentity(),
     name: varchar({ length: 255 }).notNull(),
+    age: integer().notNull(),
     email: varchar({ length: 255 }),
     phone_number: varchar({ length: 16 }),
-    hire_date: date(),
+    hire_date: date().notNull().defaultNow(),
+    pay_date: date(),
 });
