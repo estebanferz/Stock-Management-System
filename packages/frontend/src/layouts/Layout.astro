@@ -1,22 +1,62 @@
+---
+import Header from '../components/Header.astro';
+import '../styles/tailwind.css';
+
+export interface Props {
+  title: string;
+}
+
+const { title } = Astro.props;
+---
+
 <!doctype html>
-<html lang="en">
-	<head>
-		<meta charset="UTF-8" />
-		<meta name="viewport" content="width=device-width" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro Basics</title>
-	</head>
-	<body>
-		<slot />
-	</body>
+<html class="scroll-smooth" lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <link rel="icon" type="image/png" href="/nowaste-icon.png" />
+    <meta name="generator" content={Astro.generator} />
+    <title>{title}</title>
+  </head>
+  <body class="min-h-screen w-full">
+	  <Header />
+    <!-- Main content container -->
+    <main class="min-h-screen w-full pt-[var(--header-height)]">
+      <!-- Header container slot -->
+      <slot name="header-container" />
+
+      <!-- Main content area with column structure -->
+      <div
+        class="flex min-h-[calc(100vh-var(--header-height))] flex-col md:flex-row"
+      >
+        <!-- First column -->
+        <div class="w-full p-2 md:w-1/5 md:p-4">
+          <slot name="primer-columna">
+            <!-- Contenido de la primera columna -->
+          </slot>
+        </div>
+
+        <!-- Main content column -->
+        <div class="w-full p-2 md:w-3/5 md:p-4">
+          <slot>
+            <!-- Contenido principal -->
+          </slot>
+        </div>
+
+        <!-- Third column -->
+        <div class="w-full p-2 md:w-1/5 md:p-4">
+          <slot name="tercer-columna">
+            <!-- Contenido de la tercera columna -->
+          </slot>
+        </div>
+      </div>
+    </main>
+  </body>
 </html>
 
+
 <style>
-	html,
-	body {
-		margin: 0;
-		width: 100%;
-		height: 100%;
-	}
+    :root {
+      --header-height: 64px; /* ajustá según tu header real */
+    }
 </style>

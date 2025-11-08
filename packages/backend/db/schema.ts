@@ -98,7 +98,7 @@ export const saleTable = pgTable("sale", {
         .notNull(),
 });
 
-export const sellerTable = pgTable("seller", {                                   //PREGUNTAR
+export const sellerTable = pgTable("seller", {                                   
     seller_id: integer().primaryKey().generatedAlwaysAsIdentity(),
     name: varchar({ length: 255 }).notNull(),
     age: integer().notNull(),
