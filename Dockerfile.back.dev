@@ -1,0 +1,19 @@
+# 1. Usar la imagen base completa
+FROM oven/bun:1
+
+# 2. Instalar dependencias del SO
+RUN apt update && apt install python3 python3-pip make g++ -y
+
+# 3. Establecer el directorio
+WORKDIR /app
+
+# 4. Copiar TODOS los manifests de paquetes
+COPY package.json bun.lock ./
+COPY packages/frontend/package.json ./packages/frontend/
+COPY packages/backend/package.json ./packages/backend/
+
+# 5. Instalar TODAS las dependencias (dev y prod)
+RUN bun install
+
+# 6. Exponer el puerto
+EXPOSE 3000

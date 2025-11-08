@@ -1,0 +1,133 @@
+---
+//import SearchBar from "../components/SearchBar.astro";
+---
+
+<header
+  id="header"
+  class="fixed left-0 right-0 top-0 z-50 flex h-[var(--header-height)] bg-white shadow-lg transition-transform duration-300"
+>
+<div class="relative flex w-full items-center justify-around p-5">
+
+  <button
+    id="menu-toggle"
+    class="absolute left-10 z-30 h-10 w-10 flex justify-center items-center text-2xl pb-1 rounded-md bg-gray-100 text-gray-700 hover:bg-gray-200 focus:outline-none"
+  >
+    ☰
+  </button>
+  <div class="flex items-center space-x-4">
+      <a href="/" class="absolute translate-y-4 h-20 w-20 text-xl z-20 font-bold text-gray-800 border-[5px] border-white rounded-full shadow-md">
+        <img
+          src="../../logo-apple-mdp.jpg"
+          alt="Logo empresa"
+          class="h-full w-auto object-contain rounded-full"
+        />
+      </a>
+    </div>
+    <div class="flex space-x-3">
+      <a
+        href="/products"
+        class="place-content-center text-sm text-gray-400 hover:text-gray-600 focus:text-gray-600"
+      >
+        Boton 1
+      </a>
+      <a
+        href="/commerces"
+        class="place-content-center text-sm text-gray-400 hover:text-gray-600 focus:text-gray-600"
+      >
+        Boton 2
+      </a>
+    </div>
+    <!-- <SearchBar /> -->
+
+    <nav class="place-content-center">
+      <ul class="flex space-x-4">
+        <li>
+          <a href="/profile" class="text-bold text-gray-600 hover:text-gray-800"
+            >Perfil</a
+          >
+        </li>
+        <!--Ver de reemplar Perfil por el nombre del user -->
+        <li>
+          <a
+            href={`${import.meta.env.PUBLIC_API_URL}/api/user/logout`}
+            class="text-bold text-gray-600 hover:text-gray-800">Logout</a
+          >
+        </li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<!-- Slide-out panel -->
+<aside
+  id="slider"
+  class="fixed left-0 pt-16 z-10 h-full w-56 -translate-x-full transform bg-white shadow-lg transition-transform duration-200"
+>
+
+  <div class="flex items-center justify-between p-4 pt-8">
+    <h2 class="text-lg font-semibold text-gray-700">Menu</h2>
+  </div>
+
+  <nav class="flex flex-col space-y-4 p-4 text-gray-500">
+    <div class="my-3">
+      <a href="/products" class="flex text-sm font-medium hover:text-gray-800 hover:bg-gray-100 rounded-md p-3 pl-5 w-full">Dashboard</a>
+    </div>
+
+    <div class="flex flex-col my-3">
+      <p class="text-slate-400 text-xs pb-2"> Servicio Tecnico </p>
+      <a href="/products" class="flex text-sm font-medium hover:text-gray-800 hover:bg-gray-100 rounded-md p-3 pl-5 w-full">Reparaciones</a>
+      <a href="/products" class="flex text-sm font-medium hover:text-gray-800 hover:bg-gray-100 rounded-md p-3 pl-5 w-full">Tecnico</a>
+      <a href="/products" class="flex text-sm font-medium hover:text-gray-800 hover:bg-gray-100 rounded-md p-3 pl-5 w-full">Dashboard ST</a>
+    </div>
+
+    <div class="flex flex-col my-3">
+      <p class="text-slate-400 text-xs pb-2"> Operaciones </p>
+      <a href="/products" class="flex text-sm font-medium hover:text-gray-800 hover:bg-gray-100 rounded-md p-3 pl-5 w-full">Inventario</a>
+      <a href="/products" class="flex text-sm font-medium hover:text-gray-800 hover:bg-gray-100 rounded-md p-3 pl-5 w-full">Ventas</a>
+      <a href="/products" class="flex text-sm font-medium hover:text-gray-800 hover:bg-gray-100 rounded-md p-3 pl-5 w-full">Gastos</a>
+    </div>
+
+    <div class="flex flex-col my-3">
+      <p class="text-slate-400 text-xs pb-2"> Gestion </p>
+      <a href="/products" class="flex text-sm font-medium hover:text-gray-800 hover:bg-gray-100 rounded-md p-3 pl-5 w-full">Clientes</a>
+      <a href="/products" class="flex text-sm font-medium hover:text-gray-800 hover:bg-gray-100 rounded-md p-3 pl-5 w-full">Vendedores</a>
+    </div>
+    
+    <div class="my-3">
+      <a href="/products" class="flex text-sm font-medium hover:text-gray-800 hover:bg-gray-100 rounded-md p-3 pl-5 mt-4 w-full">Perfil</a>
+    </div>
+  </nav>
+</aside>
+
+<script>
+  let lastScrollTop = 0;
+  const header = document.getElementById("header");
+
+  window.addEventListener("scroll", () => {
+    const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+
+    if (scrollTop > lastScrollTop && scrollTop > 100) {
+      // Scrolling down and past the top
+      header?.classList.add("-translate-y-full");
+    } else {
+      // Scrolling up or at the top
+      header?.classList.remove("-translate-y-full");
+    }
+
+    lastScrollTop = scrollTop;
+  });
+</script>
+
+<script>
+  const slider = document.getElementById("slider");
+  const toggleButton = document.getElementById("menu-toggle");
+  const closeButton = document.getElementById("close-slider");
+
+  toggleButton?.addEventListener("click", () => {
+    slider?.classList.toggle("-translate-x-full");
+  });
+
+  closeButton?.addEventListener("click", () => {
+    slider?.classList.add("-translate-x-full");
+  });
+</script>
