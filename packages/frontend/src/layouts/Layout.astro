@@ -1,6 +1,7 @@
 ---
 import Header from '../components/Header.astro';
 import '../styles/tailwind.css';
+import background from '../assets/background.svg';
 
 export interface Props {
   title: string;
@@ -20,6 +21,7 @@ const { title } = Astro.props;
   </head>
   <body class="min-h-screen w-full">
 	  <Header />
+    <img id="background" src={background.src} alt="" fetchpriority="high" />
     <!-- Main content container -->
     <main class="min-h-screen w-full pt-[var(--header-height)]">
       <!-- Header container slot -->
@@ -37,7 +39,7 @@ const { title } = Astro.props;
         </div>
 
         <!-- Main content column -->
-        <div class="w-full p-2 md:w-3/5 md:p-4">
+        <div class="relative w-full p-2 md:w-3/5 md:p-4">
           <slot>
             <!-- Contenido principal -->
           </slot>
@@ -59,4 +61,13 @@ const { title } = Astro.props;
     :root {
       --header-height: 64px; /* ajustá según tu header real */
     }
+	  #background {
+		  position: fixed;
+		  top: 0;
+		  left: 0;
+		  width: 100%;
+		  height: 100%;
+		  z-index: -1;
+		  filter: blur(100px);
+	  } 
 </style>

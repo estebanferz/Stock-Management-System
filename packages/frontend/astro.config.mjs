@@ -5,6 +5,8 @@ import { defineConfig } from 'astro/config';
 import node from '@astrojs/node';
 import tailwind from '@astrojs/tailwind';
 
+import react from '@astrojs/react';
+
 // https://astro.build/config
 export default defineConfig({
   // Define el modo de renderizado a "servidor" (SSR)
@@ -12,8 +14,6 @@ export default defineConfig({
   adapter: node({ mode: "standalone" }),
 
   // Configura las integraciones
-  integrations: [
-    // 1. Integración de Tailwind
-    tailwind(),
-  ],
+  integrations: [// 1. Integración de Tailwind
+  tailwind(), react()],
 });
