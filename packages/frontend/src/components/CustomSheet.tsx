@@ -49,14 +49,14 @@ export function CustomSheet({
       </SheetTrigger>
 
       {/* Contenido del Sheet */}
-      <SheetContent className={className ?? "duration-300"}>
-        <SheetHeader>
-          <SheetTitle>{title}</SheetTitle>
+      <SheetContent className={`${className ?? "duration-300"} flex flex-col max-h-[90vh]"`}>
+        <SheetHeader className="py-5 my-6">
+          <SheetTitle className="font-semibold text-xl">{title}</SheetTitle>
           {description && <SheetDescription>{description}</SheetDescription>}
         </SheetHeader>
 
         {/* Contenido dinámico */}
-        <div className="grid flex-1 auto-rows-min gap-6 px-4">{children}</div>
+        <div className="grid flex-1 overflow-y-auto auto-rows-min gap-6 mb-10 pl-1 pr-4 py-1">{children}</div>
 
         {/* Footer dinámico */}
         <SheetFooter>
