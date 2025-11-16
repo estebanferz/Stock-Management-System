@@ -1,4 +1,4 @@
-import { clientTable, technicianTable, phoneTable, providerTable, expenseTable, repairTable, sellerTable } from './schema';
+import { clientTable, technicianTable, phoneTable, providerTable, expenseTable, repairTable, sellerTable, saleTable } from './schema';
 import { createInsertSchema } from 'drizzle-typebox';
 import { t } from 'elysia';
 
@@ -29,3 +29,7 @@ export const repairUpdateDTO = t.Omit(repairSchema, ["repair_id"]);
 export const sellerSchema = createInsertSchema(sellerTable);
 export const sellerInsertDTO = t.Omit(sellerSchema, ["seller_id", "hire_date"]);
 export const sellerUpdateDTO = t.Omit(sellerSchema, ["seller_id", "hire_date"]);
+
+export const saleSchema = createInsertSchema(saleTable);
+export const saleInsertDTO = t.Omit(saleSchema, ["sale_id"]);
+export const saleUpdateDTO = t.Omit(saleSchema, ["sale_id"]);

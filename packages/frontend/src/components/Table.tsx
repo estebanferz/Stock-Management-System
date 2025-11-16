@@ -39,31 +39,31 @@ const data: Payment[] = [
     id: "m5gr84i9",
     amount: 316,
     status: "success",
-    email: "ken99@example.com",
+    hola: "ken99@example.com",
   },
   {
     id: "3u1reuv4",
     amount: 242,
     status: "success",
-    email: "Abe45@example.com",
+    hola: "Abe45@example.com",
   },
   {
     id: "derv1ws0",
     amount: 837,
     status: "processing",
-    email: "Monserrat44@example.com",
+    hola: "Monserrat44@example.com",
   },
   {
     id: "5kma53ae",
     amount: 874,
     status: "success",
-    email: "Silas22@example.com",
+    hola: "Silas22@example.com",
   },
   {
     id: "bhqecj4p",
     amount: 721,
     status: "failed",
-    email: "carmella@example.com",
+    hola: "carmella@example.com",
   },
 ]
 
@@ -71,7 +71,7 @@ export type Payment = {
   id: string
   amount: number
   status: "pending" | "processing" | "success" | "failed"
-  email: string
+  hola: string
 }
 
 export const columns: ColumnDef<Payment>[] = [
@@ -105,19 +105,19 @@ export const columns: ColumnDef<Payment>[] = [
     ),
   },
   {
-    accessorKey: "email",
+    accessorKey: "hola",
     header: ({ column }) => {
       return (
         <Button
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
-          Email
+          Hola
           <ArrowUpDown />
         </Button>
       )
     },
-    cell: ({ row }) => <div className="lowercase">{row.getValue("email")}</div>,
+    cell: ({ row }) => <div className="lowercase">{row.getValue("hola")}</div>,
   },
   {
     accessorKey: "amount",
