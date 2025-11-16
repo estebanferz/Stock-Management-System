@@ -1,20 +1,20 @@
 ---
 
 import Layout from "../../layouts/Layout.astro";
-import { SheetFormSale } from "@/components/SheetForms/SheetFormSale";
+import { SheetFormSeller } from "@/components/SheetForms/SheetFormSeller";
 import { CustomTable } from "@/components/CustomTable"
 import { serverApp } from "@/lib/serverAPI";
-import { saleColumns } from "@/config/SaleColumnConfig.client";
+import { sellerColumns } from "@/config/SellerColumnConfig";
 
-const response = await serverApp.sale.all.get();
+const response = await serverApp.seller.all.get();
 const data = response.data || [];
     
 
 ---
 
-<Layout title="Ventas">
-    <h1 class="w-full text-center text-4xl text-gray-700 font-bold my-5">Ventas</h1>
-    <CustomTable client:only="react" data={data} columns={saleColumns} />
+<Layout title="Vendedores">
+    <h1 class="w-full text-center text-4xl text-gray-700 font-bold my-5">Vendedores</h1>
+    <CustomTable client:only="react" data={data} columns={sellerColumns} />
     <div class="group absolute bottom-10 right-10">
         <span 
         class="absolute bottom-full right-0 mb-2 whitespace-nowrap rounded-md border bg-white px-4 py-2 
@@ -23,8 +23,8 @@ const data = response.data || [];
            group-hover:opacity-100 group-hover:scale-100
            pointer-events-none"
         >
-        Nueva Venta
+        Nuevo Vendedor
         </span>
-        <SheetFormSale client:load/>
+        <SheetFormSeller client:load/>
     </div>
 </Layout>

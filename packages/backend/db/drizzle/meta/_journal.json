@@ -36,6 +36,13 @@
       "when": 1762572612089,
       "tag": "0004_steep_chimera",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1762916031804,
+      "tag": "0005_groovy_mister_fear",
+      "breakpoints": true
     }
   ]
 }

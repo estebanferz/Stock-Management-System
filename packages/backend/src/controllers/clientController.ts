@@ -35,7 +35,7 @@ export const clientController = new Elysia({prefix: '/client'})
 
             const newClient = {
                 name: body.name,
-                id_number: body.id_number,
+                id_number: Number(body.id_number),
                 ...(body.email && { email: body.email }),
                 ...(body.phone_number && { phone_number: body.phone_number }),
                 ...(body.birth_date && { birth_date: body.birth_date })
@@ -48,6 +48,7 @@ export const clientController = new Elysia({prefix: '/client'})
         {
             body: t.Object({
                 ...clientInsertDTO.properties,
+                id_number: t.String(),
             }),
             detail: {
                 summary: "Insert a new client",
@@ -58,19 +59,13 @@ export const clientController = new Elysia({prefix: '/client'})
     .put(
         "/:client_id",
         async ({ body, params: { client_id }, set }) => {
-            const {
-                name,
-                email,
-                phone_number,
-                id_number,
-                birth_date,
-            } = body;
+
             const updClient = {
-                name,
-                email,
-                phone_number,
-                id_number,
-                birth_date,
+                name: body.name,
+                email: body.email,
+                phone_number: body.phone_number,
+                id_number: Number(body.id_number),
+                birth_date: body.birth_date,
             };
             const result = await updateClient(
                 Number(client_id),
@@ -82,6 +77,7 @@ export const clientController = new Elysia({prefix: '/client'})
         {
             body: t.Object({
                 ...clientUpdateDTO.properties,
+                id_number: t.String(),
             }),
             detail: {
                 summary: "Update a client",

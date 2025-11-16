@@ -1,4 +1,6 @@
 import { integer, pgTable, varchar, date, bigint, numeric, timestamp, boolean } from "drizzle-orm/pg-core";
+import { type InferSelectModel } from "drizzle-orm"
+
 
 export const clientTable = pgTable("client", {
   client_id: integer().primaryKey().generatedAlwaysAsIdentity(),
@@ -8,6 +10,7 @@ export const clientTable = pgTable("client", {
   id_number: bigint({mode: "number"}).notNull().unique(),
   birth_date: date(),
 });
+export type Client = InferSelectModel<typeof clientTable>
 
 export const technicianTable = pgTable("technician", {
   technician_id: integer().primaryKey().generatedAlwaysAsIdentity(),
@@ -81,22 +84,26 @@ export const repairTable = pgTable("repair", {
 
 export const saleTable = pgTable("sale", {
     sale_id: integer().primaryKey().generatedAlwaysAsIdentity(),
-    datetime: timestamp().notNull(),
+    datetime: timestamp().notNull().defaultNow(),
     total_amount: numeric({precision: 12, scale: 2}).notNull(),
     payment_method: varchar({ length: 50 }).notNull(),
     debt: boolean().default(false).notNull(),
-    debt_amount: numeric({precision: 12, scale: 2}).notNull(),
+    debt_amount: numeric({precision: 12, scale: 2}),
     client_id: 
         integer()
-        .references(() => clientTable.client_id),
+        .references(() => clientTable.client_id)
+        .notNull(),
     seller_id:
         integer()
-        .references(() => sellerTable.seller_id),
+        .references(() => sellerTable.seller_id)
+        .notNull(),
     device_id: 
         integer()
         .references(() => phoneTable.device_id)
         .notNull(),
 });
+export type Sale = InferSelectModel<typeof saleTable>
+
 
 export const sellerTable = pgTable("seller", {                                   
     seller_id: integer().primaryKey().generatedAlwaysAsIdentity(),
@@ -107,3 +114,4 @@ export const sellerTable = pgTable("seller", {
     hire_date: date().notNull().defaultNow(),
     pay_date: date(),
 });
+export type Seller = InferSelectModel<typeof sellerTable>
