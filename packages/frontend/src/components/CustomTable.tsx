@@ -40,11 +40,9 @@ export function CustomTable<T>({ data, columns }: TableProps<T>) {
       return RENDERERS[col.renderKey]
     }
 
-    // C. No hay renderer → mostrar raw
     return null
   }
 
-  // 3️⃣ Obtener la key de la columna
   const getColKey = (col: Column<T>) =>
     (col.accessorKey as string) || (col.key as string)
 
