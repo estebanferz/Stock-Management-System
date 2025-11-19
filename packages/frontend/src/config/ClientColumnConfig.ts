@@ -1,4 +1,3 @@
-// src/config/SaleColumnConfig.ts
 import type { Column } from "@/components/CustomTable"
 import type { Client } from "@server/db/schema"
 

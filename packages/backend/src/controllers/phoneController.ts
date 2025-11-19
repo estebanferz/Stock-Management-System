@@ -1,6 +1,7 @@
 import { Elysia, t } from "elysia";
 import { getAllPhones, getPhonesByFilter, addPhone, updatePhone, deletePhone } from "../services/phoneService";
 import { phoneInsertDTO, phoneUpdateDTO } from "@server/db/types";
+import { date } from "drizzle-orm/mysql-core";
 
 export const phoneController = new Elysia({prefix: '/phone'})
     .get("/", () => {
@@ -33,6 +34,7 @@ export const phoneController = new Elysia({prefix: '/phone'})
         async ({body, set}) => {
 
             const newPhone = {
+                datetime: new Date(body.datetime),
                 name: body.name,
                 brand: body.brand,
                 imei: body.imei,
@@ -54,6 +56,7 @@ export const phoneController = new Elysia({prefix: '/phone'})
         {
             body: t.Object({
                 ...phoneInsertDTO.properties,
+                datetime: t.String({ format: "date-time" })
             }),
             detail: {
                 summary: "Insert a new phone",

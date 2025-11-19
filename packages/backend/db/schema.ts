@@ -58,6 +58,7 @@ export const phoneTable = pgTable("phone", {
     deposit: varchar({length: 255}).notNull(),
     sold: boolean().default(false).notNull(),
 });
+export type Phone = InferSelectModel<typeof phoneTable>
 
 export const repairTable = pgTable("repair", {
     repair_id: integer().primaryKey().generatedAlwaysAsIdentity(),

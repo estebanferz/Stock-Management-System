@@ -27,6 +27,7 @@ export const getAllPhones = async () => {
 }
 
 export const addPhone = async ( newPhone: {
+    datetime: Date;
     name: string;
     brand: string;
     imei: string;
