@@ -12,7 +12,6 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { paymentMethods } from "../Structures/paymentMethods"
 import { ChevronDown} from "lucide-react"
-import { Checkbox } from "@/components/ui/checkbox"
 import { clientApp } from "@/lib/clientAPI";
 
 
@@ -52,35 +51,33 @@ export function TimeInput() {
   );
 }
 
-export function SheetFormSale() {
+export function SheetFormExpense() {
   const [selectedMethod, setSelectedMethod] = useState("Pago")
-  const [sellerId, setSellerId] = useState("")
-  const [clientId, setClientId] = useState("")
-  const [deviceId, setDeviceId] = useState("")
-  const [debt, setDebt] = useState(false)
-  const [debtAmount, setDebtAmount] = useState("")
+  const [category, setCategory] = useState("")
+  const [description, setDescription] = useState("")
+  const [amount, setAmount] = useState("0.00")
+  const [receipt, setReceipt] = useState("")
+  const [provider, setProvider] = useState("")
   const [date, setDate] = useState(new Date().toISOString().split("T")[0])
   const [time, setTime] = useState(new Date().toISOString().slice(11, 16))
-  const [totalAmount, setTotalAmount] = useState("0.00")
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
     const datetime = new Date(`${date}T${time}`).toISOString();
-    const saleData = {
-      datetime,
-      debt,
-      debt_amount: debt ? debtAmount : null,
-      client_id: Number(clientId),
+    const expenseData = {
+      datetime: datetime,
+      category: category,
+      description: description,
+      amount: amount,
       payment_method: selectedMethod,
-      device_id: Number(deviceId),
-      total_amount: totalAmount,
-      seller_id: Number(sellerId),
+      receipt_number: receipt,
+      provider_id: Number(provider),
     }
 
     try {
-      console.log("📤 Enviando saleData:", saleData);
-      const { data, error } = await clientApp.sale.post(saleData);
+      console.log("📤 Enviando saleData:", expenseData);
+      const { data, error } = await clientApp.expense.post(expenseData);
       console.log("📥 Respuesta del servidor:", { data, error });
 
       if (error) throw error.value;
@@ -97,8 +94,8 @@ export function SheetFormSale() {
 return (
     <form id="form-sale" onSubmit={handleSubmit}>
       <CustomSheet
-        title="Agregar venta"
-        description="Agregar venta de dispositivo al sistema"
+        title="Agregar gasto"
+        description="Agregar gasto de dispositivo al sistema"
         footer={
           <>
             <Button type="submit" form="form-sale">Agregar</Button>
@@ -117,23 +114,23 @@ return (
         </div>
 
         <div className="grid gap-3">
-          <Label>Vendedor</Label>
-          <Input value={sellerId} onChange={(e) => setSellerId(e.target.value)} required />
+          <Label>Categoría</Label>
+          <Input value={category} onChange={(e) => setCategory(e.target.value)} required />
         </div>
 
         <div className="grid gap-3">
-          <Label>Cliente</Label>
-          <Input value={clientId} onChange={(e) => setClientId(e.target.value)} required />
+          <Label>Descripción</Label>
+          <Input value={description} onChange={(e) => setDescription(e.target.value)} required />
         </div>
 
         <div className="grid gap-3">
-          <Label>Dispositivo</Label>
-          <Input value={deviceId} onChange={(e) => setDeviceId(e.target.value)} required />
-        </div>
-
-        <div className="grid gap-3">
-          <Label>Valor</Label>
-          <Input value={totalAmount} onChange={(e) => setTotalAmount(e.target.value)} required />
+            <Label>Monto</Label>
+            <Input
+                type="number"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                placeholder="0.00"
+            />
         </div>
 
         <div className="grid gap-3">
@@ -154,22 +151,15 @@ return (
           </DropdownMenu>
         </div>
 
-        <div className="flex items-center justify-between gap-3">
-          <Label>Debe</Label>
-          <Checkbox checked={debt} onCheckedChange={(checked) => setDebt(!!checked)} />
+        <div className="grid gap-3">
+          <Label>Comprobante</Label>
+          <Input value={receipt} onChange={(e) => setReceipt(e.target.value)} required />
         </div>
 
-        {debt && (
-          <div className="grid gap-3">
-            <Label>Cuánto debe</Label>
-            <Input
-              type="number"
-              value={debtAmount}
-              onChange={(e) => setDebtAmount(e.target.value)}
-              placeholder="0.00"
-            />
-          </div>
-        )}
+        <div className="grid gap-3">
+          <Label>Proveedor</Label>
+          <Input value={provider} onChange={(e) => setProvider(e.target.value)} required />
+        </div>
       </CustomSheet>
     </form>
   )

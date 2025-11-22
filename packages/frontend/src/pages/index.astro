@@ -1,11 +1,25 @@
 ---
-import Welcome from '../components/Welcome.astro';
 import Layout from '../layouts/Layout.astro';
+import CustomCard from "@/components/CustomCard";
+import { SalesChart } from "@/components/SalesChart";
+import { serverApp } from "@/lib/serverAPI";
+const resultGross = await serverApp.sale['gross-income'].get()
+const gross_income = String(resultGross.data);
+const resultNet = await serverApp.sale['net-income'].get()
+const net_income = String(resultNet.data);
+const units_sold = await serverApp.sale.all.get();
+const units_sold_count = units_sold.data?.length ?? 0;
 
-// Welcome to Astro! Wondering what to do next? Check out the Astro documentation at https://docs.astro.build
-// Don't want to use any of this? Delete everything in this file, the `assets`, `components`, and `layouts` directories, and start fresh.
 ---
 
 <Layout title="StockManagement">
-	<Welcome />
+	<h1 class="w-full text-center text-4xl text-gray-700 font-bold my-5">Dashboard</h1>
+	<div class="grid grid-cols-3">
+		<CustomCard title="Ingresos Netos" amount=`$${net_income}` />
+		<CustomCard title="Unidades Vendidas" amount={String(units_sold_count)} />
+		<CustomCard title="Ingresos Brutos" amount=`$${gross_income}` />
+	</div>
+	<div class="w-3/6">
+		<SalesChart client:load/>
+	</div>
 </Layout>

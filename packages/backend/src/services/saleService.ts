@@ -1,5 +1,5 @@
 import { db } from "@server/db/db";
-import { saleTable } from "@server/db/schema.ts";
+import { saleTable, expenseTable } from "@server/db/schema.ts";
 import { ilike, and, eq, sql } from "drizzle-orm"
 
 export async function getSaleByFilter(
@@ -76,4 +76,46 @@ export const deleteSale = async (sale_id: number) => {
         .returning();
 
     return result;
+}
+
+export const getGrossIncome = async () => {
+    const income = await db
+        .select({
+            gross_income: sql`SUM(${saleTable.total_amount})`,
+        })
+        .from(saleTable);
+
+    const debts = await db
+        .select({
+            total_debt: sql`SUM(${saleTable.debt_amount})`,
+        })
+        .from(saleTable)
+        .where(eq(saleTable.debt, true));
+
+    const incomeRow = income[0] ?? { gross_income: 0 };
+    const debtsRow = debts[0] ?? { total_debt: 0 };
+
+    incomeRow.gross_income = Number(incomeRow.gross_income) - Number(debtsRow.total_debt);
+    
+    if (income.length > 0){
+        return incomeRow.gross_income;
+    }
+
+    return 0;
+}
+
+export const getNetIncome = async () => {
+    const grossIncome = await getGrossIncome();
+
+    const expenseDebts = await db
+        .select({
+            total_expenses: sql`SUM(${expenseTable.amount})`,
+        })
+        .from(expenseTable);
+
+    const { total_expenses } = expenseDebts[0] ?? { total_expenses: 0 };
+
+    const expenses = Number(total_expenses);
+
+    return Number(grossIncome) - expenses;
 }

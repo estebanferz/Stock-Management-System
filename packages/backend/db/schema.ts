@@ -41,6 +41,7 @@ export const expenseTable = pgTable("expense", {
         integer()
         .references(() => providerTable.provider_id),
 });
+export type Expense = InferSelectModel<typeof expenseTable>
 
 export const phoneTable = pgTable("phone", {
     device_id: integer().primaryKey().generatedAlwaysAsIdentity(),
