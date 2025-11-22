@@ -1,7 +1,7 @@
 import { Elysia, t } from "elysia";
 import { getAllSales, getSaleByFilter, addSale, updateSale, deleteSale } from "../services/saleService";
 import { saleInsertDTO, saleUpdateDTO } from "@server/db/types";
-import { datetime } from "drizzle-orm/mysql-core";
+import { getGrossIncome, getNetIncome } from "../services/saleService";
 
 export const saleController = new Elysia({prefix: '/sale'})
     .get("/", () => {
@@ -123,4 +123,25 @@ export const saleController = new Elysia({prefix: '/sale'})
                 tags: ["sales"],
             },
         },
+    )
+    .get("/gross-income", async () => {
+            const grossIncome = await getGrossIncome();
+            return grossIncome;
+        },
+        {
+            detail: {
+                summary: "Get gross income",
+                tags: ["sales"],
+            },
+        })
+    .get("/net-income", async () => {
+            const netIncome = await getNetIncome();
+            return netIncome;
+        },
+        {
+            detail: {
+                summary: "Get net income",
+                tags: ["sales"],
+            },
+        }
     )

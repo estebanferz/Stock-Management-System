@@ -1,0 +1,30 @@
+---
+
+import Layout from "../../layouts/Layout.astro";
+import { SheetFormExpense } from "@/components/SheetForms/SheetFormExpense";
+import { CustomTable } from "@/components/CustomTable"
+import { serverApp } from "@/lib/serverAPI";
+import { expenseColumns } from "@/config/ExpenseColumnConfig";
+
+const response = await serverApp.expense.all.get();
+const data = response.data || [];
+    
+
+---
+
+<Layout title="Gastos">
+    <h1 class="w-full text-center text-4xl text-gray-700 font-bold my-5">Gastos</h1>
+    <CustomTable client:only="react" data={data} columns={expenseColumns} />
+    <div class="group absolute bottom-10 right-10">
+        <span 
+        class="absolute bottom-full right-0 mb-2 whitespace-nowrap rounded-md border bg-white px-4 py-2 
+           text-sm font-medium text-black shadow-lg
+           opacity-0 scale-95 transition-all duration-200 
+           group-hover:opacity-100 group-hover:scale-100
+           pointer-events-none"
+        >
+        Nuevo gasto
+        </span>
+        <SheetFormExpense client:load/>
+    </div>
+</Layout>

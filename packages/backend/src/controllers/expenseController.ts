@@ -33,6 +33,7 @@ export const expenseController = new Elysia({prefix: "/expense"})
         async ({body, set}) => {
 
             const newExpense = {
+                datetime: body.datetime ? new Date(body.datetime) : undefined,
                 category: body.category,
                 ...(body.description && {description: body.description}),
                 amount: body.amount,
@@ -48,6 +49,7 @@ export const expenseController = new Elysia({prefix: "/expense"})
         {
             body: t.Object({
                 ...expenseInsertDTO.properties,
+                datetime: t.Optional(t.String({format: "date-time"})),
             }),
             detail: {
                 summary: "Insert a new expense",
