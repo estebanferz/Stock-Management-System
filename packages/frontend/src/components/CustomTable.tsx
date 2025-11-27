@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { ChevronDown } from "lucide-react"
 
-import { formatDate, formatMoney, formatPaymentMethod } from "@/utils/formatters"
+import { formatDate, formatMoney, formatPaymentMethod, generalStringFormat } from "@/utils/formatters"
 
 export interface Column<T> {
   key?: keyof T
@@ -31,6 +31,7 @@ export function CustomTable<T>({ data, columns }: TableProps<T>) {
     money: (v) => formatMoney(v),
     yesno: (v) => (v ? "Sí" : "No"),
     paymentMethod: (v) => formatPaymentMethod(v),
+    general: (v) => generalStringFormat(v),
   }
 
   const getRenderer = (col: Column<T>) => {

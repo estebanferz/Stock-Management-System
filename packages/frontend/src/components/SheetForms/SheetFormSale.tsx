@@ -146,7 +146,7 @@ return (
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               {paymentMethods.map((method) => (
-                <DropdownMenuItem key={method.value} onClick={() => setSelectedMethod(method.label)}>
+                <DropdownMenuItem key={method.value} onClick={() => setSelectedMethod(method.value)}>
                   {method.label}
                 </DropdownMenuItem>
               ))}

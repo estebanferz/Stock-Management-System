@@ -1,5 +1,5 @@
 import { db } from "@server/db/db";
-import { saleTable, expenseTable } from "@server/db/schema.ts";
+import { saleTable, expenseTable, phoneTable } from "@server/db/schema.ts";
 import { ilike, and, eq, sql } from "drizzle-orm"
 
 export async function getSaleByFilter(
@@ -25,7 +25,7 @@ export async function getSaleByFilter(
 }
 
 export const getAllSales = async () => {
-    return await db.select().from(saleTable);
+    return await db.select().from(saleTable).orderBy(sql`${saleTable.datetime} DESC`);
 }
 
 export const addSale = async ( newSale: {
@@ -118,4 +118,61 @@ export const getNetIncome = async () => {
     const expenses = Number(total_expenses);
 
     return Number(grossIncome) - expenses;
+}
+
+export const getSalesCountByMonth = async () => {
+  
+  const salesByMonth = await db
+    .select({
+      month_start_date: sql<string>`DATE_TRUNC('month', ${saleTable.datetime})`,
+      count: sql<number>`CAST(COUNT(*) AS INTEGER)`, 
+    })
+    .from(saleTable)
+    .groupBy(sql`DATE_TRUNC('month', ${saleTable.datetime})`)
+    .orderBy(sql`DATE_TRUNC('month', ${saleTable.datetime}) ASC`); 
+    
+  return salesByMonth;
+};
+
+export const getProductSoldCount = async() => {
+    
+    const result = await db
+        .select({
+            name: phoneTable.name, 
+            sold_count: sql<number>`CAST(COUNT(${saleTable.device_id}) AS INTEGER)`,
+        })
+        .from(saleTable)
+        .innerJoin(
+            phoneTable, 
+            eq(saleTable.device_id, phoneTable.device_id)
+        )
+        .groupBy(phoneTable.name) 
+        .orderBy(sql`COUNT(${saleTable.device_id}) DESC`)
+        .limit(5);
+
+    return result;
+};
+
+export const getDebts = async() => {
+    const debts = await db
+        .select()
+        .from(saleTable)
+        .where(eq(saleTable.debt, true));
+
+    return debts;
+}
+
+export const getTotalDebt = async() => {
+    const debts = await db
+        .select({
+            total_debt: sql`SUM(${saleTable.debt_amount})`,
+        })
+        .from(saleTable)
+        .where(eq(saleTable.debt, true));
+    
+    const { total_debt } = debts[0] ?? { total_debt: 0 };
+
+    const debt = Number(total_debt);
+
+    return Number(debt);
 }

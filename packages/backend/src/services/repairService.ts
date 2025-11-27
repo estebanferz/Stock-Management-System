@@ -33,6 +33,7 @@ export const getAllRepairs = async () => {
 
 export const addRepair = async (
     newRepair: {
+        datetime?: Date;
         repair_state: string;
         priority: string;
         description: string;

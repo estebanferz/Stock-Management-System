@@ -26,6 +26,7 @@ export const phoneColumns: Column<Phone>[] = [
     {
         accessorKey: "device_type",
         header: "Tipo",
+        renderKey: "general"
     },
     {
         accessorKey: "battery_health",
@@ -38,9 +39,11 @@ export const phoneColumns: Column<Phone>[] = [
     {
         accessorKey: "color",
         header: "Color",
+        renderKey: "general"
     },{
         accessorKey: "category",
         header: "Categoría",
+        renderKey: "general"
     },
        {
         accessorKey: "buy_cost",

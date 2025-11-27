@@ -20,6 +20,7 @@ export const technicianTable = pgTable("technician", {
   speciality: varchar({ length: 255 }).notNull(),
   state: varchar({ length: 100 }).notNull(),
 });
+export type Technician = InferSelectModel<typeof technicianTable>
 
 export const providerTable = pgTable("provider", {                          
   provider_id: integer().primaryKey().generatedAlwaysAsIdentity(),
@@ -83,6 +84,7 @@ export const repairTable = pgTable("repair", {
         .references(() => phoneTable.device_id)
         .notNull(),
 });
+export type Repair = InferSelectModel<typeof repairTable>
 
 export const saleTable = pgTable("sale", {
     sale_id: integer().primaryKey().generatedAlwaysAsIdentity(),

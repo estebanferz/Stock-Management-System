@@ -39,6 +39,7 @@ export const repairController = new Elysia({prefix: "/repair"})
         async ({body, set}) => {
 
             const newRepair = {
+                datetime: body.datetime ? new Date(body.datetime) : undefined,
                 repair_state: body.repair_state,
                 priority: body.priority,
                 description: body.description,
@@ -57,6 +58,7 @@ export const repairController = new Elysia({prefix: "/repair"})
         {
             body: t.Object({
                 ...repairInsertDTO.properties,
+                datetime: t.String({ format: "date-time"})
             }),
             detail: {
                 summary: "Insert a new repair",

@@ -1,5 +1,5 @@
 import { Elysia, t } from "elysia";
-import { getAllExpenses, getExpensesByFilter, addExpense, updateExpense, deleteExpense } from "../services/expenseService";
+import { getAllExpenses, getExpensesByFilter, addExpense, updateExpense, deleteExpense, getTotalExpenses } from "../services/expenseService";
 import { expenseInsertDTO, expenseUpdateDTO } from "@server/db/types";
 
 export const expenseController = new Elysia({prefix: "/expense"})
@@ -117,4 +117,15 @@ export const expenseController = new Elysia({prefix: "/expense"})
                 tags: ["expenses"],
             },
         },
+    )
+    .get("/expenses", async () => {
+            const expenses = await getTotalExpenses();
+            return expenses;
+        },
+        {
+            detail: {
+                summary: "Get expenses",
+                tags: ["sales"],
+            },
+        }
     )

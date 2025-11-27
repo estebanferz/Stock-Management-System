@@ -152,7 +152,7 @@ return (
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               {productTypes.map((method) => (
-                <DropdownMenuItem key={method.value} onClick={() => setSelectedType(method.label)}>
+                <DropdownMenuItem key={method.value} onClick={() => setSelectedType(method.value)}>
                   {method.label}
                 </DropdownMenuItem>
               ))}
@@ -198,7 +198,7 @@ return (
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               {phoneCategories.map((method) => (
-                <DropdownMenuItem key={method.value} onClick={() => setSelectedCategory(method.label)}>
+                <DropdownMenuItem key={method.value} onClick={() => setSelectedCategory(method.value)}>
                   {method.label}
                 </DropdownMenuItem>
               ))}

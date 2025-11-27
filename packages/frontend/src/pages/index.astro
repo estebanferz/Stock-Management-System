@@ -3,13 +3,36 @@ import Layout from '../layouts/Layout.astro';
 import CustomCard from "@/components/CustomCard";
 import { SalesChart } from "@/components/SalesChart";
 import { serverApp } from "@/lib/serverAPI";
+import { SalesDataByMonth } from '@/utils/formatters';
+import { PieChart } from '@/components/PieChart';
 const resultGross = await serverApp.sale['gross-income'].get()
 const gross_income = String(resultGross.data);
 const resultNet = await serverApp.sale['net-income'].get()
 const net_income = String(resultNet.data);
-const units_sold = await serverApp.sale.all.get();
-const units_sold_count = units_sold.data?.length ?? 0;
+const saleData = await serverApp.sale.all.get();
+const units_sold_count = saleData.data?.length ?? 0;
+const expenseData = await serverApp.expense['expenses'].get()
+const expensesFormatted = expenseData.data || []
+const saleDataByMonth = await serverApp.sale['sales-by-month'].get();
+const saleDataFormatted = SalesDataByMonth(saleDataByMonth.data || []) || [];
+const deudoresCount = await serverApp.sale['debts'].get()
+const deudoresCountFormatted = deudoresCount.data?.length || 0;
+const totalDebt = await serverApp.sale['total-debt'].get()
+const totalDebtFormatted = totalDebt.data || 0;
 
+const phoneSoldCount = await serverApp.sale["products-sold-count"].get()
+const phoneSoldCountFormatted = phoneSoldCount.data || []
+
+const pieChartData = [
+  ['Producto', 'Unidades Vendidas'],
+  ...phoneSoldCountFormatted.map(item => [item.name, item.sold_count]) 
+];
+
+const secondaryData = `
+    <div>
+        <p>${deudoresCountFormatted}</p>
+    </div>
+`;
 ---
 
 <Layout title="StockManagement">
@@ -19,7 +42,16 @@ const units_sold_count = units_sold.data?.length ?? 0;
 		<CustomCard title="Unidades Vendidas" amount={String(units_sold_count)} />
 		<CustomCard title="Ingresos Brutos" amount=`$${gross_income}` />
 	</div>
-	<div class="w-3/6">
-		<SalesChart client:load/>
+	<div class="grid grid-cols-2 gap-4">
+		<div class="flex justify-center w-full p-3 m-2 bg-white hover:bg-gray-50 shadow-lg rounded-2xl">
+			<SalesChart client:load data={saleDataFormatted}/>
+		</div>
+		<div class="flex justify-center w-auto p-3 m-2 bg-white hover:bg-gray-50 shadow-lg rounded-2xl">
+			<PieChart data={pieChartData} className="flex justify-center" client:load/>
+		</div>
+	</div>
+	<div class="grid grid-cols-2">
+		<CustomCard title="Gastos Totales" amount=`$${expensesFormatted}`/>
+		<CustomCard title="Deudores" amount=`$${totalDebtFormatted}` secondaryData={secondaryData}/>
 	</div>
 </Layout>
