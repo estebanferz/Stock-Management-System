@@ -1,7 +1,8 @@
 import { Elysia, t } from "elysia";
 import { getAllSales, getSaleByFilter, addSale, updateSale, deleteSale } from "../services/saleService";
 import { saleInsertDTO, saleUpdateDTO } from "@server/db/types";
-import { getGrossIncome, getNetIncome } from "../services/saleService";
+import { getGrossIncome, getNetIncome, getSalesCountByMonth, getProductSoldCount, getDebts, getTotalDebt } from "../services/saleService";
+import { db } from "@server/db/db";
 
 export const saleController = new Elysia({prefix: '/sale'})
     .get("/", () => {
@@ -145,3 +146,42 @@ export const saleController = new Elysia({prefix: '/sale'})
             },
         }
     )
+    .get("/sales-by-month", async () => {
+        return await getSalesCountByMonth();
+    },
+    {
+        detail: {
+            summary: "Get net income",
+            tags: ["sales"],
+        },
+    }
+    )
+    .get("/products-sold-count", async () => {
+        return await getProductSoldCount();
+    },
+    {
+        detail: {
+            summary: "Get products sold count",
+            tags: ["sales"],
+        },
+    }
+    )
+    .get("/debts", async() => {
+        return await getDebts();
+    },
+    {
+        detail: {
+            summary: "Get all debts",
+            tags: ["sales"],
+        },
+    })
+    .get("/total-debt", async() => {
+        return await getTotalDebt();
+    },
+    {
+        detail: {
+            summary: "Get total debt amount",
+            tags: ["sales"],
+        },
+    }
+    );

@@ -71,3 +71,15 @@ export const deleteExpense = async (expense_id: number) => {
     if (result.length > 0) {return true}
     else {return false}
 }
+
+export const getTotalExpenses = async() => {
+    const result = await db
+        .select({
+            total_expenses: sql`SUM(${expenseTable.amount})`
+        })
+        .from(expenseTable)
+    
+    const { total_expenses } = result[0] ?? { total_expenses: 0 };
+
+    return Number(total_expenses);
+}
