@@ -1,5 +1,5 @@
 import { Elysia, t } from "elysia";
-import { getAllPhones, getPhonesByFilter, addPhone, updatePhone, deletePhone } from "../services/phoneService";
+import { getAllPhones, getPhonesByFilter, getPhoneById, addPhone, updatePhone, deletePhone } from "../services/phoneService";
 import { phoneInsertDTO, phoneUpdateDTO } from "@server/db/types";
 import { date } from "drizzle-orm/mysql-core";
 
@@ -28,6 +28,19 @@ export const phoneController = new Elysia({prefix: '/phone'})
                 tags: ["phones"],
             },
         },
+    )
+    .get(
+        "/:id",
+        async (req) => {
+            const { id } = req.params;
+            return await getPhoneById(Number(id));
+        },
+        {
+            detail: {
+                summary: "Get phone details by ID",
+                tags: ["phones"],
+            },
+        }
     )
     .post(
         "/",
@@ -65,8 +78,8 @@ export const phoneController = new Elysia({prefix: '/phone'})
         }
     )
     .put(
-        "/:device_id",
-        async ({ body, params: { device_id }, set }) => {
+        "/:id",
+        async ({ body, params: { id }, set }) => {
 
             const updPhone = {
                 name: body.name,
@@ -84,7 +97,7 @@ export const phoneController = new Elysia({prefix: '/phone'})
             };
 
             const result = await updatePhone(
-                Number(device_id),
+                Number(id),
                 updPhone,
             );
             set.status = 200;
@@ -101,9 +114,9 @@ export const phoneController = new Elysia({prefix: '/phone'})
         },
     )
     .delete(
-        "/:device_id",
-        async ({ params: { device_id }, set }) => {
-            const phoneIdNum = Number(device_id);
+        "/:id",
+        async ({ params: { id }, set }) => {
+            const phoneIdNum = Number(id);
             if (!Number.isInteger(phoneIdNum) || phoneIdNum <= 0) {
                 set.status = 400;
                 return false;
@@ -120,7 +133,7 @@ export const phoneController = new Elysia({prefix: '/phone'})
         },
         {
             params: t.Object({
-                device_id: t.Numeric({
+                id: t.Numeric({
                     minimum: 1,
                     errorMessage: 'device_id must be a positive integer',
                 })

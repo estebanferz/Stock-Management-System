@@ -30,6 +30,13 @@ export async function getAllClients() {
     return await db.select().from(clientTable);
 }
 
+export const getClientById = async(id: number) => {
+    const sale = await db.query.clientTable.findFirst({
+        where: eq(clientTable.client_id, id),
+    });
+    return sale;
+}
+
 export async function updateClient(
     client_id: number,
     client_upd: typeof clientUpdateDTO.static,

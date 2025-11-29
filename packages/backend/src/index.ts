@@ -11,7 +11,10 @@ import {saleController} from "./controllers/saleController";
 import {sellerController} from "./controllers/sellerController";
 
 const app = new Elysia({prefix: '/api'})
-  .use(cors({ origin: Bun.env.PUBLIC_FRONTEND_URL })) // Enable CORS
+  .use(cors({ origin: [
+    Bun.env.PUBLIC_FRONTEND_URL,
+    /\.ngrok-free\.app$/,                         //Accept Ngrok conections for client Demo
+  ].filter(Boolean) as (string | RegExp)[] }))
   .get("/", () => {
     return { message: "app" };
   })

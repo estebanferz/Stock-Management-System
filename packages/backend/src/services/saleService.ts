@@ -28,6 +28,13 @@ export const getAllSales = async () => {
     return await db.select().from(saleTable).orderBy(sql`${saleTable.datetime} DESC`);
 }
 
+export const getSaleById = async(id: number) => {
+    const sale = await db.query.saleTable.findFirst({
+        where: eq(saleTable.sale_id, id),
+    });
+    return sale;
+}
+
 export const addSale = async ( newSale: {
     total_amount: string;
     payment_method: string;

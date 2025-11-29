@@ -94,7 +94,7 @@ export function SheetFormExpense() {
 return (
     <form id="form-sale" onSubmit={handleSubmit}>
       <CustomSheet
-        title="Agregar gasto"
+        title="Agregar Gasto"
         description="Agregar gasto de dispositivo al sistema"
         footer={
           <>

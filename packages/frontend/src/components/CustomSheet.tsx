@@ -25,6 +25,14 @@ interface CustomSheetProps {
   trigger?: React.ReactNode
   /** Clases personalizadas del contenedor del Sheet */
   className?: string
+  /** Dirección desde donde se abre el Sheet (right, left, top, bottom) */
+  side?: "top" | "right" | "bottom" | "left"
+  /** Controla si el Sheet está abierto (para uso controlado) */
+  isOpen?: boolean
+  /** Función para manejar el cambio de estado (cierre/apertura) */
+  onOpenChange?: (open: boolean) => void
+  /** Contenido que se renderiza dentro del Sheet (si no se usa children) */
+  content?: React.ReactNode // Permite pasar el contenido como prop o como children
 }
 
 export function CustomSheet({
@@ -34,9 +42,13 @@ export function CustomSheet({
   footer,
   trigger,
   className,
+  side = "right",
+  isOpen,        
+  onOpenChange,   
+  content,        
 }: CustomSheetProps) {
   return (
-    <Sheet>
+    <Sheet open={isOpen} onOpenChange={onOpenChange}>
       {/* Botón de apertura */}
       <SheetTrigger asChild>
         {trigger ? (
@@ -49,14 +61,16 @@ export function CustomSheet({
       </SheetTrigger>
 
       {/* Contenido del Sheet */}
-      <SheetContent className={`${className ?? "duration-300"} flex flex-col max-h-[90vh]"`}>
+      <SheetContent side={side} className={`${className ?? "duration-300"} flex flex-col max-h-[90vh]"`}>
         <SheetHeader className="py-5 my-6">
           <SheetTitle className="font-semibold text-xl">{title}</SheetTitle>
           {description && <SheetDescription>{description}</SheetDescription>}
         </SheetHeader>
 
         {/* Contenido dinámico */}
-        <div className="grid flex-1 overflow-y-auto auto-rows-min gap-6 mb-10 pl-1 pr-4 py-1">{children}</div>
+        <div className="grid flex-1 overflow-y-auto auto-rows-min gap-6 mb-10 pl-1 pr-4 py-1">
+          {children || content}
+        </div>
 
         {/* Footer dinámico */}
         <SheetFooter>

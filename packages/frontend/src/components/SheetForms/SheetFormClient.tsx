@@ -42,7 +42,7 @@ export function SheetFormClient() {
 return (
     <form id="form-sale" onSubmit={handleSubmit}>
       <CustomSheet
-        title="Agregar cliente"
+        title="Agregar Cliente"
         description="Agregar ciente al sistema"
         footer={
           <>

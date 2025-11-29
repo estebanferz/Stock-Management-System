@@ -5,43 +5,8 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1762097623228,
-      "tag": "0000_tiresome_kang",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1762267059090,
-      "tag": "0001_complete_captain_britain",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1762311704684,
-      "tag": "0002_rich_medusa",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "7",
-      "when": 1762311915150,
-      "tag": "0003_late_firestar",
-      "breakpoints": true
-    },
-    {
-      "idx": 4,
-      "version": "7",
-      "when": 1762572612089,
-      "tag": "0004_steep_chimera",
-      "breakpoints": true
-    },
-    {
-      "idx": 5,
-      "version": "7",
-      "when": 1762916031804,
-      "tag": "0005_groovy_mister_fear",
+      "when": 1764451013637,
+      "tag": "0000_steep_thanos",
       "breakpoints": true
     }
   ]

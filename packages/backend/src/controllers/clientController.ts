@@ -1,5 +1,5 @@
 import {Elysia} from "elysia";
-import {getAllClients, getClientByFilter, updateClient, addClient, deleteClient} from "../services/clientService";
+import {getAllClients, getClientByFilter, getClientById, updateClient, addClient, deleteClient} from "../services/clientService";
 import {clientInsertDTO, clientUpdateDTO} from "@server/db/types";
 import { t } from "elysia";
 
@@ -29,6 +29,19 @@ export const clientController = new Elysia({prefix: '/client'})
             },
         },
     )
+    .get(
+        "/:id",
+        async (req) => {
+            const { id } = req.params;
+            return await getClientById(Number(id));
+        },
+        {
+            detail: {
+                summary: "Get client details by ID",
+                tags: ["clients"],
+            },
+        }
+    )
     .post(
         "/",
         async ({body, set}) => {
@@ -57,8 +70,8 @@ export const clientController = new Elysia({prefix: '/client'})
         }
     )
     .put(
-        "/:client_id",
-        async ({ body, params: { client_id }, set }) => {
+        "/:id",
+        async ({ body, params: { id }, set }) => {
 
             const updClient = {
                 name: body.name,
@@ -68,7 +81,7 @@ export const clientController = new Elysia({prefix: '/client'})
                 birth_date: body.birth_date,
             };
             const result = await updateClient(
-                Number(client_id),
+                Number(id),
                 updClient,
             );
             set.status = 200;
@@ -86,9 +99,9 @@ export const clientController = new Elysia({prefix: '/client'})
         },
     )
     .delete(
-        "/:client_id",
-        async ({ params: { client_id }, set }) => {
-            const clientIdNum = Number(client_id);
+        "/:id",
+        async ({ params: { id }, set }) => {
+            const clientIdNum = Number(id);
             if (!Number.isInteger(clientIdNum) || clientIdNum <= 0) {
                 set.status = 400;
                 return false;
@@ -105,7 +118,7 @@ export const clientController = new Elysia({prefix: '/client'})
         },
         {
             params: t.Object({
-                client_id: t.Numeric({
+                id: t.Numeric({
                     minimum: 1,
                     errorMessage: 'ID de cliente debe ser un número positivo'
                 })

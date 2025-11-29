@@ -1,5 +1,5 @@
 import { Elysia, t } from "elysia";
-import { getAllSales, getSaleByFilter, addSale, updateSale, deleteSale } from "../services/saleService";
+import { getAllSales, getSaleByFilter, getSaleById, addSale, updateSale, deleteSale } from "../services/saleService";
 import { saleInsertDTO, saleUpdateDTO } from "@server/db/types";
 import { getGrossIncome, getNetIncome, getSalesCountByMonth, getProductSoldCount, getDebts, getTotalDebt } from "../services/saleService";
 import { db } from "@server/db/db";
@@ -33,6 +33,19 @@ export const saleController = new Elysia({prefix: '/sale'})
             },
         },
     )
+    .get(
+        "/:id",
+        async (req) => {
+            const { id } = req.params;
+            return await getSaleById(Number(id));
+        },
+        {
+            detail: {
+                summary: "Get sale details by ID",
+                tags: ["sales"],
+            },
+        }
+    )
     .post(
         "/",
         async ({body, set}) => {
@@ -64,8 +77,8 @@ export const saleController = new Elysia({prefix: '/sale'})
         }
     )
     .put(
-        "/:sale_id",
-        async ({ body, params: { sale_id }, set }) => {
+        "/:id",
+        async ({ body, params: { id }, set }) => {
 
             const updSale = {
                 total_amount: body.total_amount,
@@ -78,7 +91,7 @@ export const saleController = new Elysia({prefix: '/sale'})
             };
 
             const result = await updateSale(
-                Number(sale_id),
+                Number(id),
                 updSale,
             );
             set.status = 200;
@@ -95,9 +108,9 @@ export const saleController = new Elysia({prefix: '/sale'})
         },
     )
     .delete(
-        "/:sale_id",
-        async ({ params: { sale_id }, set }) => {
-            const saleIdNum = Number(sale_id);
+        "/:id",
+        async ({ params: { id }, set }) => {
+            const saleIdNum = Number(id);
             if (!Number.isInteger(saleIdNum) || saleIdNum <= 0) {
                 set.status = 400;
                 return false;
@@ -114,7 +127,7 @@ export const saleController = new Elysia({prefix: '/sale'})
         },
         {
             params: t.Object({
-                sale_id: t.Numeric({
+                id: t.Numeric({
                     minimum: 1,
                     errorMessage: 'sale_id must be a positive integer',
                 })

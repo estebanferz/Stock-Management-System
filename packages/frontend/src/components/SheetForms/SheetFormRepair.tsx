@@ -102,7 +102,7 @@ export function SheetFormRepair() {
 return (
     <form id="form-sale" onSubmit={handleSubmit}>
       <CustomSheet
-        title="Agregar reparación"
+        title="Agregar Reparación"
         description="Agregar reparación de dispositivo al sistema"
         footer={
           <>
