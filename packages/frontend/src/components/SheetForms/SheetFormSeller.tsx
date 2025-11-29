@@ -63,8 +63,8 @@ export function SheetFormSeller() {
 return (
     <form id="form-sale" onSubmit={handleSubmit}>
       <CustomSheet
-        title="Agregar cliente"
-        description="Agregar ciente al sistema"
+        title="Agregar Vendedor"
+        description="Agregar vendedor al sistema"
         footer={
           <>
             <Button type="submit" form="form-sale">Agregar</Button>

@@ -59,6 +59,7 @@ export const phoneTable = pgTable("phone", {
     buy_cost: numeric({precision: 12, scale: 2}).notNull(),
     deposit: varchar({length: 255}).notNull(),
     sold: boolean().default(false).notNull(),
+    trade_in: boolean().default(false),
 });
 export type Phone = InferSelectModel<typeof phoneTable>
 

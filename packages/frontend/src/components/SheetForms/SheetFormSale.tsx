@@ -14,59 +14,43 @@ import { paymentMethods } from "../Structures/paymentMethods"
 import { ChevronDown} from "lucide-react"
 import { Checkbox } from "@/components/ui/checkbox"
 import { clientApp } from "@/lib/clientAPI";
+import { SheetSelector } from './SheetFormSelector'; 
 
 
-export function DateInput() {
+// Función auxiliar para obtener el objeto Date ajustado a la hora local
+const getLocalTime = () => {
   const today = new Date();
-  const local = new Date(today.getTime() - today.getTimezoneOffset() * 60000)
-  .toISOString()
-  .split("T")[0];
-  const [date, setDate] = useState(local);
-  
-  return (
-    <Input
-    id="sheet-sale-date"
-    type="date"
-    value={date}
-    onChange={(e) => setDate(e.target.value)}
-    className="border rounded-lg px-3 py-2"
-    />
-  );
-}
-
-export function TimeInput() {
-  const today = new Date();
-  const local = new Date(today.getTime() - today.getTimezoneOffset() * 60000)
-  .toISOString()
-  .slice(11,16);
-  const [time, setTime] = useState(local);
-  
-  return (
-    <Input
-    id="sheet-sale-time"
-    type="time"
-    value={time}
-    onChange={(e) => setTime(e.target.value)}
-    className="flex justify-center border rounded-lg px-3 py-2"
-    />
-  );
-}
+  // Crea un nuevo Date que, al ser serializado a ISOString, representa la hora local
+  return new Date(today.getTime() - today.getTimezoneOffset() * 60000);
+};
 
 export function SheetFormSale() {
+  // Inicialización de fecha y hora usando la corrección de zona horaria
+  const initialLocalTime = getLocalTime();
+  
   const [selectedMethod, setSelectedMethod] = useState("Pago")
   const [sellerId, setSellerId] = useState("")
   const [clientId, setClientId] = useState("")
   const [deviceId, setDeviceId] = useState("")
   const [debt, setDebt] = useState(false)
   const [debtAmount, setDebtAmount] = useState("")
-  const [date, setDate] = useState(new Date().toISOString().split("T")[0])
-  const [time, setTime] = useState(new Date().toISOString().slice(11, 16))
+  // Inicialización con la fecha local correcta
+  const [date, setDate] = useState(initialLocalTime.toISOString().split("T")[0])
+  // Inicialización con la hora local correcta
+  const [time, setTime] = useState(initialLocalTime.toISOString().slice(11, 16))
   const [totalAmount, setTotalAmount] = useState("0.00")
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
     const datetime = new Date(`${date}T${time}`).toISOString();
+    
+    // Validación básica de IDs
+    if (!clientId || !sellerId || !deviceId) {
+        alert("Por favor, selecciona Cliente, Vendedor y Dispositivo.");
+        return;
+    }
+
     const saleData = {
       datetime,
       debt,
@@ -85,11 +69,11 @@ export function SheetFormSale() {
 
       if (error) throw error.value;
 
-      alert("Sale successfully created");
+      alert("Venta creada exitosamente");
       window.location.href = "/sale";
     } catch (err) {
       console.error("❌ Error al cargar venta:", err);
-      alert("Error al cargar venta");
+      alert("Error al cargar venta. Revisa la consola.");
     }
   }
 
@@ -97,7 +81,7 @@ export function SheetFormSale() {
 return (
     <form id="form-sale" onSubmit={handleSubmit}>
       <CustomSheet
-        title="Agregar venta"
+        title="Agregar Venta"
         description="Agregar venta de dispositivo al sistema"
         footer={
           <>
@@ -108,6 +92,7 @@ return (
           </>
         }
       >
+        {/* FECHA Y HORA (AHORA CORRECTAMENTE INICIALIZADAS) */}
         <div className="grid gap-3">
           <Label>Fecha y hora</Label>
           <div className="grid grid-cols-2 gap-2">
@@ -116,26 +101,37 @@ return (
           </div>
         </div>
 
+        {/* 🚀 VENDEDOR - REEMPLAZADO POR SELECTOR */}
         <div className="grid gap-3">
           <Label>Vendedor</Label>
-          <Input value={sellerId} onChange={(e) => setSellerId(e.target.value)} required />
+          <SheetSelector type="seller" currentId={sellerId} onSelect={setSellerId} />
         </div>
 
+        {/* 🚀 CLIENTE - REEMPLAZADO POR SELECTOR */}
         <div className="grid gap-3">
           <Label>Cliente</Label>
-          <Input value={clientId} onChange={(e) => setClientId(e.target.value)} required />
+          <SheetSelector type="client" currentId={clientId} onSelect={setClientId} />
         </div>
 
+        {/* 🚀 DISPOSITIVO - REEMPLAZADO POR SELECTOR */}
         <div className="grid gap-3">
           <Label>Dispositivo</Label>
-          <Input value={deviceId} onChange={(e) => setDeviceId(e.target.value)} required />
+          <SheetSelector type="device" currentId={deviceId} onSelect={setDeviceId} />
         </div>
 
+        {/* VALOR */}
         <div className="grid gap-3">
           <Label>Valor</Label>
-          <Input value={totalAmount} onChange={(e) => setTotalAmount(e.target.value)} required />
+          <Input 
+            value={totalAmount} 
+            onChange={(e) => setTotalAmount(e.target.value)} 
+            type="number" 
+            step="0.01" 
+            required 
+          />
         </div>
 
+        {/* MÉTODO DE PAGO */}
         <div className="grid gap-3">
           <Label>Método de pago</Label>
           <DropdownMenu>
@@ -154,11 +150,13 @@ return (
           </DropdownMenu>
         </div>
 
+        {/* DEBE */}
         <div className="flex items-center justify-between gap-3">
           <Label>Debe</Label>
           <Checkbox checked={debt} onCheckedChange={(checked) => setDebt(!!checked)} />
         </div>
 
+        {/* CANTIDAD DE DEUDA (CONDICIONAL) */}
         {debt && (
           <div className="grid gap-3">
             <Label>Cuánto debe</Label>
@@ -167,6 +165,7 @@ return (
               value={debtAmount}
               onChange={(e) => setDebtAmount(e.target.value)}
               placeholder="0.00"
+              required={debt} // Hace el campo requerido si hay deuda
             />
           </div>
         )}
@@ -174,6 +173,3 @@ return (
     </form>
   )
 }
-
-
-

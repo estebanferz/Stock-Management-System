@@ -1,5 +1,5 @@
 import { Elysia, t } from "elysia";
-import { getSellersByFilter, getAllSellers, addSeller, updateSeller, deleteSeller} from "../services/sellerService";
+import { getSellersByFilter, getAllSellers, getSellerById, addSeller, updateSeller, deleteSeller} from "../services/sellerService";
 import { sellerInsertDTO, sellerUpdateDTO } from "@server/db/types";
 
 export const sellerController = new Elysia({prefix: "/seller"})
@@ -54,9 +54,22 @@ export const sellerController = new Elysia({prefix: "/seller"})
             },
         }
     )
+    .get(
+        "/:id",
+        async (req) => {
+            const { id } = req.params;
+            return await getSellerById(Number(id));
+        },
+        {
+            detail: {
+                summary: "Get seller details by ID",
+                tags: ["sellers"],
+            },
+        }
+    )
     .put(
-        "/:seller_id",
-        async ({ body, params: { seller_id }, set }) => {
+        "/:id",
+        async ({ body, params: { id }, set }) => {
 
             const updPhone = {
                 name: body.name,
@@ -67,7 +80,7 @@ export const sellerController = new Elysia({prefix: "/seller"})
             };
 
             const result = await updateSeller(
-                Number(seller_id),
+                Number(id),
                 updPhone,
             );
             set.status = 200;
@@ -84,9 +97,9 @@ export const sellerController = new Elysia({prefix: "/seller"})
         },
     )
     .delete(
-        "/:seller_id",
-        async ({ params: { seller_id }, set }) => {
-            const sellerIdNum = Number(seller_id);
+        "/:id",
+        async ({ params: { id }, set }) => {
+            const sellerIdNum = Number(id);
             if (!Number.isInteger(sellerIdNum) || sellerIdNum <= 0) {
                 set.status = 400;
                 return false;
@@ -103,7 +116,7 @@ export const sellerController = new Elysia({prefix: "/seller"})
         },
         {
             params: t.Object({
-                seller_id: t.Numeric({
+                id: t.Numeric({
                     minimum: 1,
                     errorMessage: 'seller_id must be a positive integer',
                 })

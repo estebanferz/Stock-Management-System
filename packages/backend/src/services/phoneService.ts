@@ -26,6 +26,13 @@ export const getAllPhones = async () => {
     return await db.select().from(phoneTable);
 }
 
+export const getPhoneById = async(id: number) => {
+    const sale = await db.query.phoneTable.findFirst({
+        where: eq(phoneTable.device_id, id),
+    });
+    return sale;
+}
+
 export const addPhone = async ( newPhone: {
     datetime: Date;
     name: string;

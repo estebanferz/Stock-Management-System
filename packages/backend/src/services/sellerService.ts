@@ -26,6 +26,13 @@ export const getAllSellers = async () => {
     return await db.select().from(sellerTable);
 }
 
+export const getSellerById = async(id: number) => {
+    const sale = await db.query.sellerTable.findFirst({
+        where: eq(sellerTable.seller_id, id),
+    });
+    return sale;
+}
+
 export const addSeller = async (
     newSeller: {
         name: string;

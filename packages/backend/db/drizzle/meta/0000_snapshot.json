@@ -1,5 +1,5 @@
 {
-  "id": "f2441c30-daba-457e-99c4-a0fc8d80c641",
+  "id": "d09e71f4-40be-4c29-afff-cfa3f70105ca",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -97,10 +97,11 @@
           "name": "datetime",
           "type": "timestamp",
           "primaryKey": false,
-          "notNull": true
+          "notNull": true,
+          "default": "now()"
         },
-        "catergory": {
-          "name": "catergory",
+        "category": {
+          "name": "category",
           "type": "varchar(255)",
           "primaryKey": false,
           "notNull": true
@@ -113,7 +114,7 @@
         },
         "amount": {
           "name": "amount",
-          "type": "numeric(2, 12)",
+          "type": "numeric(12, 2)",
           "primaryKey": false,
           "notNull": true
         },
@@ -187,6 +188,13 @@
             "cycle": false
           }
         },
+        "datetime": {
+          "name": "datetime",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
         "name": {
           "name": "name",
           "type": "varchar(255)",
@@ -209,7 +217,7 @@
           "name": "device_type",
           "type": "varchar(100)",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "battery_health": {
           "name": "battery_health",
@@ -237,13 +245,13 @@
         },
         "price": {
           "name": "price",
-          "type": "numeric(2, 12)",
+          "type": "numeric(12, 2)",
           "primaryKey": false,
           "notNull": true
         },
         "buy_cost": {
           "name": "buy_cost",
-          "type": "numeric(2, 12)",
+          "type": "numeric(12, 2)",
           "primaryKey": false,
           "notNull": true
         },
@@ -258,6 +266,13 @@
           "type": "boolean",
           "primaryKey": false,
           "notNull": true,
+          "default": false
+        },
+        "trade_in": {
+          "name": "trade_in",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
           "default": false
         }
       },
@@ -356,7 +371,8 @@
           "name": "datetime",
           "type": "timestamp",
           "primaryKey": false,
-          "notNull": true
+          "notNull": true,
+          "default": "now()"
         },
         "repair_state": {
           "name": "repair_state",
@@ -384,13 +400,13 @@
         },
         "client_cost": {
           "name": "client_cost",
-          "type": "numeric(2, 12)",
+          "type": "numeric(12, 2)",
           "primaryKey": false,
           "notNull": true
         },
         "internal_cost": {
           "name": "internal_cost",
-          "type": "numeric(2, 12)",
+          "type": "numeric(12, 2)",
           "primaryKey": false,
           "notNull": true
         },
@@ -486,11 +502,12 @@
           "name": "datetime",
           "type": "timestamp",
           "primaryKey": false,
-          "notNull": true
+          "notNull": true,
+          "default": "now()"
         },
         "total_amount": {
           "name": "total_amount",
-          "type": "numeric(2, 12)",
+          "type": "numeric(12, 2)",
           "primaryKey": false,
           "notNull": true
         },
@@ -509,21 +526,21 @@
         },
         "debt_amount": {
           "name": "debt_amount",
-          "type": "numeric(2, 12)",
+          "type": "numeric(12, 2)",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "client_id": {
           "name": "client_id",
           "type": "integer",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "seller_id": {
           "name": "seller_id",
           "type": "integer",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "device_id": {
           "name": "device_id",
@@ -607,6 +624,12 @@
           "primaryKey": false,
           "notNull": true
         },
+        "age": {
+          "name": "age",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
         "email": {
           "name": "email",
           "type": "varchar(255)",
@@ -621,6 +644,13 @@
         },
         "hire_date": {
           "name": "hire_date",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "pay_date": {
+          "name": "pay_date",
           "type": "date",
           "primaryKey": false,
           "notNull": false
@@ -677,13 +707,13 @@
           "name": "speciality",
           "type": "varchar(255)",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
-        "birth_date": {
-          "name": "birth_date",
-          "type": "date",
+        "state": {
+          "name": "state",
+          "type": "varchar(100)",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         }
       },
       "indexes": {},

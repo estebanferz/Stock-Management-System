@@ -16,12 +16,12 @@ export const sellerColumns: Column<Seller>[] = [
     
     {
       accessorKey: "hire_date",
-      header: "Fecha",
+      header: "Contratación",
       renderKey: "date",
     },
       {
       accessorKey: "pay_date",
-      header: "Fecha",
+      header: "Fecha Pago",
       renderKey: "date",
     },
 ]
