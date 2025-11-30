@@ -128,13 +128,13 @@ return (
         </div>
 
         <div className="grid gap-3">
-          <Label>Modelo</Label>
-          <Input value={phoneName} onChange={(e) => setPhoneName(e.target.value)} required />
+          <Label>Marca</Label>
+          <Input value={phoneBrand} onChange={(e) => setPhoneBrand(e.target.value)} required />
         </div>
 
         <div className="grid gap-3">
-          <Label>Marca</Label>
-          <Input value={phoneBrand} onChange={(e) => setPhoneBrand(e.target.value)} required />
+          <Label>Modelo</Label>
+          <Input value={phoneName} onChange={(e) => setPhoneName(e.target.value)} required />
         </div>
 
         <div className="grid gap-3">

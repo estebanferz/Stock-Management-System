@@ -81,8 +81,11 @@ export function SheetFormSale() {
 return (
     <form id="form-sale" onSubmit={handleSubmit}>
       <CustomSheet
+        className="w-[400px] duration-300 flex flex-col"
         title="Agregar Venta"
+        zIndex={60}
         description="Agregar venta de dispositivo al sistema"
+        isModal={true}
         footer={
           <>
             <Button type="submit" form="form-sale">Agregar</Button>

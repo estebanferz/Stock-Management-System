@@ -1,8 +1,9 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { clientApp } from "@/lib/clientAPI"; // Asume la ruta
+import { clientApp } from "@/lib/clientAPI"; 
 import { Button } from "@/components/ui/button";
 import { Search, ChevronRight } from 'lucide-react';
-import { CustomSheet } from "@/components/CustomSheet"; // Asume la ruta y que acepta prop 'side'
+import { CustomSheet } from "@/components/CustomSheet";
+import { SheetClose } from "@/components/ui/sheet"
 import { Input } from "@/components/ui/input"; 
 import { Label } from "@/components/ui/label";
 
@@ -159,8 +160,11 @@ export function SheetSelector({ type, currentId, onSelect }: SheetSelectorProps)
     
     return (
         <CustomSheet
-            side="left" 
+            side="right" 
+            className="right-[380px]"
             isOpen={isOpen}
+            isModal={false}
+            zIndex={50}
             onOpenChange={setIsOpen}
             title={`Seleccionar ${type}`}
             trigger={triggerButton}
@@ -172,6 +176,14 @@ export function SheetSelector({ type, currentId, onSelect }: SheetSelectorProps)
                     onSelect={onSelect}
                     setIsOpen={setIsOpen}
                 />
+            }
+            footer={
+                <>
+                    <Button type="submit">Agregar</Button>
+                    <SheetClose asChild>
+                    <Button variant="outline">Cancelar</Button>
+                    </SheetClose>
+                </>
             }
         />
         
