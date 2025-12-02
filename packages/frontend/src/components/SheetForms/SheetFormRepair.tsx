@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { SheetClose } from "@/components/ui/sheet"
+import { SheetSelector } from "@/components/SheetForms/SheetSelector"
 import { useState } from "react"
 import {
   DropdownMenu,
@@ -104,6 +105,8 @@ return (
       <CustomSheet
         title="Agregar Reparación"
         description="Agregar reparación de dispositivo al sistema"
+        zIndex={60}
+        isModal={true}
         footer={
           <>
             <Button type="submit" form="form-sale">Agregar</Button>
@@ -123,17 +126,17 @@ return (
 
         <div className="grid gap-3">
           <Label>Dispositivo</Label>
-          <Input value={device} onChange={(e) => setDevice(e.target.value)} required />
+          <SheetSelector type="device" currentId={device} onSelect={setDevice} />
         </div>
 
         <div className="grid gap-3">
           <Label>Cliente</Label>
-          <Input value={client} onChange={(e) => setClient(e.target.value)} required />
+          <SheetSelector type="client" currentId={client} onSelect={setClient} />
         </div>
 
         <div className="grid gap-3">
-          <Label>Tecnico asignado</Label>
-          <Input value={technician} onChange={(e) => setTechnician(e.target.value)} required />
+          <Label>Tecnico</Label>
+          <SheetSelector type="technician" currentId={technician} onSelect={setTechnician} />
         </div>
 
         <div className="grid gap-3">

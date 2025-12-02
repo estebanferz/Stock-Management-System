@@ -6,14 +6,30 @@ import { SheetClose } from "@/components/ui/sheet"
 import { useState } from "react"
 import { clientApp } from "@/lib/clientAPI";
 
+interface SheetFormClientProps {
+    isOpen?: boolean;
+    onClose?: (newClientId?: string) => void;
+    zIndex?: number;
+}
 
-export function SheetFormClient() {
+export function SheetFormClient({ isOpen, onClose, zIndex }: SheetFormClientProps) {
+
+  const [internalOpen, setInternalOpen] = useState(false);
+  const controlledOpen = isOpen !== undefined ? isOpen : internalOpen;
+  const handleOpenChange = (open: boolean) => {
+    if (onClose) {
+        if (!open) onClose(); 
+    } else {
+        setInternalOpen(open); 
+    }
+  };
+  
   const [clientName, setClientName] = useState("")
   const [clientEmail, setClientEmail] = useState("")
   const [clientPhone, setClientPhone] = useState("")
   const [clientID, setClientID] = useState("")
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmitClient = async (e: React.FormEvent) => {
     e.preventDefault()
 
     const clientData = {
@@ -25,30 +41,47 @@ export function SheetFormClient() {
 
     try {
       console.log("Enviando clientData:", clientData);
-      const { data, error } = await clientApp.client.post(clientData);
-      console.log("Respuesta del servidor:", { data, error });
+      const { data: clientResponse, error } = await clientApp.client.post(clientData);
+      console.log("Respuesta del servidor:", { clientResponse, error });
 
       if (error) throw error.value;
+      
+      const newClientId = clientResponse[0]?.client_id;
 
-      alert("Client successfully created");
-      window.location.href = "/client";
+      if (onClose) {
+        if (newClientId) {
+            onClose(String(newClientId)); 
+        } else {
+            onClose();
+        }
+      } else {
+        window.location.href = "/client"; 
+      }
     } catch (err) {
       console.error("Error al cargar cliente:", err);
-      alert("Error al cargar cliente");
+      if (onClose) onClose();
     }
   }
-
+  const isNested = onClose !== undefined;
+  const offsetClass = isNested ? "right-[380px]" : "";
 
 return (
-    <form id="form-sale" onSubmit={handleSubmit}>
+    <form id="form-client" onSubmit={handleSubmitClient}>
       <CustomSheet
         title="Agregar Cliente"
         description="Agregar ciente al sistema"
+        //if nested, add offset for cards ilusion
+        className={`${offsetClass}`}
+        side="right"
+        isOpen={controlledOpen}
+        onOpenChange={handleOpenChange}
+        isModal={!onClose}
+        zIndex={zIndex || (onClose ? 50 : 10)}
         footer={
           <>
-            <Button type="submit" form="form-sale">Agregar</Button>
+            <Button type="submit" form="form-client">Agregar</Button>
             <SheetClose asChild>
-              <Button variant="outline">Cancelar</Button>
+              <Button variant="outline" onClick={() => handleOpenChange(false)}>Cancelar</Button> 
             </SheetClose>
           </>
         }

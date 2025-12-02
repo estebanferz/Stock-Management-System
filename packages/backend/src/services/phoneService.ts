@@ -6,8 +6,10 @@ export async function getPhonesByFilter(
     name?: string,
     device_type?: string,
     brand?: string,
+    sold?: string,
 ){
-
+    let soldFormatted = false
+    if (sold){sold == "true" ? soldFormatted = true : soldFormatted = false}
     const result = await db
     .select()
     .from(phoneTable)
@@ -16,6 +18,7 @@ export async function getPhonesByFilter(
         name ? ilike(phoneTable.name, `%${name}%`) : undefined,
         device_type ? ilike(phoneTable.device_type, device_type) : undefined, // ya convertido y validado
         brand ? ilike(phoneTable.brand, `%${brand}%`) : undefined,
+        sold ? eq(phoneTable.sold, soldFormatted) : undefined
       ),
     );
     
@@ -27,10 +30,12 @@ export const getAllPhones = async () => {
 }
 
 export const getPhoneById = async(id: number) => {
-    const sale = await db.query.phoneTable.findFirst({
+    const phone = await db.query.phoneTable.findFirst({
         where: eq(phoneTable.device_id, id),
     });
-    return sale;
+    
+    
+    return phone;
 }
 
 export const addPhone = async ( newPhone: {

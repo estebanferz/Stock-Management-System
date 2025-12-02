@@ -43,7 +43,6 @@ export function CustomSheet({
 }: CustomSheetProps) {
   return (
     <Sheet modal={isModal} open={isOpen} onOpenChange={onOpenChange}>
-      {/* Botón de apertura */}
       <SheetTrigger asChild>
         {trigger ? (
           trigger
