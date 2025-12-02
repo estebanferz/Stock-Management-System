@@ -14,18 +14,21 @@ import { paymentMethods } from "../Structures/paymentMethods"
 import { ChevronDown} from "lucide-react"
 import { Checkbox } from "@/components/ui/checkbox"
 import { clientApp } from "@/lib/clientAPI";
-import { SheetSelector } from './SheetFormSelector'; 
+import { SheetSelector } from './SheetSelector'; 
+import { SheetFormClient } from './SheetFormClient';
 
 
-// Función auxiliar para obtener el objeto Date ajustado a la hora local
 const getLocalTime = () => {
   const today = new Date();
-  // Crea un nuevo Date que, al ser serializado a ISOString, representa la hora local
   return new Date(today.getTime() - today.getTimezoneOffset() * 60000);
 };
 
+interface SheetFormSaleProps {
+  injectedClientId?: string;
+  onRequestAddClient?: () => void;
+}
+
 export function SheetFormSale() {
-  // Inicialización de fecha y hora usando la corrección de zona horaria
   const initialLocalTime = getLocalTime();
   
   const [selectedMethod, setSelectedMethod] = useState("Pago")
@@ -34,18 +37,24 @@ export function SheetFormSale() {
   const [deviceId, setDeviceId] = useState("")
   const [debt, setDebt] = useState(false)
   const [debtAmount, setDebtAmount] = useState("")
-  // Inicialización con la fecha local correcta
   const [date, setDate] = useState(initialLocalTime.toISOString().split("T")[0])
-  // Inicialización con la hora local correcta
   const [time, setTime] = useState(initialLocalTime.toISOString().slice(11, 16))
   const [totalAmount, setTotalAmount] = useState("0.00")
+  // 🚀 1. Estado para controlar la apertura del SheetFormClient
+  const [isClientSheetOpen, setIsClientSheetOpen] = useState(false);
+  
+  const handleDeviceSelect = (id: string, price?: string) => {
+    setDeviceId(id)
+    if (price) {
+      setTotalAmount(String(price)); 
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
     const datetime = new Date(`${date}T${time}`).toISOString();
     
-    // Validación básica de IDs
     if (!clientId || !sellerId || !deviceId) {
         alert("Por favor, selecciona Cliente, Vendedor y Dispositivo.");
         return;
@@ -63,19 +72,65 @@ export function SheetFormSale() {
     }
 
     try {
-      console.log("📤 Enviando saleData:", saleData);
       const { data, error } = await clientApp.sale.post(saleData);
-      console.log("📥 Respuesta del servidor:", { data, error });
+      console.log("server response:", { data, error });
 
       if (error) throw error.value;
 
-      alert("Venta creada exitosamente");
+
+      const deviceIdNumber = Number(deviceId);      
+      const phoneFetcher = clientApp.phone;
+      const { data: currentPhoneData, error: getError } = 
+        await (phoneFetcher as any)({ id: deviceIdNumber }).get();
+
+      console.log(currentPhoneData)
+      if (getError || !currentPhoneData) {
+        alert("Venta registrada, pero falló la actualización del estado del dispositivo (No encontrado o error GET).");
+        window.location.href = "/sale";
+        return;
+      }
+      
+      const updatePayload = {
+        ...currentPhoneData,
+        sold: true,
+      };
+      delete updatePayload.datetime;
+
+      console.log(`🛠️ Enviando actualización de estado (sold: true)...`);
+      const phoneUpdater = clientApp.phone;
+      const { error: phoneUpdateError } = 
+        await (phoneUpdater as any)({ id: deviceIdNumber }).put(updatePayload);      
+      if (phoneUpdateError) {
+        console.error("⚠️ Falló la actualización final del dispositivo:", phoneUpdateError.value);
+        alert("Venta registrada, pero falló la actualización del estado del dispositivo (Error PUT).");
+      } else {
+        console.log("✅ Dispositivo marcado como vendido.");
+      }
+
+      alert("Venta creada exitosamente y dispositivo marcado como vendido.");
       window.location.href = "/sale";
+
     } catch (err) {
       console.error("❌ Error al cargar venta:", err);
       alert("Error al cargar venta. Revisa la consola.");
     }
   }
+  
+
+  // SheetFormClient Opening Function
+  const handleAddClient = () => {
+      setIsClientSheetOpen(true);
+  };
+
+  // Function for closing SheetFormClient and retrieving the client_id
+  const handleClientFormClose = (newClientId?: string) => {
+      setIsClientSheetOpen(false); // Closes Sheet
+      
+      // If ID provided, updates state of clientId
+      if (newClientId) {
+          setClientId(newClientId); 
+      }
+  };
 
 
 return (
@@ -95,7 +150,7 @@ return (
           </>
         }
       >
-        {/* FECHA Y HORA (AHORA CORRECTAMENTE INICIALIZADAS) */}
+
         <div className="grid gap-3">
           <Label>Fecha y hora</Label>
           <div className="grid grid-cols-2 gap-2">
@@ -104,25 +159,44 @@ return (
           </div>
         </div>
 
-        {/* 🚀 VENDEDOR - REEMPLAZADO POR SELECTOR */}
         <div className="grid gap-3">
           <Label>Vendedor</Label>
           <SheetSelector type="seller" currentId={sellerId} onSelect={setSellerId} />
         </div>
 
-        {/* 🚀 CLIENTE - REEMPLAZADO POR SELECTOR */}
         <div className="grid gap-3">
-          <Label>Cliente</Label>
-          <SheetSelector type="client" currentId={clientId} onSelect={setClientId} />
+            <Label>Cliente</Label>
+            <div className="grid grid-cols-3 gap-3">
+                <div className="col-span-2">
+                  <SheetSelector type="client" currentId={clientId} onSelect={setClientId} />
+                </div>
+                <Button 
+                    className="col-span-1" 
+                    type="button" 
+                    onClick={(e) => {
+                      e.preventDefault(); 
+                      e.stopPropagation(); 
+                      handleAddClient(); 
+                  }}
+                >
+                  Agregar
+                </Button>
+            </div>
         </div>
 
-        {/* 🚀 DISPOSITIVO - REEMPLAZADO POR SELECTOR */}
+        {isClientSheetOpen && (
+          <SheetFormClient
+              isOpen={isClientSheetOpen}
+              onClose={handleClientFormClose} 
+              zIndex={50} 
+          />
+        )}
+
         <div className="grid gap-3">
           <Label>Dispositivo</Label>
-          <SheetSelector type="device" currentId={deviceId} onSelect={setDeviceId} />
+          <SheetSelector type="device" currentId={deviceId} onSelect={handleDeviceSelect} />
         </div>
 
-        {/* VALOR */}
         <div className="grid gap-3">
           <Label>Valor</Label>
           <Input 
@@ -134,7 +208,6 @@ return (
           />
         </div>
 
-        {/* MÉTODO DE PAGO */}
         <div className="grid gap-3">
           <Label>Método de pago</Label>
           <DropdownMenu>
@@ -153,13 +226,11 @@ return (
           </DropdownMenu>
         </div>
 
-        {/* DEBE */}
         <div className="flex items-center justify-between gap-3">
           <Label>Debe</Label>
           <Checkbox checked={debt} onCheckedChange={(checked) => setDebt(!!checked)} />
         </div>
 
-        {/* CANTIDAD DE DEUDA (CONDICIONAL) */}
         {debt && (
           <div className="grid gap-3">
             <Label>Cuánto debe</Label>
@@ -168,7 +239,7 @@ return (
               value={debtAmount}
               onChange={(e) => setDebtAmount(e.target.value)}
               placeholder="0.00"
-              required={debt} // Hace el campo requerido si hay deuda
+              required={debt}
             />
           </div>
         )}

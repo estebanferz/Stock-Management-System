@@ -1,5 +1,5 @@
 import { Elysia, t } from "elysia";
-import { getAllProviders, getProviderByFilter, addProvider, updateProvider, deleteProvider } from "../services/providerService";
+import { getAllProviders, getProviderByFilter, getProviderById, addProvider, updateProvider, deleteProvider } from "../services/providerService";
 import { providerInsertDTO, providerUpdateDTO } from "@server/db/types";
 
 export const providerController = new Elysia({prefix: '/provider'})
@@ -23,6 +23,19 @@ export const providerController = new Elysia({prefix: '/provider'})
                 tags: ["providers"],
             },
         },
+    )
+    .get(
+        "/:id",
+        async (req) => {
+            const { id } = req.params;
+            return await getProviderById(Number(id));
+        },
+        {
+            detail: {
+                summary: "Get provider details by ID",
+                tags: ["providers"],
+            },
+        }
     )
     .post(
         "/",
@@ -50,8 +63,8 @@ export const providerController = new Elysia({prefix: '/provider'})
         }
     )
     .put(
-        "/:provider_id",
-        async ({ body, params: { provider_id }, set }) => {
+        "/:id",
+        async ({ body, params: { id }, set }) => {
 
             const updProvider = {
                 name: body.name,
@@ -61,7 +74,7 @@ export const providerController = new Elysia({prefix: '/provider'})
             };
 
             const result = await updateProvider(
-                Number(provider_id),
+                Number(id),
                 updProvider,
             );
             set.status = 200;
@@ -78,9 +91,9 @@ export const providerController = new Elysia({prefix: '/provider'})
         },
     )
     .delete(
-        "/:provider_id",
-        async ({ params: { provider_id }, set }) => {
-            const providerIdNum = Number(provider_id);
+        "/:id",
+        async ({ params: { id }, set }) => {
+            const providerIdNum = Number(id);
             if (!Number.isInteger(providerIdNum) || providerIdNum <= 0) {
                 set.status = 400;
                 return false;
@@ -97,7 +110,7 @@ export const providerController = new Elysia({prefix: '/provider'})
         },
         {
             params: t.Object({
-                provider_id: t.Numeric({
+                id: t.Numeric({
                     minimum: 1,
                     errorMessage: 'provider_id must be a positive integer',
                 })

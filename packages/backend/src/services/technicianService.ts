@@ -7,6 +7,15 @@ export const getAllTechnicians = async () => {
     return await db.select().from(technicianTable);
 }
 
+export const getTechnicianById = async(id: number) => {
+    const technician = await db.query.technicianTable.findFirst({
+        where: eq(technicianTable.technician_id, id),
+    });
+    
+    
+    return technician;
+}
+
 export const addTechnician = async (newTechnician: {
     name: string;
     email?: string;

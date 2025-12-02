@@ -22,6 +22,15 @@ export const getAllProviders = async () => {
     return await db.select().from(providerTable);
 }
 
+export const getProviderById = async(id: number) => {
+    const provider = await db.query.providerTable.findFirst({
+        where: eq(providerTable.provider_id, id),
+    });
+    
+    
+    return provider;
+}
+
 export const addProvider = async ( newProvider: {
     name: string;
     phone_number: string;

@@ -4,6 +4,7 @@ import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { SheetClose } from "@/components/ui/sheet"
 import { useState } from "react"
+import { SheetSelector } from "@/components/SheetForms/SheetSelector"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -37,8 +38,8 @@ export function TimeInput() {
   const today = new Date();
   const local = new Date(today.getTime() - today.getTimezoneOffset() * 60000)
   .toISOString()
-  .slice(11,16);
-  const [time, setTime] = useState(local);
+  .slice(11,16)
+  const [time, setTime] = useState(local)
   
   return (
     <Input
@@ -96,6 +97,7 @@ return (
       <CustomSheet
         title="Agregar Gasto"
         description="Agregar gasto de dispositivo al sistema"
+        zIndex={60}
         footer={
           <>
             <Button type="submit" form="form-sale">Agregar</Button>
@@ -157,8 +159,8 @@ return (
         </div>
 
         <div className="grid gap-3">
-          <Label>Proveedor</Label>
-          <Input value={provider} onChange={(e) => setProvider(e.target.value)} required />
+          <Label>Vendedor</Label>
+          <SheetSelector type="provider" currentId={provider} onSelect={setProvider} />
         </div>
       </CustomSheet>
     </form>

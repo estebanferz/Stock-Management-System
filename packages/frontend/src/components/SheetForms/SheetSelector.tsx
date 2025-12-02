@@ -8,14 +8,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 interface SheetSelectorProps {
-    type: 'client' | 'seller' | 'device';
+    type: 'client' | 'seller' | 'device' | 'technician' | 'provider';
     currentId: string;
-    onSelect: (id: string) => void;
+    onSelect: (id: string, price?: string) => void;
 }
 
-// -------------------------------------------------------------------------
-// Componente de Búsqueda y Selección (El Sheet de la Izquierda)
-// -------------------------------------------------------------------------
 interface DataSearchSheetProps extends SheetSelectorProps {
     setIsOpen: (open: boolean) => void;
 }
@@ -25,11 +22,12 @@ const DataSearchSheet: React.FC<DataSearchSheetProps> = ({ type, onSelect, setIs
     const [results, setResults] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(false);
 
-    // Mapeo de la API (AJUSTA LOS ENDPOINTS: ej. client.all, seller.all, phone.all)
     const apiMap = {
         client: { endpoint: clientApp.client, nameKey: 'name', key: "client_id" },
         seller: { endpoint: clientApp.seller, nameKey: 'name', key: "seller_id"  },
         device: { endpoint: clientApp.phone, nameKey: 'name', key: "device_id"  },
+        technician: { endpoint: clientApp.technician, nameKey: 'name', key: "technician_id"  },
+        provider: { endpoint: clientApp.provider, nameKey: 'name', key: "provider_id"  },
     };
     const { endpoint, nameKey, key } = apiMap[type];
 
@@ -37,7 +35,12 @@ const DataSearchSheet: React.FC<DataSearchSheetProps> = ({ type, onSelect, setIs
         setIsLoading(true);
         setResults([]);
         try {
-            const result = await endpoint.all.get(); 
+            let result
+            if (type == "device"){
+                result = await endpoint.all.get({query: { sold:"false" }}); 
+            }else{
+                result = await endpoint.all.get(); 
+            }
             const rawData = result.data as any; 
             const items = Array.isArray(rawData) ? rawData : rawData?.data || [];
 
@@ -65,7 +68,7 @@ const DataSearchSheet: React.FC<DataSearchSheetProps> = ({ type, onSelect, setIs
     }, []);
     
     const selectItem = (item: any) => {
-        onSelect(String(item[key]));
+        onSelect(String(item[key]), String(item.price))
         setIsOpen(false);
     };
     
@@ -120,6 +123,8 @@ export function SheetSelector({ type, currentId, onSelect }: SheetSelectorProps)
         client: { endpoint: clientApp.client, nameKey: 'name' },
         seller: { endpoint: clientApp.seller, nameKey: 'name' },
         device: { endpoint: clientApp.phone, nameKey: 'name' },
+        technician: { endpoint: clientApp.technician, nameKey: 'name', key: "technician_id"  },
+        provider: { endpoint: clientApp.provider, nameKey: 'name', key: "provider_id"  },
     };
     const { endpoint, nameKey } = apiMap[type];
 
@@ -156,7 +161,6 @@ export function SheetSelector({ type, currentId, onSelect }: SheetSelectorProps)
             <Search className="w-4 h-4 ml-2" />
         </Button>
     );
-    // ------------------------------------------------------
     
     return (
         <CustomSheet
@@ -179,10 +183,6 @@ export function SheetSelector({ type, currentId, onSelect }: SheetSelectorProps)
             }
             footer={
                 <>
-                    <Button type="submit">Agregar</Button>
-                    <SheetClose asChild>
-                    <Button variant="outline">Cancelar</Button>
-                    </SheetClose>
                 </>
             }
         />

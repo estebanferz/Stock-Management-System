@@ -12,17 +12,25 @@ export const phoneController = new Elysia({prefix: '/phone'})
         async ({ query }) => {
             if (query.name || 
                 query.device_type || 
-                query.brand) {
+                query.brand ||
+                query.sold) {
                 return await getPhonesByFilter(
                     query.name,
                     query.device_type,
                     query.brand,
+                    query.sold,
                 ); //Filter by parameters
             }
 
             return await getAllPhones();
         },
         {
+            query: t.Object({
+                name: t.Optional(t.String()),
+                device_type: t.Optional(t.String()),
+                brand: t.Optional(t.String()),
+                sold: t.Optional(t.String()), // llega como string siempre
+            }),
             detail: {
                 summary: "Get all phones in DB",
                 tags: ["phones"],

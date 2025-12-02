@@ -1,5 +1,5 @@
 import { Elysia, t } from "elysia";
-import { getAllTechnicians, addTechnician, updateTechnician, deleteTechnician } from "../services/technicianService";
+import { getAllTechnicians, getTechnicianById, addTechnician, updateTechnician, deleteTechnician } from "../services/technicianService";
 import { technicianInsertDTO, technicianUpdateDTO } from "@server/db/types"; 
 
 export const technicianController = new Elysia({prefix: '/technician'})
@@ -17,6 +17,19 @@ export const technicianController = new Elysia({prefix: '/technician'})
                 tags: ["technicians"],
             },
         },
+    )
+    .get(
+        "/:id",
+        async (req) => {
+            const { id } = req.params;
+            return await getTechnicianById(Number(id));
+        },
+        {
+            detail: {
+                summary: "Get technician details by ID",
+                tags: ["technicians"],
+            },
+        }
     )
     .post(
         "/",
@@ -45,8 +58,8 @@ export const technicianController = new Elysia({prefix: '/technician'})
         }
     )
     .put(
-        "/:technician_id",
-        async ({ body, params: { technician_id }, set }) => {
+        "/:id",
+        async ({ body, params: { id }, set }) => {
 
             const updTechnician = {
                 name: body.name,
@@ -56,7 +69,7 @@ export const technicianController = new Elysia({prefix: '/technician'})
                 state: body.state,
             };
             const result = await updateTechnician(
-                Number(technician_id),
+                Number(id),
                 updTechnician,
             );
             set.status = 200;
@@ -73,9 +86,9 @@ export const technicianController = new Elysia({prefix: '/technician'})
         },
     )
     .delete(
-        "/:technician_id",
-        async ({ params: { technician_id }, set }) => {
-            const technicianIdNum = Number(technician_id);
+        "/:id",
+        async ({ params: { id }, set }) => {
+            const technicianIdNum = Number(id);
             if (!Number.isInteger(technicianIdNum) || technicianIdNum <= 0) {
                 set.status = 400;
                 return false;
@@ -92,7 +105,7 @@ export const technicianController = new Elysia({prefix: '/technician'})
         },
         {
             params: t.Object({
-                technician_id: t.Numeric({
+                id: t.Numeric({
                     minimum: 1,
                     errorMessage: 'Technician ID must be a positive integer',
                 })
