@@ -5,11 +5,22 @@ import { Input } from "@/components/ui/input"
 import { SheetClose } from "@/components/ui/sheet"
 import { useState } from "react"
 import { clientApp } from "@/lib/clientAPI";
+import { parsePhoneNumberFromString } from "libphonenumber-js";
+
 
 interface SheetFormClientProps {
-    isOpen?: boolean;
-    onClose?: (newClientId?: string) => void;
-    zIndex?: number;
+  isOpen?: boolean;
+  onClose?: (newClientId?: string) => void;
+  zIndex?: number;
+}
+
+function normalizePhoneE164(raw: string): string | null {
+  if (!raw) return null;
+
+  const phone = parsePhoneNumberFromString(raw, "AR"); // default AR
+  if (!phone || !phone.isValid()) return null;
+
+  return phone.format("E.164"); // +54911...
 }
 
 export function SheetFormClient({ isOpen, onClose, zIndex }: SheetFormClientProps) {
@@ -31,11 +42,18 @@ export function SheetFormClient({ isOpen, onClose, zIndex }: SheetFormClientProp
 
   const handleSubmitClient = async (e: React.FormEvent) => {
     e.preventDefault()
+    e.stopPropagation()
+
+    const phoneE164 = normalizePhoneE164(clientPhone);
+    if (!phoneE164) {
+      alert("El número de teléfono es inválido. Ingresá un número válido, ej: +54911...");
+      return;
+    }
 
     const clientData = {
       name: clientName,
       email: clientEmail,
-      phone_number: clientPhone,
+      phone_number: phoneE164,
       id_number: clientID,
     }
 
@@ -98,7 +116,19 @@ return (
 
         <div className="grid gap-3">
           <Label>Telefono</Label>
-          <Input value={clientPhone} onChange={(e) => setClientPhone(e.target.value)} required />
+          <Input
+            value={clientPhone}
+            onChange={(e) => {
+              setClientPhone(e.target.value.replace(/[^\d+]/g, ""));
+            }}
+            onBlur={() => {
+              const normalized = normalizePhoneE164(clientPhone);
+              if (normalized) setClientPhone(normalized);
+            }}
+            inputMode="tel"
+            placeholder="+54 9 11 1234 5678"
+            required
+          />
         </div>
 
         <div className="grid gap-3">

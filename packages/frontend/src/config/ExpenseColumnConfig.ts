@@ -19,7 +19,6 @@ export const expenseColumns: Column<Expense>[] = [
     {
         accessorKey: "description",
         header: "Descripción",
-        renderKey: "money",
     },
     {
         accessorKey: "amount",
@@ -29,6 +28,7 @@ export const expenseColumns: Column<Expense>[] = [
     {
         accessorKey: "payment_method",
         header: "Pago",
+        renderKey: "paymentMethod"
     },
     {
         accessorKey: "receipt_number",

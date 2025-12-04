@@ -1,6 +1,7 @@
 import { db } from "@server/db/db";
 import { phoneTable } from "@server/db/schema.ts";
-import { ilike, and, eq } from "drizzle-orm"
+import { ilike, and, eq } from "drizzle-orm";
+import { normalizeShortString } from "../util/formattersBackend";
 
 export async function getPhonesByFilter(
     name?: string,
@@ -53,11 +54,22 @@ export const addPhone = async ( newPhone: {
     deposit: string;
     sold?: boolean;
 }) => {
+    const normalizedPhone = {
+        ...newPhone,
+        name: normalizeShortString(newPhone.name),
+        brand: normalizeShortString(newPhone.brand),
+        device_type: normalizeShortString(newPhone.device_type),
+        category: normalizeShortString(newPhone.category),
+        color: newPhone.color ? normalizeShortString(newPhone.color) : undefined,
+        imei: newPhone.imei.trim(),
+        price: newPhone.price,
+        buy_cost: newPhone.buy_cost,
+        deposit: newPhone.deposit,
+    };
+
     const result = await db
         .insert(phoneTable)
-        .values({
-            ...newPhone,
-        })
+        .values(normalizedPhone)
         .returning();
 
     return result;

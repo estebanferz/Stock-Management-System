@@ -1,11 +1,19 @@
+import { parsePhoneNumberFromString } from "libphonenumber-js";
+
+
 export const formatDate = (value: string | Date) => {
-  const d = value instanceof Date ? value : new Date(value)
-  return d.toLocaleString("es-AR", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "2-digit",
-  })
-}
+  if (!value) return "";
+
+  const iso =
+    value instanceof Date
+      ? value.toISOString().slice(0, 10)
+      : value.slice(0, 10);
+
+  const [year, month, day] = iso.split("-");
+
+  return `${day.padStart(2, "0")}/${month.padStart(2, "0")}/${year.slice(2)}`;
+};
+
 
 export const formatMoney = (v: string | number) =>
   `$${Number(v).toLocaleString("es-AR")}`
@@ -32,21 +40,23 @@ export const formatPaymentMethod = (v: string) => {
 }
 
 export const generalStringFormat = (v: string) => {
+  if (!v) return "";
+  const parts = v.split("-");
 
-  if (!v) return ""
+  const formattedParts = parts.map((p) => {
+    if (!p) return "";
+    let word = p.charAt(0).toUpperCase() + p.slice(1);
 
-  const parts = v.split("-")
+    if (word === "Iphone") {
+      word = "iPhone";
+    }
 
-  if (parts.length === 1) {
-    return `${parts[0].charAt(0).toUpperCase() + parts[0].slice(1)}`
-  }
+    return word;
+  });
 
-  let first = parts[0].charAt(0).toUpperCase() + parts[0].slice(1)
+  return formattedParts.join(" ");
+};
 
-  const second = parts[1].charAt(0).toUpperCase() + parts[1].slice(1)
-
-  return `${first} ${second}`
-}
 
 export const SalesDataByMonth = (SalesData: any[]) => {
   
@@ -66,3 +76,23 @@ export const SalesDataByMonth = (SalesData: any[]) => {
   return newSaleObject;
 });
 }
+
+export const formatPhoneE164 = (raw: string) => {
+  if (!raw) return "";
+
+  const phone = parsePhoneNumberFromString(raw);
+
+  if (!phone || !phone.isValid()) return raw;
+
+  let national: string = String(phone.nationalNumber);
+
+  if (national.startsWith("9") && national.length >= 10) {
+    national = national.slice(1);
+  }
+
+  const areaCodeLength = national.length === 10 ? 3 : 4;
+  const area = national.slice(0, areaCodeLength);
+  const local = national.slice(areaCodeLength);
+
+  return `+${phone.countryCallingCode} ${area} ${local}`;
+};

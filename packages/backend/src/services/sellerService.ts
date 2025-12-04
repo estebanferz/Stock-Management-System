@@ -1,6 +1,7 @@
 import { db } from "@server/db/db"
 import { sellerTable } from "@server/db/schema"
 import { and, ilike, eq, sql } from "drizzle-orm"
+import { normalizeShortString } from "../util/formattersBackend";
 
 
 export const getSellersByFilter = async (
@@ -39,14 +40,20 @@ export const addSeller = async (
         age: number;
         email?: string;
         phone_number?: string;
+        hire_date?: string;
         pay_date?: string;
     }
 ) => {
+    const normalizedSeller = {
+        ...newSeller,
+        name: normalizeShortString(newSeller.name),
+        email: newSeller.email?.trim(),
+        phone_number: newSeller.phone_number?.trim(),
+    };
+
     const result = await db
         .insert(sellerTable)
-        .values({
-            ...newSeller,
-        })
+        .values(normalizedSeller)
         .returning();
 
     return result;

@@ -1,6 +1,7 @@
 import { db } from "@server/db/db";
 import { expenseTable } from "@server/db/schema.ts";
-import { ilike, and, eq, sql } from "drizzle-orm"
+import { ilike, and, eq, sql } from "drizzle-orm";
+import { normalizeShortString } from "../util/formattersBackend"
 
 export async function getExpensesByFilter(
     datetime?: string,
@@ -34,11 +35,18 @@ export const addExpense = async ( newExpense: {
     receipt_number?: string;
     provider_id?: number;
 }) => {
+
+    const normalizedExpense = {
+        ...newExpense,
+        category: normalizeShortString(newExpense.category),
+        payment_method: normalizeShortString(newExpense.payment_method),
+        description: newExpense.description?.trim(),
+        receipt_number: newExpense.receipt_number?.trim(),
+    };
+
     const result = await db
         .insert(expenseTable)
-        .values({
-            ...newExpense,
-        })
+        .values(normalizedExpense)
         .returning();
 
     return result;

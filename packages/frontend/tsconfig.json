@@ -2,8 +2,8 @@
   "extends": "astro/tsconfigs/strict",
   "include": [
     ".astro/types.d.ts",
-    "**/*"
-  ],
+    "**/*",
+    "../backend/src/util/formattersBackend.ts"  ],
   "exclude": [
     "dist"
   ],

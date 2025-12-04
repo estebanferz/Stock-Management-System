@@ -1,6 +1,7 @@
 import { db } from "@server/db/db";
 import { saleTable, expenseTable, phoneTable } from "@server/db/schema.ts";
 import { ilike, and, eq, sql } from "drizzle-orm"
+import { normalizeShortString } from "../util/formattersBackend";
 
 export async function getSaleByFilter(
     datetime?: string,
@@ -45,11 +46,14 @@ export const addSale = async ( newSale: {
     seller_id: number;
     device_id: number;
 }) => {
+    const normalizedSale = {
+        ...newSale,
+        payment_method: normalizeShortString(newSale.payment_method),
+    };
+
     const result = await db
         .insert(saleTable)
-        .values({
-            ...newSale,
-        })
+        .values(normalizedSale)
         .returning();
 
     return result;

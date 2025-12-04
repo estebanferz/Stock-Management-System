@@ -17,17 +17,18 @@ export const technicianColumns: Column<Technician>[] = [
         },
     { 
         accessorKey: "phone_number", 
-        header: "Teléfono" 
+        header: "Teléfono",
+        renderKey: "phone"
+
     },
     { 
         accessorKey: "speciality", 
         header: "Especialidad",
-        renderKey: "general"
+        renderKey: "description"
     },
     { 
         accessorKey: "state", 
         header: "Estado",
-        renderKey: "date"
     }
 
 ]

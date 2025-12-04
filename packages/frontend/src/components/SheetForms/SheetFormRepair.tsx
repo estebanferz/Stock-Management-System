@@ -16,42 +16,10 @@ import { priorities } from "../Structures/priorities"
 import { ChevronDown} from "lucide-react"
 import { clientApp } from "@/lib/clientAPI";
 
-
-export function DateInput() {
+const getLocalTime = () => {
   const today = new Date();
-  const local = new Date(today.getTime() - today.getTimezoneOffset() * 60000)
-  .toISOString()
-  .split("T")[0];
-  const [date, setDate] = useState(local);
-  
-  return (
-    <Input
-    id="sheet-sale-date"
-    type="date"
-    value={date}
-    onChange={(e) => setDate(e.target.value)}
-    className="border rounded-lg px-3 py-2"
-    />
-  );
-}
-
-export function TimeInput() {
-  const today = new Date();
-  const local = new Date(today.getTime() - today.getTimezoneOffset() * 60000)
-  .toISOString()
-  .slice(11,16);
-  const [time, setTime] = useState(local);
-  
-  return (
-    <Input
-    id="sheet-sale-time"
-    type="time"
-    value={time}
-    onChange={(e) => setTime(e.target.value)}
-    className="flex justify-center border rounded-lg px-3 py-2"
-    />
-  );
-}
+  return new Date(today.getTime() - today.getTimezoneOffset() * 60000);
+};
 
 export function SheetFormRepair() {
   const [selectedPriority, setSelectedPriority] = useState("Prioridad")
@@ -62,15 +30,16 @@ export function SheetFormRepair() {
   const [repairState, setRepairState] = useState("")
   const [description, setDescription] = useState("")
   const [diagnostic, setDiagnostic] = useState("")
-  const [date, setDate] = useState(new Date().toISOString().split("T")[0])
-  const [time, setTime] = useState(new Date().toISOString().slice(11, 16))
+  const initialLocalTime = getLocalTime();
+  const [date, setDate] = useState(initialLocalTime.toISOString().split("T")[0])
+  const [time, setTime] = useState(initialLocalTime.toISOString().slice(11, 16))
   const [clientCost, setClientCost] = useState("0.00")
   const [internalCost, setInternalCost] = useState("0.00")
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    const datetime = new Date(`${date}T${time}`).toISOString();
+    const datetime = `${date} ${time}:00`;
     const repairData = {
       datetime: datetime,
       repair_state: selectedState,

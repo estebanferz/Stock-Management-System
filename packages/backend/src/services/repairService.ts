@@ -1,6 +1,7 @@
 import { db } from "@server/db/db";
 import { repairTable } from "@server/db/schema.ts";
 import { ilike, and, eq, sql } from "drizzle-orm"
+import { normalizeShortString } from "../util/formattersBackend";
 
 export const getRepairsByFilter = async (
     datetime?: string,
@@ -45,11 +46,20 @@ export const addRepair = async (
         device_id: number;
     }
 ) => {
-    const result = await db
+    const normalizedRepair = {
+        ...newRepair,
+        repair_state: normalizeShortString(newRepair.repair_state),
+        priority: normalizeShortString(newRepair.priority),
+        description: newRepair.description.trim(),
+        diagnostic: newRepair.diagnostic
+            ? newRepair.diagnostic.trim()
+            : undefined,
+        client_cost: newRepair.client_cost,
+        internal_cost: newRepair.internal_cost,
+    };
+        const result = await db
         .insert(repairTable)
-        .values({
-            ...newRepair,
-        })
+        .values(normalizedRepair)
         .returning();
 
     return result;

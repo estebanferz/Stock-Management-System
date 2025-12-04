@@ -2,6 +2,7 @@ import { db } from '../../db/db';
 import { clientTable } from '../../db/schema';
 import { eq, and, ilike } from "drizzle-orm";
 import { clientUpdateDTO } from "@server/db/types";
+import { normalizeShortString } from "@server/src/util/formattersBackend";
 
 
 export async function getClientByFilter(
@@ -58,9 +59,14 @@ export const addClient = async (newClient: {
     id_number: number;
     birth_date?: string;
 }) => {
+    const normalizedClient = {
+        ...newClient,
+        name: normalizeShortString(newClient.name),
+        email: newClient.email?.toLowerCase().trim(),
+    };
     const result = await db
         .insert(clientTable)
-        .values(newClient)
+        .values(normalizedClient)
         .returning();
 
     return result;

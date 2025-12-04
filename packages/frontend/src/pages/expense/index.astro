@@ -22,9 +22,9 @@ const data = response.data || [];
            opacity-0 scale-95 transition-all duration-200 
            group-hover:opacity-100 group-hover:scale-100
            pointer-events-none"
-        >
-        Nuevo gasto
+           >
+           Nuevo gasto
         </span>
-        <SheetFormExpense client:load/>
+        <SheetFormExpense zIndex={60} client:load/>
     </div>
 </Layout>

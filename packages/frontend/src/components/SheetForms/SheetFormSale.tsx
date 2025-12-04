@@ -23,13 +23,7 @@ const getLocalTime = () => {
   return new Date(today.getTime() - today.getTimezoneOffset() * 60000);
 };
 
-interface SheetFormSaleProps {
-  injectedClientId?: string;
-  onRequestAddClient?: () => void;
-}
-
 export function SheetFormSale() {
-  const initialLocalTime = getLocalTime();
   
   const [selectedMethod, setSelectedMethod] = useState("Pago")
   const [sellerId, setSellerId] = useState("")
@@ -37,6 +31,7 @@ export function SheetFormSale() {
   const [deviceId, setDeviceId] = useState("")
   const [debt, setDebt] = useState(false)
   const [debtAmount, setDebtAmount] = useState("")
+  const initialLocalTime = getLocalTime();
   const [date, setDate] = useState(initialLocalTime.toISOString().split("T")[0])
   const [time, setTime] = useState(initialLocalTime.toISOString().slice(11, 16))
   const [totalAmount, setTotalAmount] = useState("0.00")
@@ -51,9 +46,10 @@ export function SheetFormSale() {
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
+    e.stopPropagation();
 
-    const datetime = new Date(`${date}T${time}`).toISOString();
+    const datetime = `${date} ${time}:00`;
     
     if (!clientId || !sellerId || !deviceId) {
         alert("Por favor, selecciona Cliente, Vendedor y Dispositivo.");
@@ -188,7 +184,8 @@ return (
           <SheetFormClient
               isOpen={isClientSheetOpen}
               onClose={handleClientFormClose} 
-              zIndex={50} 
+              zIndex={50}
+              
           />
         )}
 

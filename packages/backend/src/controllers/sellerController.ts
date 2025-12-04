@@ -37,6 +37,7 @@ export const sellerController = new Elysia({prefix: "/seller"})
                 age: body.age,
                 ...(body.email && {email: body.email}),
                 ...(body.phone_number && {phone_number: body.phone_number}),
+                ...(body.hire_date && {hire_date: body.hire_date}),
                 ...(body.pay_date && {pay_date: body.pay_date}),
             };
             

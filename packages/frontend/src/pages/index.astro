@@ -5,6 +5,7 @@ import { SalesChart } from "@/components/SalesChart";
 import { serverApp } from "@/lib/serverAPI";
 import { SalesDataByMonth } from '@/utils/formatters';
 import { PieChart } from '@/components/PieChart';
+import { generalStringFormat } from "@/utils/formatters";
 const resultGross = await serverApp.sale['gross-income'].get()
 const gross_income = String(resultGross.data);
 const resultNet = await serverApp.sale['net-income'].get()
@@ -22,10 +23,14 @@ const totalDebtFormatted = totalDebt.data || 0;
 
 const phoneSoldCount = await serverApp.sale["products-sold-count"].get()
 const phoneSoldCountFormatted = phoneSoldCount.data || []
+const formattedDataName = phoneSoldCountFormatted.map((item) => ({
+  ...item,
+  name: generalStringFormat(item.name),
+}));
 
 const pieChartData = [
   ['Producto', 'Unidades Vendidas'],
-  ...phoneSoldCountFormatted.map(item => [item.name, item.sold_count]) 
+  ...formattedDataName.map(item => [item.name, item.sold_count]) 
 ];
 
 const secondaryData = `

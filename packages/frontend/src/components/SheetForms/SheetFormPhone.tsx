@@ -3,7 +3,8 @@ import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { SheetClose } from "@/components/ui/sheet"
-import { useState } from "react"
+import { SheetFormExpense } from './SheetFormExpense';
+import { useState, useEffect } from "react"
 import { clientApp } from "@/lib/clientAPI";
 import {
   DropdownMenu,
@@ -17,62 +18,56 @@ import { phoneStorage } from "../Structures/phoneStorage"
 import { ChevronDown} from "lucide-react"
 import { Checkbox } from "@/components/ui/checkbox"
 
-export function DateInput() {
+const getLocalTime = () => {
   const today = new Date();
-  const local = new Date(today.getTime() - today.getTimezoneOffset() * 60000)
-  .toISOString()
-  .split("T")[0];
-  const [date, setDate] = useState(local);
-  
-  return (
-    <Input
-    id="sheet-sale-date"
-    type="date"
-    value={date}
-    onChange={(e) => setDate(e.target.value)}
-    className="border rounded-lg px-3 py-2"
-    />
-  );
-}
-
-export function TimeInput() {
-  const today = new Date();
-  const local = new Date(today.getTime() - today.getTimezoneOffset() * 60000)
-  .toISOString()
-  .slice(11,16);
-  const [time, setTime] = useState(local);
-  
-  return (
-    <Input
-    id="sheet-sale-time"
-    type="time"
-    value={time}
-    onChange={(e) => setTime(e.target.value)}
-    className="flex justify-center border rounded-lg px-3 py-2"
-    />
-  );
-}
+  return new Date(today.getTime() - today.getTimezoneOffset() * 60000);
+};
 
 export function SheetFormPhone() {
-    const [selectedCategory, setSelectedCategory] = useState("Categroría")
-    const [selectedType, setSelectedType] = useState("Categroría")
-    const [selectedStorage, setSelectedStorage] = useState("Almacenamiento")
-    const [date, setDate] = useState(new Date().toISOString().split("T")[0])
-    const [time, setTime] = useState(new Date().toISOString().slice(11,16))
-    const [phoneName, setPhoneName] = useState("")
-    const [phoneBrand, setPhoneBrand] = useState("")
-    const [phoneIMEI, setPhoneIMEI] = useState("")
-    const [batteryHealth, setBatteryHealth] = useState("100")
-    const [color, setColor] = useState("")
-    const [price, setPrice] = useState("0.00")
-    const [buyCost, setBuyCost] = useState("0.00")
-    const [deposit, setDeposit] = useState("")
-    const [sold, setSold] = useState(false)
+  const [selectedCategory, setSelectedCategory] = useState("Categroría")
+  const [selectedType, setSelectedType] = useState("Categroría")
+  const [selectedStorage, setSelectedStorage] = useState("Almacenamiento")
+  const initialLocalTime = getLocalTime();
+  const [date, setDate] = useState(initialLocalTime.toISOString().split("T")[0])
+  const [time, setTime] = useState(initialLocalTime.toISOString().slice(11, 16))
+  const [phoneName, setPhoneName] = useState("")
+  const [phoneBrand, setPhoneBrand] = useState("")
+  const [phoneIMEI, setPhoneIMEI] = useState("")
+  const [batteryHealth, setBatteryHealth] = useState("100")
+  const [color, setColor] = useState("")
+  const [price, setPrice] = useState("0.00")
+  const [buyCost, setBuyCost] = useState("0.00")
+  const [deposit, setDeposit] = useState("")
+  const [sold, setSold] = useState(false)
+
+  const [hasTriggeredExpense, setHasTriggeredExpense] = useState(false);
+
+
+  const [isExpenseSheetOpen, setIsExpenseSheetOpen] = useState(false)
+  const handleExpenseFormClose = () => {
+    setIsExpenseSheetOpen(false);
+  };
+
+  useEffect(() => {
+    const cost = parseFloat(buyCost);
+    if (cost > 0 && !isExpenseSheetOpen && !hasTriggeredExpense) {
+        const timer = setTimeout(() => {
+            setIsExpenseSheetOpen(true);
+            setHasTriggeredExpense(true);
+        }, 350); 
+        return () => clearTimeout(timer);
+
+      }
+    if (cost <= 0 && hasTriggeredExpense) {
+      setHasTriggeredExpense(false);
+    }
+  }, [buyCost, isExpenseSheetOpen, hasTriggeredExpense]);
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    const datetime = new Date(`${date}T${time}`).toISOString();
+    const datetime = `${date} ${time}:00`;
     const phoneData = {
         datetime: datetime,
         name: phoneName,
@@ -104,12 +99,14 @@ export function SheetFormPhone() {
     }
   }
 
+  const expenseDescription = `Compra de ${phoneBrand} ${phoneName}`.trim();
 
 return (
     <form id="form-sale" onSubmit={handleSubmit}>
       <CustomSheet
         title="Agregar Celular"
         description="Agregar un celular al inventario"
+        zIndex={60}
         footer={
           <>
             <Button type="submit" form="form-sale">Agregar</Button>
@@ -212,9 +209,24 @@ return (
         </div>
 
         <div className="grid gap-3">
-          <Label>Costo de compra</Label>
-          <Input type="number" value={buyCost} onChange={(e) => setBuyCost(e.target.value)} required />
+            <Label>Costo de compra</Label>
+            <Input 
+                type="number" 
+                value={buyCost} 
+                onChange={(e) => setBuyCost(e.target.value)}
+                required 
+            />
         </div>
+        {isExpenseSheetOpen && (
+          <SheetFormExpense
+              isOpen={isExpenseSheetOpen}
+              onClose={handleExpenseFormClose} 
+              zIndex={50}
+              injectedAmount={buyCost}
+              injectedDescription={expenseDescription} 
+
+          />
+        )}
 
         <div className="grid gap-3">
           <Label>Deposito</Label>
