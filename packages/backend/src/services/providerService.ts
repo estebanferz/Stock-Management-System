@@ -1,6 +1,7 @@
 import { db } from "@server/db/db";
 import { providerTable } from "@server/db/schema.ts";
 import { ilike, and, eq } from "drizzle-orm"
+import { normalizeShortString } from "../util/formattersBackend";
 
 export async function getProviderByFilter(
     name?: string,
@@ -37,11 +38,17 @@ export const addProvider = async ( newProvider: {
     email?: string;
     address: string;
 }) => {
+    const normalizedProvider = {
+        ...newProvider,
+        name: normalizeShortString(newProvider.name),
+        address: normalizeShortString(newProvider.address),
+        phone_number: newProvider.phone_number.trim(),
+        email: newProvider.email?.toLowerCase().trim(),
+    };
+    
     const result = await db
         .insert(providerTable)
-        .values({
-            ...newProvider,
-        })
+        .values(normalizedProvider)
         .returning();
 
     return result;

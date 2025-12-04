@@ -15,7 +15,8 @@ export const clientColumns: Column<Client>[] = [
     },
   { 
     accessorKey: "phone_number", 
-    header: "Teléfono" 
+    header: "Teléfono",
+    renderKey: "phone"
   },
   { 
     accessorKey: "id_number", 

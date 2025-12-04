@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { SheetClose } from "@/components/ui/sheet"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { SheetSelector } from "@/components/SheetForms/SheetSelector"
 import {
   DropdownMenu,
@@ -16,56 +16,59 @@ import { ChevronDown} from "lucide-react"
 import { clientApp } from "@/lib/clientAPI";
 
 
-export function DateInput() {
+const getLocalTime = () => {
   const today = new Date();
-  const local = new Date(today.getTime() - today.getTimezoneOffset() * 60000)
-  .toISOString()
-  .split("T")[0];
-  const [date, setDate] = useState(local);
-  
-  return (
-    <Input
-    id="sheet-sale-date"
-    type="date"
-    value={date}
-    onChange={(e) => setDate(e.target.value)}
-    className="border rounded-lg px-3 py-2"
-    />
-  );
+  return new Date(today.getTime() - today.getTimezoneOffset() * 60000);
+};
+
+interface SheetFormExpenseProps {
+    isOpen?: boolean; //optional, nested mode
+    onClose?: () => void; // optional, nested mode
+    zIndex?: number; // optional, nested mode
+    injectedAmount?: string;
+    injectedDescription?: string;
 }
 
-export function TimeInput() {
-  const today = new Date();
-  const local = new Date(today.getTime() - today.getTimezoneOffset() * 60000)
-  .toISOString()
-  .slice(11,16)
-  const [time, setTime] = useState(local)
-  
-  return (
-    <Input
-    id="sheet-sale-time"
-    type="time"
-    value={time}
-    onChange={(e) => setTime(e.target.value)}
-    className="flex justify-center border rounded-lg px-3 py-2"
-    />
-  );
-}
-
-export function SheetFormExpense() {
+export function SheetFormExpense({ isOpen, onClose, zIndex, injectedAmount, injectedDescription }: SheetFormExpenseProps) {
   const [selectedMethod, setSelectedMethod] = useState("Pago")
   const [category, setCategory] = useState("")
-  const [description, setDescription] = useState("")
-  const [amount, setAmount] = useState("0.00")
+  const [description, setDescription] = useState(injectedDescription || "")
+  const [amount, setAmount] = useState(injectedAmount || "0.00")
   const [receipt, setReceipt] = useState("")
   const [provider, setProvider] = useState("")
-  const [date, setDate] = useState(new Date().toISOString().split("T")[0])
-  const [time, setTime] = useState(new Date().toISOString().slice(11, 16))
+  const initialLocalTime = getLocalTime()
+  const [date, setDate] = useState(initialLocalTime.toISOString().split("T")[0])
+  const [time, setTime] = useState(initialLocalTime.toISOString().slice(11, 16))
+
+  const [internalOpen, setInternalOpen] = useState(false) //Only used when not nested
+  const isNested = onClose !== undefined
+  const controlledOpen = isOpen !== undefined ? isOpen : internalOpen
+
+  useEffect(() => {
+    if (injectedAmount) {
+      setAmount(injectedAmount);
+    }
+  }, [injectedAmount]);
+
+  useEffect(() => {
+    if (injectedDescription) {
+      setDescription(injectedDescription);
+    }
+  }, [injectedDescription]);
+
+  const handleOpenChange = (open: boolean) => {
+      if (onClose) {
+          if (!open) onClose()
+      } else {
+          setInternalOpen(open)
+      }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    e.stopPropagation();
 
-    const datetime = new Date(`${date}T${time}`).toISOString();
+    const datetime = `${date} ${time}:00`;
     const expenseData = {
       datetime: datetime,
       category: category,
@@ -77,32 +80,57 @@ export function SheetFormExpense() {
     }
 
     try {
-      console.log("📤 Enviando saleData:", expenseData);
-      const { data, error } = await clientApp.expense.post(expenseData);
-      console.log("📥 Respuesta del servidor:", { data, error });
+      console.log("📤 Enviando saleData:", expenseData)
+      const { data, error } = await clientApp.expense.post(expenseData)
+      console.log("📥 Respuesta del servidor:", { data, error })
 
-      if (error) throw error.value;
+      if (error) throw error.value
+      
 
-      alert("Sale successfully created");
-      window.location.href = "/sale";
+      if (isNested) {
+          alert("Gasto creado exitosamente.");
+          onClose!(); 
+      } else {
+          alert("Gasto creado exitosamente.");
+          window.location.href = "/expense";
+      }
+
     } catch (err) {
-      console.error("❌ Error al cargar venta:", err);
-      alert("Error al cargar venta");
+      console.error("❌ Error al cargar venta:", err)
+      alert("Error al cargar venta")
+      if (isNested) onClose!(); 
+
     }
   }
+  
+  const offsetClass = isNested ? "right-[380px]" : "";
+
+  const handlePropagationStop = (e: React.MouseEvent) => {
+    e.stopPropagation();
+  };
 
 
 return (
-    <form id="form-sale" onSubmit={handleSubmit}>
+    <form id="form-expense" onSubmit={handleSubmit}>
       <CustomSheet
         title="Agregar Gasto"
         description="Agregar gasto de dispositivo al sistema"
-        zIndex={60}
+        onInteractOutside={(e) => {
+          e.preventDefault(); 
+        }}
+        //Props if nested
+        className={`${offsetClass}`} //Offset
+        side={"right"}
+        isOpen={controlledOpen}
+        onOpenChange={handleOpenChange} 
+        isModal={!isNested} // ModalProp if not nested
+        zIndex={zIndex || 10} // Z-index
+        
         footer={
           <>
-            <Button type="submit" form="form-sale">Agregar</Button>
+            <Button type="submit" form="form-expense" onClick={handlePropagationStop}>Agregar</Button>
             <SheetClose asChild>
-              <Button variant="outline">Cancelar</Button>
+              <Button variant="outline" onClick={() => handleOpenChange(false)}>Cancelar</Button>
             </SheetClose>
           </>
         }

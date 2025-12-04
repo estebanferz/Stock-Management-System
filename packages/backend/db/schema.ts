@@ -1,5 +1,5 @@
 import { integer, pgTable, varchar, date, bigint, numeric, timestamp, boolean } from "drizzle-orm/pg-core";
-import { type InferSelectModel } from "drizzle-orm"
+import { type InferSelectModel, sql } from "drizzle-orm"
 
 
 export const clientTable = pgTable("client", {
@@ -116,7 +116,7 @@ export const sellerTable = pgTable("seller", {
     age: integer().notNull(),
     email: varchar({ length: 255 }),
     phone_number: varchar({ length: 16 }),
-    hire_date: date().notNull().defaultNow(),
-    pay_date: date(),
+    hire_date: date().notNull().default(sql`CURRENT_DATE`),
+    pay_date: date().default(sql`CURRENT_DATE`),
 });
 export type Seller = InferSelectModel<typeof sellerTable>

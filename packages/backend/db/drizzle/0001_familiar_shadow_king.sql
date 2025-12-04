@@ -1,0 +1,1 @@
+ALTER TABLE "seller" ALTER COLUMN "pay_date" SET DEFAULT now();

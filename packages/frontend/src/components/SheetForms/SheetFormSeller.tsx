@@ -4,24 +4,21 @@ import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { SheetClose } from "@/components/ui/sheet"
 import { useState } from "react"
-import { clientApp } from "@/lib/clientAPI";
+import { clientApp } from "@/lib/clientAPI"
+import { parsePhoneNumberFromString } from "libphonenumber-js"
 
-export function DateInput() {
+const getLocalTime = () => {
   const today = new Date();
-  const local = new Date(today.getTime() - today.getTimezoneOffset() * 60000)
-  .toISOString()
-  .split("T")[0];
-  const [date, setDate] = useState(local);
-  
-  return (
-    <Input
-    id="sheet-sale-date"
-    type="date"
-    value={date}
-    onChange={(e) => setDate(e.target.value)}
-    className="border rounded-lg px-3 py-2"
-    />
-  );
+  return new Date(today.getTime() - today.getTimezoneOffset() * 60000);
+};
+
+function normalizePhoneE164(raw: string): string | null {
+  if (!raw) return null;
+
+  const phone = parsePhoneNumberFromString(raw, "AR"); // default AR
+  if (!phone || !phone.isValid()) return null;
+
+  return phone.format("E.164"); // +54911...
 }
 
 export function SheetFormSeller() {
@@ -29,9 +26,11 @@ export function SheetFormSeller() {
   const [sellerAge, setSellerAge] = useState("")
   const [sellerEmail, setSellerEmail] = useState("")
   const [sellerPhone, setSellerPhone] = useState("")
-  const [hireDate, setHireDate] = useState(new Date().toISOString().split("T")[0])
-  const [payDate, setPayDate] = useState(new Date().toISOString().split("T")[0])
+  const today = new Date();
+  const localDateString = today.toLocaleDateString("en-CA"); // YYYY-MM-DD local, sin UTC
 
+  const [hireDate, setHireDate] = useState(localDateString);
+  const [payDate, setPayDate] = useState(localDateString);
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
@@ -95,7 +94,19 @@ return (
 
         <div className="grid gap-3">
           <Label>Telefono</Label>
-          <Input value={sellerPhone} onChange={(e) => setSellerPhone(e.target.value)} required />
+          <Input
+            value={sellerPhone}
+            onChange={(e) => {
+              setSellerPhone(e.target.value.replace(/[^\d+]/g, ""));
+            }}
+            onBlur={() => {
+              const normalized = normalizePhoneE164(sellerPhone);
+              if (normalized) setSellerPhone(normalized);
+            }}
+            inputMode="tel"
+            placeholder="+54 9 223 1234567"
+            required
+          />
         </div>
 
         <div className="grid gap-3">
@@ -104,6 +115,15 @@ return (
             type="date"
             value={hireDate}
             onChange={(e) => setHireDate(e.target.value)}
+          />
+        </div>
+
+        <div className="grid gap-3">
+          <Label>Fecha de pago</Label>
+          <Input
+            type="date"
+            value={payDate}
+            onChange={(e) => setPayDate(e.target.value)}
           />
         </div>
       </CustomSheet>

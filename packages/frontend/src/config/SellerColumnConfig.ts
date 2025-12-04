@@ -5,13 +5,15 @@ export const sellerColumns: Column<Seller>[] = [
   { accessorKey: "seller_id", header: "ID" },
 
   
-  { accessorKey: "name", header: "Nombre" },
+  { accessorKey: "name", header: "Nombre", renderKey: "general" },
   { accessorKey: "age", header: "Edad" },
   { accessorKey: "email", header: "Email" },
   
   {
       accessorKey: "phone_number",
       header: "Teléfono",
+      renderKey: "phone"
+
     },
     
     {
@@ -19,7 +21,7 @@ export const sellerColumns: Column<Seller>[] = [
       header: "Contratación",
       renderKey: "date",
     },
-      {
+    {
       accessorKey: "pay_date",
       header: "Fecha Pago",
       renderKey: "date",

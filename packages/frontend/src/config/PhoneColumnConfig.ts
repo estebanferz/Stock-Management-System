@@ -9,10 +9,12 @@ export const phoneColumns: Column<Phone>[] = [
     {
         accessorKey: "brand",
         header: "Marca",
+        renderKey: "general"
     },
     {
         accessorKey: "name",
         header: "Modelo",
+        renderKey: "general",
     },
     {
         accessorKey: "price",

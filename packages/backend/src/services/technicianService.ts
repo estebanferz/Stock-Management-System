@@ -2,6 +2,7 @@ import { technicianTable } from "@server/db/schema.ts";
 import { db } from "@server/db/db.ts";
 import { eq } from "drizzle-orm";  
 import { parsePhoneNumberFromString } from 'libphonenumber-js';
+import { normalizeShortString } from "../util/formattersBackend";
 
 export const getAllTechnicians = async () => {
     return await db.select().from(technicianTable);
@@ -33,9 +34,18 @@ export const addTechnician = async (newTechnician: {
         newTechnician.phone_number = newTechnician.phone_number.trim();
     }
 
+    const normalizedTechnician = {
+        ...newTechnician,
+        name: normalizeShortString(newTechnician.name),
+        speciality: newTechnician.speciality?.trim(),
+        state: normalizeShortString(newTechnician.state),
+        email: newTechnician.email?.trim().toLowerCase(),
+        phone_number: newTechnician.phone_number?.trim(),
+    };
+
     const result = await db
         .insert(technicianTable)
-        .values(newTechnician)
+        .values(normalizedTechnician)
         .returning();
 
     return result;

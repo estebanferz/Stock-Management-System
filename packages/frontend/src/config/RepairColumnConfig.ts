@@ -35,10 +35,12 @@ export const repairColumns: Column<Repair>[] = [
     {
         accessorKey: "description",
         header: "Descripcion",
+        renderKey: "description"
     },
     {
         accessorKey: "diagnostic",
         header: "Diagnóstico",
+        renderKey: "description"
     },
     {
         accessorKey: "client_cost",

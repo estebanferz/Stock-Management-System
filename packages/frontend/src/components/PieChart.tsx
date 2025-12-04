@@ -21,7 +21,7 @@ export const options = {
     textAlign: 'center', 
   },
   legend: {
-    position: 'bottom', 
+    position: 'right', 
     alignment: 'center',
     textStyle: {
       color: 'black',

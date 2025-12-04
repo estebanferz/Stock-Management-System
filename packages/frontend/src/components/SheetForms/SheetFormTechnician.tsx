@@ -6,7 +6,16 @@ import { SheetClose } from "@/components/ui/sheet"
 import { useState } from "react"
 import { clientApp } from "@/lib/clientAPI";
 import { Checkbox } from "@/components/ui/checkbox"
+import parsePhoneNumberFromString from "libphonenumber-js"
 
+function normalizePhoneE164(raw: string): string | null {
+  if (!raw) return null;
+
+  const phone = parsePhoneNumberFromString(raw, "AR"); // default AR
+  if (!phone || !phone.isValid()) return null;
+
+  return phone.format("E.164"); // +54911...
+}
 
 export function SheetFormTechnician() {
   const [name, setName] = useState("")
@@ -72,7 +81,19 @@ return (
 
         <div className="grid gap-3">
           <Label>Telefono</Label>
-          <Input value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} required />
+          <Input
+            value={phoneNumber}
+            onChange={(e) => {
+              setPhoneNumber(e.target.value.replace(/[^\d+]/g, ""));
+            }}
+            onBlur={() => {
+              const normalized = normalizePhoneE164(phoneNumber);
+              if (normalized) setPhoneNumber(normalized);
+            }}
+            inputMode="tel"
+            placeholder="+54 9 11 1234 5678"
+            required
+          />
         </div>
 
         <div className="grid gap-3">
