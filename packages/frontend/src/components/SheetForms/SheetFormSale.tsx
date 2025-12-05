@@ -16,14 +16,18 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { clientApp } from "@/lib/clientAPI";
 import { SheetSelector } from './SheetSelector'; 
 import { SheetFormClient } from './SheetFormClient';
+import { SheetFormPhone } from "./SheetFormPhone"
 
+interface SheetFormSaleProps {
+  zIndex?: number;
+}
 
 const getLocalTime = () => {
   const today = new Date();
   return new Date(today.getTime() - today.getTimezoneOffset() * 60000);
 };
 
-export function SheetFormSale() {
+export function SheetFormSale({zIndex}:SheetFormSaleProps) {
   
   const [selectedMethod, setSelectedMethod] = useState("Pago")
   const [sellerId, setSellerId] = useState("")
@@ -35,13 +39,26 @@ export function SheetFormSale() {
   const [date, setDate] = useState(initialLocalTime.toISOString().split("T")[0])
   const [time, setTime] = useState(initialLocalTime.toISOString().slice(11, 16))
   const [totalAmount, setTotalAmount] = useState("0.00")
-  // 🚀 1. Estado para controlar la apertura del SheetFormClient
-  const [isClientSheetOpen, setIsClientSheetOpen] = useState(false);
   
+  // Control opening of SheetFormClient
+  const [isClientSheetOpen, setIsClientSheetOpen] = useState(false);
+  // Control opening of SheetFormPhone
+  const [isPhoneSheetOpen, setIsPhoneSheetOpen] = useState(false);
+
   const handleDeviceSelect = (id: string, price?: string) => {
     setDeviceId(id)
     if (price) {
       setTotalAmount(String(price)); 
+    }
+  };
+  const handleAddTradeInPhone = () => {
+    setIsPhoneSheetOpen(true);
+  };
+  const handlePhoneFormClose = (newPhoneId?: string) => {
+    setIsPhoneSheetOpen(false);
+    
+    if (newPhoneId) {
+      setDeviceId(newPhoneId);
     }
   };
 
@@ -49,7 +66,7 @@ export function SheetFormSale() {
     e.preventDefault();
     e.stopPropagation();
 
-    const datetime = `${date} ${time}:00`;
+    const datetime = `${date}T${time}:00Z`;
     
     if (!clientId || !sellerId || !deviceId) {
         alert("Por favor, selecciona Cliente, Vendedor y Dispositivo.");
@@ -134,7 +151,7 @@ return (
       <CustomSheet
         className="w-[400px] duration-300 flex flex-col"
         title="Agregar Venta"
-        zIndex={60}
+        zIndex={zIndex}
         description="Agregar venta de dispositivo al sistema"
         isModal={true}
         footer={
@@ -184,7 +201,7 @@ return (
           <SheetFormClient
               isOpen={isClientSheetOpen}
               onClose={handleClientFormClose} 
-              zIndex={50}
+              zIndex={60}
               
           />
         )}
@@ -204,6 +221,22 @@ return (
             required 
           />
         </div>
+
+        <div className="grid gap-3">
+          <Label>Trade-In</Label>
+          <Button type="button" onClick={handleAddTradeInPhone}>
+            Agregar Trade-In
+          </Button>
+        </div>
+        
+        {isPhoneSheetOpen && (
+          <SheetFormPhone
+            isOpen={isPhoneSheetOpen}
+            onClose={handlePhoneFormClose}
+            zIndex={60}
+            depth={1}
+          />
+        )}
 
         <div className="grid gap-3">
           <Label>Método de pago</Label>

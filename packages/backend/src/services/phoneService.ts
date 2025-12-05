@@ -53,6 +53,7 @@ export const addPhone = async ( newPhone: {
     buy_cost: string;
     deposit: string;
     sold?: boolean;
+    trade_in?: boolean;
 }) => {
     const normalizedPhone = {
         ...newPhone,

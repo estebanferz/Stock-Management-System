@@ -27,9 +27,10 @@ interface SheetFormExpenseProps {
     zIndex?: number; // optional, nested mode
     injectedAmount?: string;
     injectedDescription?: string;
+    depth?: number;
 }
 
-export function SheetFormExpense({ isOpen, onClose, zIndex, injectedAmount, injectedDescription }: SheetFormExpenseProps) {
+export function SheetFormExpense({ isOpen, onClose, zIndex, injectedAmount, injectedDescription, depth=0 }: SheetFormExpenseProps) {
   const [selectedMethod, setSelectedMethod] = useState("Pago")
   const [category, setCategory] = useState("")
   const [description, setDescription] = useState(injectedDescription || "")
@@ -68,7 +69,7 @@ export function SheetFormExpense({ isOpen, onClose, zIndex, injectedAmount, inje
     e.preventDefault()
     e.stopPropagation();
 
-    const datetime = `${date} ${time}:00`;
+    const datetime = `${date}T${time}:00Z`;
     const expenseData = {
       datetime: datetime,
       category: category,
@@ -103,7 +104,9 @@ export function SheetFormExpense({ isOpen, onClose, zIndex, injectedAmount, inje
     }
   }
   
-  const offsetClass = isNested ? "right-[380px]" : "";
+  const offset = depth * 380;
+  console.log(offset)
+  const offsetClass = isNested ? `right-[${offset}px]`: "";
 
   const handlePropagationStop = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -119,7 +122,7 @@ return (
           e.preventDefault(); 
         }}
         //Props if nested
-        className={`${offsetClass}`} //Offset
+        className={offsetClass} //Offset
         side={"right"}
         isOpen={controlledOpen}
         onOpenChange={handleOpenChange} 
