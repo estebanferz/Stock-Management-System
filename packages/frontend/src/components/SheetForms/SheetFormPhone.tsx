@@ -18,12 +18,30 @@ import { phoneStorage } from "../Structures/phoneStorage"
 import { ChevronDown} from "lucide-react"
 import { Checkbox } from "@/components/ui/checkbox"
 
+interface SheetFormPhoneProps {
+  isOpen?: boolean;
+  onClose?: (newPhoneId?: string) => void;
+  zIndex?: number;
+  depth?: number;
+}
+
 const getLocalTime = () => {
   const today = new Date();
   return new Date(today.getTime() - today.getTimezoneOffset() * 60000);
 };
 
-export function SheetFormPhone() {
+export function SheetFormPhone({isOpen, onClose, zIndex, depth=0}: SheetFormPhoneProps) {
+
+  const [internalOpen, setInternalOpen] = useState(false);
+  const controlledOpen = isOpen !== undefined ? isOpen : internalOpen;
+  const handleOpenChange = (open: boolean) => {
+    if (onClose) {
+        if (!open) onClose(); 
+    } else {
+        setInternalOpen(open); 
+    }
+  };
+
   const [selectedCategory, setSelectedCategory] = useState("Categroría")
   const [selectedType, setSelectedType] = useState("Categroría")
   const [selectedStorage, setSelectedStorage] = useState("Almacenamiento")
@@ -66,8 +84,9 @@ export function SheetFormPhone() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    e.stopPropagation()
 
-    const datetime = `${date} ${time}:00`;
+    const datetime = `${date}T${time}:00Z`;
     const phoneData = {
         datetime: datetime,
         name: phoneName,
@@ -82,17 +101,27 @@ export function SheetFormPhone() {
         buy_cost: buyCost,
         deposit: deposit,
         sold: sold,
+        trade_in: isNested,
     }
 
     try {
       console.log("Enviando phoneData:", phoneData);
-      const { data, error } = await clientApp.phone.post(phoneData);
-      console.log("Respuesta del servidor:", { data, error });
+      const { data: phoneResponse, error } = await clientApp.phone.post(phoneData);
+      console.log("Respuesta del servidor:", { phoneResponse, error });
 
       if (error) throw error.value;
+      
+      const newPhoneId = phoneResponse[0]?.device_id;
 
-      alert("Phone successfully created");
-      window.location.href = "/inventory";
+      if (onClose) {
+        if (newPhoneId) {
+            onClose(String(newPhoneId)); 
+        } else {
+            onClose();
+        }
+      } else {
+        window.location.href = "/client"; 
+      }
     } catch (err) {
       console.error("Error al cargar celular:", err);
       alert("Error al cargar celular");
@@ -100,18 +129,31 @@ export function SheetFormPhone() {
   }
 
   const expenseDescription = `Compra de ${phoneBrand} ${phoneName}`.trim();
+  const isNested = onClose !== undefined;
+  const offset = depth * 380;
+  const offsetClass = isNested ? `right-[${offset}px]` : "";
+  depth += 1;
 
 return (
-    <form id="form-sale" onSubmit={handleSubmit}>
+    <form id="form-phone" onSubmit={handleSubmit}>
       <CustomSheet
         title="Agregar Celular"
         description="Agregar un celular al inventario"
-        zIndex={60}
+        onInteractOutside={(e) => {
+          e.preventDefault(); 
+        }}
+        //if nested, add offset for cards ilusion
+        className={offsetClass}
+        side="right"
+        isOpen={controlledOpen}
+        onOpenChange={handleOpenChange}
+        isModal={!onClose}
+        zIndex={zIndex || (onClose ? 50 : 10)}
         footer={
           <>
-            <Button type="submit" form="form-sale">Agregar</Button>
+            <Button type="submit" form="form-phone">Agregar</Button>
             <SheetClose asChild>
-              <Button variant="outline">Cancelar</Button>
+              <Button variant="outline" onClick={() => handleOpenChange(false)}>Cancelar</Button> 
             </SheetClose>
           </>
         }
@@ -224,7 +266,7 @@ return (
               zIndex={50}
               injectedAmount={buyCost}
               injectedDescription={expenseDescription} 
-
+              depth={depth}
           />
         )}
 

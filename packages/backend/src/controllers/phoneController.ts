@@ -68,6 +68,7 @@ export const phoneController = new Elysia({prefix: '/phone'})
                 buy_cost: body.buy_cost,
                 deposit: body.deposit,
                 ...(body.sold && {sold: body.sold}),
+                ...(body.trade_in && {trade_in: body.trade_in}),
             };
             
             const result = await addPhone(newPhone);
