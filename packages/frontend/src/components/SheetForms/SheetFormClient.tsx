@@ -3,9 +3,10 @@ import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { SheetClose } from "@/components/ui/sheet"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { clientApp } from "@/lib/clientAPI";
 import { parsePhoneNumberFromString } from "libphonenumber-js";
+import type { Client } from "@server/db/schema"
 
 
 interface SheetFormClientProps {
@@ -35,51 +36,72 @@ export function SheetFormClient({ isOpen, onClose, zIndex }: SheetFormClientProp
     }
   };
   
-  const [clientName, setClientName] = useState("")
-  const [clientEmail, setClientEmail] = useState("")
-  const [clientPhone, setClientPhone] = useState("")
-  const [clientID, setClientID] = useState("")
+  const [editingClient, setEditingClient] = useState<Client | null>(null);
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    phone_number: "",
+    id_number: "",
+    birth_date: "",
+  });
 
-  const handleSubmitClient = async (e: React.FormEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
+  useEffect(() => {
+    const onEdit = (e: CustomEvent<Client>) => {
+      const row = e.detail;
 
-    const phoneE164 = normalizePhoneE164(clientPhone);
-    if (!phoneE164) {
-      alert("El número de teléfono es inválido. Ingresá un número válido, ej: +54911...");
-      return;
-    }
+      setEditingClient(row);
 
-    const clientData = {
-      name: clientName,
-      email: clientEmail,
-      phone_number: phoneE164,
-      id_number: clientID,
-    }
+      setForm({
+        name: row.name ?? "",
+        email: row.email ?? "",
+        phone_number: row.phone_number ?? "",
+        id_number: row.id_number ? String(row.id_number) : "",
+        birth_date: row.birth_date ?? "",
+      });
 
-    try {
-      console.log("Enviando clientData:", clientData);
-      const { data: clientResponse, error } = await clientApp.client.post(clientData);
-      console.log("Respuesta del servidor:", { clientResponse, error });
+      setInternalOpen(true);
+    };
 
-      if (error) throw error.value;
-      
-      const newClientId = clientResponse[0]?.client_id;
+    window.addEventListener("open-edit-client", onEdit as any);
+    return () => window.removeEventListener("open-edit-client", onEdit as any);
+  }, []);
 
-      if (onClose) {
-        if (newClientId) {
-            onClose(String(newClientId)); 
-        } else {
-            onClose();
-        }
-      } else {
-        window.location.href = "/client"; 
-      }
-    } catch (err) {
-      console.error("Error al cargar cliente:", err);
-      if (onClose) onClose();
-    }
+const handleSubmitClient = async (e: React.FormEvent) => {
+  e.preventDefault();
+  e.stopPropagation();
+
+  const phoneE164 = normalizePhoneE164(form.phone_number);
+  if (!phoneE164) {
+    alert("El número de teléfono es inválido.");
+    return;
   }
+
+  const clientData = {
+    ...form,
+    phone_number: phoneE164
+  };
+
+  try {
+    let response;
+
+    if (editingClient) {
+      response = await clientApp.client({ id: editingClient.client_id }).put(clientData);
+    } else {
+      response = await clientApp.client.post(clientData);
+    }
+
+    const { data, error } = response;
+    if (error) throw error.value;
+
+    const newClientId = data?.[0]?.client_id;
+
+    onClose?.(newClientId ? String(newClientId) : undefined);
+    window.location.reload();
+  } catch (err) {
+    console.error(err);
+    onClose?.();
+  }
+};
   const isNested = onClose !== undefined;
   const offsetClass = isNested ? "right-[380px]" : "";
 
@@ -97,7 +119,7 @@ return (
         zIndex={zIndex || (onClose ? 50 : 10)}
         footer={
           <>
-            <Button type="submit" form="form-client">Agregar</Button>
+            <Button type="submit" form="form-client">{editingClient ? "Guardar" : "Agregar"}</Button>
             <SheetClose asChild>
               <Button variant="outline" onClick={() => handleOpenChange(false)}>Cancelar</Button> 
             </SheetClose>
@@ -106,24 +128,32 @@ return (
       >
         <div className="grid gap-3">
           <Label>Nombre</Label>
-          <Input value={clientName} onChange={(e) => setClientName(e.target.value)} required />
+          <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
         </div>
 
         <div className="grid gap-3">
           <Label>Email</Label>
-          <Input type="email" value={clientEmail} onChange={(e) => setClientEmail(e.target.value)} required />
+          <Input
+            type="email"
+            value={form.email}
+            onChange={(e) => setForm({ ...form, email: e.target.value })}
+            required
+          />
         </div>
 
         <div className="grid gap-3">
           <Label>Telefono</Label>
           <Input
-            value={clientPhone}
-            onChange={(e) => {
-              setClientPhone(e.target.value.replace(/[^\d+]/g, ""));
-            }}
+            value={form.phone_number}
+            onChange={(e) =>
+              setForm({
+                ...form,
+                phone_number: e.target.value.replace(/[^\d+]/g, "")
+              })
+            }
             onBlur={() => {
-              const normalized = normalizePhoneE164(clientPhone);
-              if (normalized) setClientPhone(normalized);
+              const normalized = normalizePhoneE164(form.phone_number);
+              if (normalized) setForm({ ...form, phone_number: normalized });
             }}
             inputMode="tel"
             placeholder="+54 9 11 1234 5678"
@@ -132,12 +162,11 @@ return (
         </div>
 
         <div className="grid gap-3">
-          <Label>DNI</Label>
-          <Input
-            type="number"
-            value={clientID}
-            onChange={(e) => setClientID(e.target.value)}
-          />
+        <Input
+          type="number"
+          value={form.id_number}
+          onChange={(e) => setForm({ ...form, id_number: e.target.value })}
+        />
         </div>
       </CustomSheet>
     </form>

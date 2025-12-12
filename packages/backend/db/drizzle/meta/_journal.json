@@ -15,6 +15,62 @@
       "when": 1764807241783,
       "tag": "0001_familiar_shadow_king",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1765222778964,
+      "tag": "0002_first_falcon",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1765293594406,
+      "tag": "0003_swift_silk_fever",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1765302964137,
+      "tag": "0004_handy_electro",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1765421611370,
+      "tag": "0005_fancy_natasha_romanoff",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1765421946618,
+      "tag": "0006_colossal_santa_claus",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1765564006011,
+      "tag": "0007_mature_hairball",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1765564155857,
+      "tag": "0008_smiling_franklin_richards",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1765572667860,
+      "tag": "0009_sharp_zaladane",
+      "breakpoints": true
     }
   ]
 }

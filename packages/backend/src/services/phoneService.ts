@@ -19,7 +19,8 @@ export async function getPhonesByFilter(
         name ? ilike(phoneTable.name, `%${name}%`) : undefined,
         device_type ? ilike(phoneTable.device_type, device_type) : undefined, // ya convertido y validado
         brand ? ilike(phoneTable.brand, `%${brand}%`) : undefined,
-        sold ? eq(phoneTable.sold, soldFormatted) : undefined
+        sold ? eq(phoneTable.sold, soldFormatted) : undefined,
+        eq(phoneTable.is_deleted, false),
       ),
     );
     
@@ -27,7 +28,7 @@ export async function getPhonesByFilter(
 }
 
 export const getAllPhones = async () => {
-    return await db.select().from(phoneTable);
+    return await db.select().from(phoneTable).where(eq(phoneTable.is_deleted, false)).orderBy(phoneTable.device_id);
 }
 
 export const getPhoneById = async(id: number) => {
@@ -99,16 +100,15 @@ export async function updatePhone(
         .where(eq(phoneTable.device_id, device_id))
         .returning();
 
-    if (result) {return true}
-    else {return false}
+    return result
 }
 
-export const deletePhone = async (device_id: number) => {
+export async function softDeletePhone(id: number) {
     const result = await db
-        .delete(phoneTable)
-        .where(eq(phoneTable.device_id, device_id))
+        .update(phoneTable)
+        .set({ is_deleted: true })
+        .where(eq(phoneTable.device_id, id))
         .returning();
 
-    if (result.length > 0) {return true}
-    else {return false}
+    return result.length > 0;
 }

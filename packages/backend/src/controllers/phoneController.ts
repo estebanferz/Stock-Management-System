@@ -1,5 +1,5 @@
 import { Elysia, t } from "elysia";
-import { getAllPhones, getPhonesByFilter, getPhoneById, addPhone, updatePhone, deletePhone } from "../services/phoneService";
+import { getAllPhones, getPhonesByFilter, getPhoneById, addPhone, updatePhone, softDeletePhone } from "../services/phoneService";
 import { phoneInsertDTO, phoneUpdateDTO } from "@server/db/types";
 import { date } from "drizzle-orm/mysql-core";
 
@@ -115,6 +115,7 @@ export const phoneController = new Elysia({prefix: '/phone'})
         {
             body: t.Object({
                 ...phoneUpdateDTO.properties,
+                datetime: t.String({ format: "date-time" }),
             }),
             detail: {
                 summary: "Update a phone",
@@ -122,34 +123,8 @@ export const phoneController = new Elysia({prefix: '/phone'})
             },
         },
     )
-    .delete(
-        "/:id",
-        async ({ params: { id }, set }) => {
-            const phoneIdNum = Number(id);
-            if (!Number.isInteger(phoneIdNum) || phoneIdNum <= 0) {
-                set.status = 400;
-                return false;
-            }
-
-            const result = await deletePhone(phoneIdNum);
-            if (!result) {
-                set.status = 404;
-                return false;
-            }
-
-            set.status = 200;
-            return true;
-        },
-        {
-            params: t.Object({
-                id: t.Numeric({
-                    minimum: 1,
-                    errorMessage: 'device_id must be a positive integer',
-                })
-            }),
-            detail: {
-                summary: "Delete a phone",
-                tags: ["phones"],
-            },
-        },
-    )
+    .delete("/:id", async ({ params: { id }, set }) => {
+        const ok = await softDeletePhone(Number(id));
+        set.status = ok ? 200 : 404;
+        return ok;
+    });

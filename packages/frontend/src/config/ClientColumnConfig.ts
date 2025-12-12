@@ -22,5 +22,4 @@ export const clientColumns: Column<Client>[] = [
     accessorKey: "id_number", 
     header: "DNI" 
   },
-
 ]

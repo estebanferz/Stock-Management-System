@@ -1,0 +1,1 @@
+ALTER TABLE "client" ADD COLUMN "debt" integer DEFAULT 0;

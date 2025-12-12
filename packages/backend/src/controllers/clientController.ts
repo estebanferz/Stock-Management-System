@@ -1,5 +1,5 @@
 import {Elysia} from "elysia";
-import {getAllClients, getClientByFilter, getClientById, updateClient, addClient, deleteClient} from "../services/clientService";
+import {getAllClients, getClientByFilter, getClientById, updateClient, addClient, softDeleteClient} from "../services/clientService";
 import {clientInsertDTO, clientUpdateDTO} from "@server/db/types";
 import { t } from "elysia";
 
@@ -75,10 +75,10 @@ export const clientController = new Elysia({prefix: '/client'})
 
             const updClient = {
                 name: body.name,
-                email: body.email,
-                phone_number: body.phone_number,
                 id_number: Number(body.id_number),
-                birth_date: body.birth_date,
+                ...(body.email && { email: body.email }),
+                ...(body.phone_number && { phone_number: body.phone_number }),
+                ...(body.birth_date && { birth_date: body.birth_date })
             };
             const result = await updateClient(
                 Number(id),
@@ -98,34 +98,8 @@ export const clientController = new Elysia({prefix: '/client'})
             },
         },
     )
-    .delete(
-        "/:id",
-        async ({ params: { id }, set }) => {
-            const clientIdNum = Number(id);
-            if (!Number.isInteger(clientIdNum) || clientIdNum <= 0) {
-                set.status = 400;
-                return false;
-            }
-
-            const result = await deleteClient(clientIdNum);
-            if (!result) {
-                set.status = 404;
-                return false;
-            }
-
-            set.status = 200;
-            return true;
-        },
-        {
-            params: t.Object({
-                id: t.Numeric({
-                    minimum: 1,
-                    errorMessage: 'ID de cliente debe ser un número positivo'
-                })
-            }),
-            detail: {
-                summary: "Delete a client",
-                tags: ["clients"],
-            },
-        },
-    )
+    .delete("/:id", async ({ params: { id }, set }) => {
+        const ok = await softDeleteClient(Number(id));
+        set.status = ok ? 200 : 404;
+        return ok;
+    });

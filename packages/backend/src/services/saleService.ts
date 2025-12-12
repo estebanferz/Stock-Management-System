@@ -1,6 +1,6 @@
 import { db } from "@server/db/db";
 import { saleTable, expenseTable, phoneTable } from "@server/db/schema.ts";
-import { ilike, and, eq, sql } from "drizzle-orm"
+import { and, eq, sql } from "drizzle-orm"
 import { normalizeShortString } from "../util/formattersBackend";
 
 export async function getSaleByFilter(
@@ -9,7 +9,6 @@ export async function getSaleByFilter(
     seller_id?: string,
     device_id?: string,
 ){
-
     const result = await db
     .select()
     .from(saleTable)
@@ -19,6 +18,7 @@ export async function getSaleByFilter(
         client_id ? eq(saleTable.client_id, Number(client_id)) : undefined,
         seller_id ? eq(saleTable.seller_id, Number(seller_id)) : undefined,
         device_id ? eq(saleTable.device_id, Number(device_id)) : undefined,
+        eq(saleTable.is_deleted, false),
       ),
     );
     
@@ -26,12 +26,14 @@ export async function getSaleByFilter(
 }
 
 export const getAllSales = async () => {
-    return await db.select().from(saleTable).orderBy(sql`${saleTable.datetime} DESC`);
+    return await db.select().from(saleTable).where(eq(saleTable.is_deleted, false)).orderBy(sql`${saleTable.datetime} DESC`);
 }
 
 export const getSaleById = async(id: number) => {
     const sale = await db.query.saleTable.findFirst({
-        where: eq(saleTable.sale_id, id),
+        where: and(
+            eq(saleTable.sale_id, id), 
+            eq(saleTable.is_deleted, false)),
     });
     return sale;
 }
@@ -45,6 +47,7 @@ export const addSale = async ( newSale: {
     client_id: number;
     seller_id: number;
     device_id: number;
+    trade_in_device?: number;
 }) => {
     const normalizedSale = {
         ...newSale,
@@ -80,13 +83,14 @@ export async function updateSale(
     return result;
 }
 
-export const deleteSale = async (sale_id: number) => {
+export async function softDeleteSale(id: number) {
     const result = await db
-        .delete(saleTable)
-        .where(eq(saleTable.device_id, sale_id))
+        .update(saleTable)
+        .set({ is_deleted: true })
+        .where(eq(saleTable.sale_id, id))
         .returning();
 
-    return result;
+    return result.length > 0;
 }
 
 export const getGrossIncome = async () => {
@@ -94,14 +98,15 @@ export const getGrossIncome = async () => {
         .select({
             gross_income: sql`SUM(${saleTable.total_amount})`,
         })
-        .from(saleTable);
+        .from(saleTable)
+        .where(eq(saleTable.is_deleted, false));
 
     const debts = await db
         .select({
             total_debt: sql`SUM(${saleTable.debt_amount})`,
         })
         .from(saleTable)
-        .where(eq(saleTable.debt, true));
+        .where(and(eq(saleTable.debt, true), eq(saleTable.is_deleted, false)));
 
     const incomeRow = income[0] ?? { gross_income: 0 };
     const debtsRow = debts[0] ?? { total_debt: 0 };
@@ -122,7 +127,8 @@ export const getNetIncome = async () => {
         .select({
             total_expenses: sql`SUM(${expenseTable.amount})`,
         })
-        .from(expenseTable);
+        .from(expenseTable)
+        .where(eq(expenseTable.is_deleted, false));
 
     const { total_expenses } = expenseDebts[0] ?? { total_expenses: 0 };
 
@@ -139,6 +145,7 @@ export const getSalesCountByMonth = async () => {
       count: sql<number>`CAST(COUNT(*) AS INTEGER)`, 
     })
     .from(saleTable)
+    .where(eq(saleTable.is_deleted, false))
     .groupBy(sql`DATE_TRUNC('month', ${saleTable.datetime})`)
     .orderBy(sql`DATE_TRUNC('month', ${saleTable.datetime}) ASC`); 
     
@@ -157,6 +164,7 @@ export const getProductSoldCount = async() => {
             phoneTable, 
             eq(saleTable.device_id, phoneTable.device_id)
         )
+        .where(eq(saleTable.is_deleted, false))
         .groupBy(phoneTable.name) 
         .orderBy(sql`COUNT(${saleTable.device_id}) DESC`)
         .limit(5);
@@ -168,8 +176,9 @@ export const getDebts = async() => {
     const debts = await db
         .select()
         .from(saleTable)
-        .where(eq(saleTable.debt, true));
+        .where(and(eq(saleTable.debt, true), eq(saleTable.is_deleted, false)));
 
+    console.log(debts);
     return debts;
 }
 
@@ -179,7 +188,7 @@ export const getTotalDebt = async() => {
             total_debt: sql`SUM(${saleTable.debt_amount})`,
         })
         .from(saleTable)
-        .where(eq(saleTable.debt, true));
+        .where(and(eq(saleTable.debt, true), eq(saleTable.is_deleted, false)));
     
     const { total_debt } = debts[0] ?? { total_debt: 0 };
 

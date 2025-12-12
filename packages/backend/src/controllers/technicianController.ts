@@ -1,5 +1,5 @@
 import { Elysia, t } from "elysia";
-import { getAllTechnicians, getTechnicianById, addTechnician, updateTechnician, deleteTechnician } from "../services/technicianService";
+import { getAllTechnicians, getTechnicianById, addTechnician, updateTechnician, softDeleteTechnician } from "../services/technicianService";
 import { technicianInsertDTO, technicianUpdateDTO } from "@server/db/types"; 
 
 export const technicianController = new Elysia({prefix: '/technician'})
@@ -85,34 +85,8 @@ export const technicianController = new Elysia({prefix: '/technician'})
             },
         },
     )
-    .delete(
-        "/:id",
-        async ({ params: { id }, set }) => {
-            const technicianIdNum = Number(id);
-            if (!Number.isInteger(technicianIdNum) || technicianIdNum <= 0) {
-                set.status = 400;
-                return false;
-            }
-
-            const result = await deleteTechnician(technicianIdNum);
-            if (!result) {
-                set.status = 404;
-                return false;
-            }
-
-            set.status = 200;
-            return true;
-        },
-        {
-            params: t.Object({
-                id: t.Numeric({
-                    minimum: 1,
-                    errorMessage: 'Technician ID must be a positive integer',
-                })
-            }),
-            detail: {
-                summary: "Delete a technician",
-                tags: ["technicians"],
-            },
-        },
-    )
+    .delete("/:id", async ({ params: { id }, set }) => {
+        const ok = await softDeleteTechnician(Number(id));
+        set.status = ok ? 200 : 404;
+        return ok;
+    });
