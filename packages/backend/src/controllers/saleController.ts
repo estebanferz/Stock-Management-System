@@ -1,5 +1,5 @@
 import { Elysia, t } from "elysia";
-import { getAllSales, getSaleByFilter, getSaleById, addSale, updateSale, deleteSale } from "../services/saleService";
+import { getAllSales, getSaleByFilter, getSaleById, addSale, updateSale, softDeleteSale } from "../services/saleService";
 import { saleInsertDTO, saleUpdateDTO } from "@server/db/types";
 import { getGrossIncome, getNetIncome, getSalesCountByMonth, getProductSoldCount, getDebts, getTotalDebt } from "../services/saleService";
 import { db } from "@server/db/db";
@@ -59,6 +59,7 @@ export const saleController = new Elysia({prefix: '/sale'})
                 client_id: body.client_id,
                 seller_id: body.seller_id,
                 device_id: body.device_id,
+                ...(body.trade_in_device && {trade_in_device: body.trade_in_device}),
             };
             
             const result = await addSale(newSale);
@@ -100,6 +101,7 @@ export const saleController = new Elysia({prefix: '/sale'})
         {
             body: t.Object({
                 ...saleUpdateDTO.properties,
+                datetime: t.Optional(t.String({ format: "date-time" }))
             }),
             detail: {
                 summary: "Update a sale",
@@ -107,37 +109,11 @@ export const saleController = new Elysia({prefix: '/sale'})
             },
         },
     )
-    .delete(
-        "/:id",
-        async ({ params: { id }, set }) => {
-            const saleIdNum = Number(id);
-            if (!Number.isInteger(saleIdNum) || saleIdNum <= 0) {
-                set.status = 400;
-                return false;
-            }
-
-            const result = await deleteSale(saleIdNum);
-            if (!result) {
-                set.status = 404;
-                return false;
-            }
-
-            set.status = 200;
-            return true;
-        },
-        {
-            params: t.Object({
-                id: t.Numeric({
-                    minimum: 1,
-                    errorMessage: 'sale_id must be a positive integer',
-                })
-            }),
-            detail: {
-                summary: "Delete a sale",
-                tags: ["sales"],
-            },
-        },
-    )
+    .delete("/:id", async ({ params: { id }, set }) => {
+        const ok = await softDeleteSale(Number(id));
+        set.status = ok ? 200 : 404;
+        return ok;
+    })
     .get("/gross-income", async () => {
             const grossIncome = await getGrossIncome();
             return grossIncome;

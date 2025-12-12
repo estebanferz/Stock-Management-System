@@ -9,6 +9,8 @@ export const clientTable = pgTable("client", {
   phone_number: varchar({ length: 16 }),
   id_number: bigint({mode: "number"}).notNull().unique(),
   birth_date: date(),
+  debt: integer().default(0),
+  is_deleted: boolean().default(false)
 });
 export type Client = InferSelectModel<typeof clientTable>
 
@@ -19,6 +21,7 @@ export const technicianTable = pgTable("technician", {
   phone_number: varchar({ length: 16 }),
   speciality: varchar({ length: 255 }).notNull(),
   state: varchar({ length: 100 }).notNull(),
+  is_deleted: boolean().default(false),
 });
 export type Technician = InferSelectModel<typeof technicianTable>
 
@@ -41,6 +44,7 @@ export const expenseTable = pgTable("expense", {
     provider_id: 
         integer()
         .references(() => providerTable.provider_id),
+    is_deleted: boolean().default(false),
 });
 export type Expense = InferSelectModel<typeof expenseTable>
 
@@ -60,6 +64,7 @@ export const phoneTable = pgTable("phone", {
     deposit: varchar({length: 255}).notNull(),
     sold: boolean().default(false).notNull(),
     trade_in: boolean().default(false),
+    is_deleted: boolean().default(false),
 });
 export type Phone = InferSelectModel<typeof phoneTable>
 
@@ -106,6 +111,9 @@ export const saleTable = pgTable("sale", {
         integer()
         .references(() => phoneTable.device_id)
         .notNull(),
+    is_deleted: boolean().default(false),
+    trade_in_device: integer()
+        .references(() => phoneTable.device_id),
 });
 export type Sale = InferSelectModel<typeof saleTable>
 

@@ -1,5 +1,5 @@
 import { Elysia, t } from "elysia";
-import { getAllExpenses, getExpensesByFilter, addExpense, updateExpense, deleteExpense, getTotalExpenses } from "../services/expenseService";
+import { getAllExpenses, getExpensesByFilter, addExpense, updateExpense, softDeleteExpense, getTotalExpenses } from "../services/expenseService";
 import { expenseInsertDTO, expenseUpdateDTO } from "@server/db/types";
 
 export const expenseController = new Elysia({prefix: "/expense"})
@@ -58,8 +58,8 @@ export const expenseController = new Elysia({prefix: "/expense"})
         }
     )
     .put(
-        "/:expense_id",
-        async ({ body, params: { expense_id }, set }) => {
+        "/:id",
+        async ({ body, params: { id }, set }) => {
 
             const updExpense = {
                 category: body.category,
@@ -71,7 +71,7 @@ export const expenseController = new Elysia({prefix: "/expense"})
             };
 
             const result = await updateExpense(
-                Number(expense_id),
+                Number(id),
                 updExpense,
             );
             set.status = 200;
@@ -80,6 +80,7 @@ export const expenseController = new Elysia({prefix: "/expense"})
         {
             body: t.Object({
                 ...expenseUpdateDTO.properties,
+                datetime: t.Optional(t.String({format: "date-time"})),
             }),
             detail: {
                 summary: "Update an expense",
@@ -87,37 +88,11 @@ export const expenseController = new Elysia({prefix: "/expense"})
             },
         },
     )
-    .delete(
-        "/:expense_id",
-        async ({ params: { expense_id }, set }) => {
-            const expenseIdNum = Number(expense_id);
-            if (!Number.isInteger(expenseIdNum) || expenseIdNum <= 0) {
-                set.status = 400;
-                return false;
-            }
-
-            const result = await deleteExpense(expenseIdNum);
-            if (!result) {
-                set.status = 404;
-                return false;
-            }
-
-            set.status = 200;
-            return true;
-        },
-        {
-            params: t.Object({
-                expense_id: t.Numeric({
-                    minimum: 1,
-                    errorMessage: 'expense_id must be a positive integer',
-                })
-            }),
-            detail: {
-                summary: "Delete an expense",
-                tags: ["expenses"],
-            },
-        },
-    )
+    .delete("/:id", async ({ params: { id }, set }) => {
+        const ok = await softDeleteExpense(Number(id));
+        set.status = ok ? 200 : 404;
+        return ok;
+    })
     .get("/expenses", async () => {
             const expenses = await getTotalExpenses();
             return expenses;

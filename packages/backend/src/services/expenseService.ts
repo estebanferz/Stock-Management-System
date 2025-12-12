@@ -24,7 +24,7 @@ export async function getExpensesByFilter(
 }
 
 export const getAllExpenses = async () => {
-    return await db.select().from(expenseTable);
+    return await db.select().from(expenseTable).where(eq(expenseTable.is_deleted, false)).orderBy(expenseTable.expense_id);
 }
 
 export const addExpense = async ( newExpense: {
@@ -70,14 +70,14 @@ export const updateExpense = async (
         .returning();
 }
 
-export const deleteExpense = async (expense_id: number) => {
+export async function softDeleteExpense(id: number) {
     const result = await db
-        .delete(expenseTable)
-        .where(eq(expenseTable.expense_id, expense_id))
+        .update(expenseTable)
+        .set({ is_deleted: true })
+        .where(eq(expenseTable.expense_id, id))
         .returning();
 
-    if (result.length > 0) {return true}
-    else {return false}
+    return result.length > 0;
 }
 
 export const getTotalExpenses = async() => {
@@ -86,6 +86,8 @@ export const getTotalExpenses = async() => {
             total_expenses: sql`SUM(${expenseTable.amount})`
         })
         .from(expenseTable)
+        .where(eq(expenseTable.is_deleted, false));
+        
     
     const { total_expenses } = result[0] ?? { total_expenses: 0 };
 

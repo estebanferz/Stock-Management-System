@@ -3,10 +3,16 @@ import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { SheetClose } from "@/components/ui/sheet"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { clientApp } from "@/lib/clientAPI";
 import { Checkbox } from "@/components/ui/checkbox"
 import parsePhoneNumberFromString from "libphonenumber-js"
+import type { Technician } from "@server/db/schema"
+
+interface SheetFormTechnicianProps {
+  zIndex?: number;
+}
+
 
 function normalizePhoneE164(raw: string): string | null {
   if (!raw) return null;
@@ -17,37 +23,69 @@ function normalizePhoneE164(raw: string): string | null {
   return phone.format("E.164"); // +54911...
 }
 
-export function SheetFormTechnician() {
-  const [name, setName] = useState("")
-  const [email, setEmail] = useState("")
-  const [phoneNumber, setPhoneNumber] = useState("")
-  const [speciality, setSpeciality] = useState("")
-  const [state, setState] = useState(false)
+
+export function SheetFormTechnician({zIndex}:SheetFormTechnicianProps) {
+  
+  const [internalOpen, setInternalOpen] = useState(false);
+  const [editingTechnician, setEditingTechnician] = useState<Technician | null>(null);
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    phone_number: "",
+    speciality: "",
+    state: false,
+  });
+  
+  useEffect(() => {
+    const onEdit = (e: CustomEvent<Technician>) => {
+      const row = e.detail;
+  
+      setEditingTechnician(row);
+  
+      setForm({
+        name: row.name ?? "",
+        email: row.email ? String(row.email) : "",
+        phone_number: row.phone_number ?? "",
+        speciality: row.speciality ?? "",
+        state: row.state === "activo" ? true : false,
+      });
+  
+      setInternalOpen(true);
+    };
+  
+    window.addEventListener("open-edit-technician", onEdit as any);
+    return () => window.removeEventListener("open-edit-technician", onEdit as any);
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    e.stopPropagation()
 
     let active
-    if (state){active = "activo"}
+    if (form.state){active = "activo"}
     else {active = "inactivo"}
 
     const technicianData = {
-      name: name,
-      email: email,
-      phone_number: phoneNumber,
-      speciality: speciality,
+      name: form.name,
+      email: form.email,
+      phone_number: form.phone_number,
+      speciality: form.speciality,
       state: active,
     }
 
     try {
-      console.log("Enviando clientData:", technicianData);
-      const { data, error } = await clientApp.technician.post(technicianData);
-      console.log("Respuesta del servidor:", { data, error });
+      let response;
 
+      if (editingTechnician) {
+        response = await clientApp.technician({ id: editingTechnician.technician_id }).put(technicianData);
+      } else {
+        response = await clientApp.technician.post(technicianData);
+      }
+
+      const { data, error } = response;
       if (error) throw error.value;
 
-      alert("Technician successfully created");
-      window.location.href = "/technician";
+      window.location.reload();
     } catch (err) {
       console.error("Error al cargar tecnico:", err);
       alert("Error al cargar tecnico");
@@ -59,6 +97,9 @@ return (
     <form id="form-sale" onSubmit={handleSubmit}>
       <CustomSheet
         title="Agregar Técnico"
+        zIndex={zIndex}
+        isOpen={internalOpen}
+        onOpenChange={setInternalOpen}
         description="Agregar técnico al sistema"
         footer={
           <>
@@ -71,24 +112,24 @@ return (
       >
         <div className="grid gap-3">
           <Label>Nombre</Label>
-          <Input value={name} onChange={(e) => setName(e.target.value)} required />
+          <Input value={form.name} onChange={(e) => setForm({...form, name: e.target.value})} required />
         </div>
 
         <div className="grid gap-3">
           <Label>Email</Label>
-          <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+          <Input type="email" value={form.email} onChange={(e) => setForm({...form, email: e.target.value})} required />
         </div>
 
         <div className="grid gap-3">
           <Label>Telefono</Label>
           <Input
-            value={phoneNumber}
+            value={form.phone_number}
             onChange={(e) => {
-              setPhoneNumber(e.target.value.replace(/[^\d+]/g, ""));
+              setForm({...form, phone_number: e.target.value.replace(/[^\d+]/g, "")})
             }}
             onBlur={() => {
-              const normalized = normalizePhoneE164(phoneNumber);
-              if (normalized) setPhoneNumber(normalized);
+              const normalized = normalizePhoneE164(form.phone_number);
+              if (normalized) setForm({...form, phone_number: normalized})
             }}
             inputMode="tel"
             placeholder="+54 9 11 1234 5678"
@@ -98,12 +139,12 @@ return (
 
         <div className="grid gap-3">
           <Label>Especialidad</Label>
-          <Input value={speciality} onChange={(e) => setSpeciality(e.target.value)} required />
+          <Input value={form.speciality} onChange={(e) => setForm({...form, speciality: e.target.value})} required />
         </div>
 
         <div className="flex items-center justify-between gap-3">
           <Label>Activo</Label>
-          <Checkbox checked={state} onCheckedChange={(checked) => setState(!!checked)} />
+          <Checkbox checked={form.state} onCheckedChange={(checked) => setForm({...form, state: !!checked})} />
         </div>
 
       </CustomSheet>

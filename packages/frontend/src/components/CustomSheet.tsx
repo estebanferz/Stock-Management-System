@@ -25,7 +25,8 @@ interface CustomSheetProps {
   zIndex?: number
   onOpenChange?: (open: boolean) => void
   content?: React.ReactNode 
-  onInteractOutside?: (event: Event) => void;
+  onInteractOutside?: (event: any) => void;
+  style?: React.CSSProperties;
 }
 
 export function CustomSheet({
@@ -36,12 +37,13 @@ export function CustomSheet({
   trigger,
   className,
   side = "right",
-  isModal,
+  isModal = true,
   isOpen,
   zIndex,        
   onOpenChange,   
   content,    
-  onInteractOutside,    
+  onInteractOutside,  
+  style,  
 }: CustomSheetProps) {
   return (
     <Sheet modal={isModal} open={isOpen} onOpenChange={onOpenChange}>
@@ -56,11 +58,14 @@ export function CustomSheet({
       </SheetTrigger>
 
       {/* Contenido del Sheet */}
-      <SheetContent 
+      <SheetContent
         onInteractOutside={onInteractOutside} 
-        style={zIndex ? { zIndex } : {}} 
+        style={{
+          ...(style ?? {}),   // Offset del nesting
+          ...(zIndex !== undefined ? { zIndex } : {}), // zIndex manual
+        }}    
         side={side} 
-        className={`${className ?? "duration-300"} flex flex-col max-h-[90vh]"`}
+        className={`${className ?? "duration-300"} flex flex-col max-h-screen`}
       >
         <SheetHeader className="py-5 my-6">
           <SheetTitle className="font-semibold text-xl">{title}</SheetTitle>

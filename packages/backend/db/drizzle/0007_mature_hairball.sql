@@ -1,0 +1,1 @@
+ALTER TABLE "phone" ADD COLUMN "trade_in_device" integer;

@@ -28,7 +28,7 @@ export async function getClientByFilter(
 }
 
 export async function getAllClients() {
-    return await db.select().from(clientTable);
+    return await db.select().from(clientTable).where(eq(clientTable.is_deleted, false)).orderBy(clientTable.client_id);
 }
 
 export const getClientById = async(id: number) => {
@@ -48,8 +48,7 @@ export async function updateClient(
         .where(eq(clientTable.client_id, client_id))
         .returning();
 
-    if (result) {return true}
-    else {return false}
+    return result;
 }
 
 export const addClient = async (newClient: {
@@ -72,15 +71,12 @@ export const addClient = async (newClient: {
     return result;
 }
 
-export const deleteClient = async (client_id: number) => {
+export async function softDeleteClient(id: number) {
     const result = await db
-        .delete(clientTable)
-        .where(eq(clientTable.client_id, client_id))
+        .update(clientTable)
+        .set({ is_deleted: true })
+        .where(eq(clientTable.client_id, id))
         .returning();
 
-    if (result.length > 0) {
-        return true;
-    } else {
-        return false;
-    }
+    return result.length > 0;
 }

@@ -5,7 +5,7 @@ import { parsePhoneNumberFromString } from 'libphonenumber-js';
 import { normalizeShortString } from "../util/formattersBackend";
 
 export const getAllTechnicians = async () => {
-    return await db.select().from(technicianTable);
+    return await db.select().from(technicianTable).where(eq(technicianTable.is_deleted, false)).orderBy(technicianTable.technician_id);
 }
 
 export const getTechnicianById = async(id: number) => {
@@ -96,4 +96,14 @@ export const deleteTechnician = async (technician_id: number) => {
 
     if (result) {return true}
     else {return false}
+}
+
+export async function softDeleteTechnician(id: number) {
+    const result = await db
+        .update(technicianTable)
+        .set({ is_deleted: true })
+        .where(eq(technicianTable.technician_id, id))
+        .returning();
+
+    return result.length > 0;
 }

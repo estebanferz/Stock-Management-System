@@ -1,0 +1,1 @@
+ALTER TABLE "phone" ADD COLUMN "is_deleted" boolean DEFAULT false;

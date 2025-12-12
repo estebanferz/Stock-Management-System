@@ -2,9 +2,10 @@
 
 import Layout from "../../layouts/Layout.astro";
 import { SheetFormSale } from "@/components/SheetForms/SheetFormSale";
-import { CustomTable } from "@/components/CustomTable"
 import { serverApp } from "@/lib/serverAPI";
 import { saleColumns } from "@/config/SaleColumnConfig.client";
+import { SaleTableManager } from "@/components/TableManager/SaleTableManager";
+import ActionPanel from "@/components/ActionPanel";
 
 const response = await serverApp.sale.all.get();
 const data = response.data || [];
@@ -12,7 +13,15 @@ const data = response.data || [];
 
 <Layout title="Ventas">
     <h1 class="w-full text-center text-4xl text-gray-700 font-bold my-5">Ventas</h1>
-    <CustomTable client:only="react" data={data} columns={saleColumns} />
+    <SaleTableManager 
+        client:load 
+        data={data} 
+        columns={saleColumns} 
+    />
+
+    <div class="m-4 mt-20" slot="tercer-columna">
+        <ActionPanel client:load />
+    </div>
     <div class="group absolute bottom-10 right-10">
         <span 
         class="absolute bottom-full right-0 mb-2 whitespace-nowrap rounded-md border bg-white px-4 py-2 

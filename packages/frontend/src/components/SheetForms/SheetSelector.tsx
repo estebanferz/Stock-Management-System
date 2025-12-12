@@ -3,9 +3,7 @@ import { clientApp } from "@/lib/clientAPI";
 import { Button } from "@/components/ui/button";
 import { Search, ChevronRight } from 'lucide-react';
 import { CustomSheet } from "@/components/CustomSheet";
-import { SheetClose } from "@/components/ui/sheet"
 import { Input } from "@/components/ui/input"; 
-import { Label } from "@/components/ui/label";
 
 interface SheetSelectorProps {
     type: 'client' | 'seller' | 'device' | 'technician' | 'provider';
@@ -52,7 +50,6 @@ const DataSearchSheet: React.FC<DataSearchSheetProps> = ({ type, onSelect, setIs
             } else {
                 setResults([]);
             }
-
         } catch (error) {
             console.error('Error searching:', error);
             setResults([]);
@@ -134,7 +131,7 @@ export function SheetSelector({ type, currentId, onSelect }: SheetSelectorProps)
             return;
         }
         try {
-            const result = await endpoint({id: id}).get(); 
+            const result = await endpoint({id: id}).get();
             if (result.data) {
                 const itemData = result.data as Record<string, any>;
                 setDisplayName(`${itemData[nameKey]} (ID: ${id})`);
