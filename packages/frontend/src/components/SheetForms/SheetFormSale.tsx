@@ -137,6 +137,37 @@ export function SheetFormSale({zIndex}:SheetFormSaleProps) {
         response = await clientApp.sale({ id: editingSale.sale_id }).put(saleData);
       } else {
         response = await clientApp.sale.post(saleData);
+
+        const seller_id = saleData.seller_id;
+        const { data: sellerData, error: sellerError } = await clientApp.seller({ id: seller_id }).get();
+
+        if (sellerError || !sellerData) {
+          console.error("Error fetching seller data:", sellerError);
+          throw new Error("Failed to fetch seller data");
+        }
+        const seller_commission = parseFloat((sellerData as any).commission);
+
+        // Registrar la comisión como gasto en el sistema
+        try {
+          const expensePayload = {
+            datetime,
+            category: 'Comisión',
+            description: `Comisión por venta (${seller_id})`,
+            amount: String(Number(seller_commission)/100 * Number(saleData.total_amount)),
+            payment_method: saleData.payment_method ?? 'Unknown',
+            receipt_number: null,
+            provider_id: null,
+          };
+
+          const { error: expenseError } = await clientApp.expense.post(expensePayload);
+          if (expenseError) {
+            console.error('Failed to create commission expense:', expenseError.value ?? expenseError);
+          } else {
+            console.log('Commission expense created.');
+          }
+        } catch (err) {
+          console.error('Error creating commission expense:', err);
+        }
       }
 
       const { data, error } = response;
@@ -270,7 +301,8 @@ return (
           <Input 
             value={form.total_amount} 
             onChange={(e) => setForm({...form, total_amount: e.target.value})} 
-            type="number" 
+            type="number"
+            placeholder="0.00" 
             step="0.01" 
             required 
           />

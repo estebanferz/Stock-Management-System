@@ -1,6 +1,7 @@
 import { Elysia, t } from "elysia";
-import { getAllExpenses, getExpensesByFilter, addExpense, updateExpense, softDeleteExpense, getTotalExpenses } from "../services/expenseService";
+import { getAllExpenses, getExpensesByFilter, addExpense, updateExpense, softDeleteExpense, getTotalExpenses, addExpenseWithReceipt, updateExpenseWithReceipt, getExpenseReceiptFile } from "../services/expenseService";
 import { expenseInsertDTO, expenseUpdateDTO } from "@server/db/types";
+import { safeFilename } from "../util/formattersBackend";
 
 export const expenseController = new Elysia({prefix: "/expense"})
     .get("/", () => {
@@ -28,65 +29,113 @@ export const expenseController = new Elysia({prefix: "/expense"})
             },
         },
     )
-    .post(
-        "/",
-        async ({body, set}) => {
+    .get("/:id/receipt", async ({ params, set }) => {
+        const expenseId = Number(params.id);
 
-            const newExpense = {
-                datetime: body.datetime ? new Date(body.datetime) : undefined,
-                category: body.category,
-                ...(body.description && {description: body.description}),
-                amount: body.amount,
-                payment_method: body.payment_method,
-                ...(body.receipt_number && {receipt_number: body.receipt_number}),
-                ...(body.provider_id && {provider_id: body.provider_id}),
-            };
-            
-            const result = await addExpense(newExpense);
-            set.status = 201;
-            return result;
-        },
-        {
-            body: t.Object({
-                ...expenseInsertDTO.properties,
-                datetime: t.Optional(t.String({format: "date-time"})),
-            }),
-            detail: {
-                summary: "Insert a new expense",
-                tags: ["expenses"],
-            },
+        const receipt = await getExpenseReceiptFile(expenseId);
+
+        if (!receipt) {
+            set.status = 404;
+            return;
         }
+
+        const filename = safeFilename(receipt.originalName);
+
+        set.headers["Content-Type"] = receipt.mime;
+
+        // ✅ filename ASCII-safe
+        set.headers["Content-Disposition"] =
+            `inline; filename="${filename}"`;
+
+        return receipt.file;
+    })
+    .post(
+    "/",
+    async ({ body, set }) => {
+        try {
+        const result = await addExpenseWithReceipt(body);
+        set.status = 201;
+        return result;
+        } catch (err: any) {
+        switch (err.message) {
+            case "INVALID_RECEIPT_TYPE":
+            set.status = 400;
+            return { error: "Tipo de archivo no permitido" };
+
+            case "RECEIPT_TOO_LARGE":
+            set.status = 400;
+            return { error: "El archivo supera los 5MB" };
+
+            default:
+            throw err;
+        }
+        }
+    },
+    {
+        body: t.Object({
+        ...expenseInsertDTO.properties,
+
+        datetime: t.Optional(
+            t.String({ format: "date-time" })
+        ),
+
+        receipt: t.Optional(t.File()),
+
+        provider_id: t.Optional(
+            t.Union([t.Integer(), t.Null(), t.String()])
+        ),
+        }),
+        detail: {
+        summary: "Insert a new expense (with optional receipt)",
+        tags: ["expenses"],
+        },
+    }
     )
     .put(
-        "/:id",
-        async ({ body, params: { id }, set }) => {
+    "/:id",
+    async ({ body, params: { id }, set }) => {
+        try {
+        const result = await updateExpenseWithReceipt(Number(id), body);
+        set.status = 200;
+        return result;
+        } catch (err: any) {
+        switch (err.message) {
+            case "INVALID_RECEIPT_TYPE":
+            set.status = 400;
+            return { error: "Tipo de archivo no permitido" };
 
-            const updExpense = {
-                category: body.category,
-                ...(body.description && {description: body.description}),
-                amount: body.amount,
-                payment_method: body.payment_method,
-                ...(body.receipt_number && {receipt_number: body.receipt_number}),
-                ...(body.provider_id && {provider_id: body.provider_id}),
-            };
+            case "RECEIPT_TOO_LARGE":
+            set.status = 400;
+            return { error: "El archivo supera los 5MB" };
 
-            const result = await updateExpense(
-                Number(id),
-                updExpense,
-            );
-            set.status = 200;
-            return result;
+            case "EXPENSE_NOT_FOUND":
+            set.status = 404;
+            return { error: "Gasto no encontrado" };
+
+            default:
+            throw err;
+        }
+        }
+    },
+    {
+        body: t.Object({
+        ...expenseUpdateDTO.properties,
+
+        datetime: t.Optional(
+            t.String({ format: "date-time" })
+        ),
+
+        receipt: t.Optional(t.File()),
+
+        provider_id: t.Optional(
+            t.Union([t.Integer(), t.Null(), t.String()])
+        ),
+        }),
+        detail: {
+        summary: "Update an expense (with optional receipt)",
+        tags: ["expenses"],
         },
-        {
-            body: t.Object({
-                ...expenseUpdateDTO.properties,
-                datetime: t.Optional(t.String({format: "date-time"})),
-            }),
-            detail: {
-                summary: "Update an expense",
-                tags: ["expenses"],
-            },
-        },
+    }
     )
     .delete("/:id", async ({ params: { id }, set }) => {
         const ok = await softDeleteExpense(Number(id));

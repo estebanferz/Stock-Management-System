@@ -1,16 +1,8 @@
 import React, { useState } from "react"
-import { Button } from "@/components/ui/button"
-import {
-  DropdownMenu,
-  DropdownMenuCheckboxItem,
-  DropdownMenuContent,
-  DropdownMenuTrigger,
-  DropdownMenuSeparator,
-} from "@/components/ui/dropdown-menu"
-import { ChevronDown } from "lucide-react"
-
 import { formatDate, formatMoney, formatPaymentMethod, generalStringFormat, formatPhoneE164 } from "@/utils/formatters"
 import { TruncatedDescription } from "./TruncatedDescription"
+import { ReceiptCell } from "./ReceiptCell"
+import { PreviewModal } from "./PreviewModal"
 
 export interface Column<T> {
   key?: keyof T
@@ -40,6 +32,14 @@ export function CustomTable<T>({
   onDelete
 }: TableProps<T>) {
 
+  const [pdfPreview, setPdfPreview] = useState<{
+    open: boolean;
+    fileName?: string;
+    filePath?: string;
+  }>({
+    open: false,
+  });
+
   const getColKey = (col: Column<T>) =>
     (col.accessorKey as string) || (col.key as string)
 
@@ -62,6 +62,13 @@ export function CustomTable<T>({
     general: (v) => generalStringFormat(v),
     phone: (v) => formatPhoneE164(v),
     description: (v) => <TruncatedDescription text={v}/>,
+    receipt: (_v, row) => (
+      <ReceiptCell
+        fileName={(row as any).receipt_original_name}
+        expenseId={(row as any).expense_id} 
+        mime={(row as any).receipt_mime}
+      />
+    ),
   }
 
   const getRenderer = (col: Column<T>) => {
@@ -96,7 +103,7 @@ export function CustomTable<T>({
               {isActionMode && (
               <th
                 className="
-                  sticky right-0
+                  sticky top-0 right-0
                   z-30
                   bg-gray-200
                   px-2
@@ -170,7 +177,6 @@ export function CustomTable<T>({
           </tbody>
         </table>
       </div>
-
     </div>
   )
 }

@@ -1,5 +1,5 @@
 import { Elysia, t } from "elysia";
-import { getSellersByFilter, getAllSellers, getSellerById, addSeller, updateSeller, deleteSeller} from "../services/sellerService";
+import { getSellersByFilter, getAllSellers, getSellerById, addSeller, updateSeller, softDeleteSeller} from "../services/sellerService";
 import { sellerInsertDTO, sellerUpdateDTO } from "@server/db/types";
 
 export const sellerController = new Elysia({prefix: "/seller"})
@@ -39,6 +39,7 @@ export const sellerController = new Elysia({prefix: "/seller"})
                 ...(body.phone_number && {phone_number: body.phone_number}),
                 ...(body.hire_date && {hire_date: body.hire_date}),
                 ...(body.pay_date && {pay_date: body.pay_date}),
+                ...(body.commission && {commission: body.commission}),
             };
             
             const result = await addSeller(newSeller);
@@ -78,6 +79,8 @@ export const sellerController = new Elysia({prefix: "/seller"})
                 ...(body.email && {email: body.email}),
                 ...(body.phone_number && {phone_number: body.phone_number}),
                 ...(body.pay_date && {pay_date: body.pay_date}),
+                hire_date: body.hire_date,
+                ...(body.commission && {commission: body.commission}),
             };
 
             const result = await updateSeller(
@@ -97,35 +100,9 @@ export const sellerController = new Elysia({prefix: "/seller"})
             },
         },
     )
-    .delete(
-        "/:id",
-        async ({ params: { id }, set }) => {
-            const sellerIdNum = Number(id);
-            if (!Number.isInteger(sellerIdNum) || sellerIdNum <= 0) {
-                set.status = 400;
-                return false;
-            }
-
-            const result = await deleteSeller(sellerIdNum);
-            if (!result) {
-                set.status = 404;
-                return false;
-            }
-
-            set.status = 200;
-            return true;
-        },
-        {
-            params: t.Object({
-                id: t.Numeric({
-                    minimum: 1,
-                    errorMessage: 'seller_id must be a positive integer',
-                })
-            }),
-            detail: {
-                summary: "Delete a seller",
-                tags: ["sellers"],
-            },
-        },
-    )
+    .delete("/:id", async ({ params: { id }, set }) => {
+        const ok = await softDeleteSeller(Number(id));
+        set.status = ok ? 200 : 404;
+        return ok;
+    });
     

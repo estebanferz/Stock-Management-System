@@ -1,6 +1,6 @@
 import { db } from "@server/db/db";
 import { repairTable } from "@server/db/schema.ts";
-import { ilike, and, eq, sql } from "drizzle-orm"
+import { ilike, and, eq, sql, is } from "drizzle-orm"
 import { normalizeShortString } from "../util/formattersBackend";
 
 export const getRepairsByFilter = async (
@@ -22,6 +22,7 @@ export const getRepairsByFilter = async (
                 client_id? eq(repairTable.client_id, client_id) : undefined,
                 technician_id? eq(repairTable.technician_id, technician_id) : undefined,
                 device_id? eq(repairTable.device_id, device_id) : undefined,
+                eq(repairTable.is_deleted, false),
             )
         );
 
@@ -29,7 +30,7 @@ export const getRepairsByFilter = async (
 }
 
 export const getAllRepairs = async () => {
-    return await db.select().from(repairTable);
+    return await db.select().from(repairTable).where(eq(repairTable.is_deleted, false)).orderBy(repairTable.repair_id);
 }
 
 export const addRepair = async (
@@ -88,15 +89,12 @@ export const updateRepair = async (
     return result;
 }
 
-export const deleteRepair = async (repair_id: number) => {
+export async function softDeleteRepair(id: number) {
     const result = await db
-        .delete(repairTable)
-        .where(eq(repairTable.repair_id, repair_id))
+        .update(repairTable)
+        .set({ is_deleted: true })
+        .where(eq(repairTable.repair_id, id))
         .returning();
 
-    if (result.length === 0) {
-        return false;
-    }
-
-    return true;
+    return result.length > 0;
 }
