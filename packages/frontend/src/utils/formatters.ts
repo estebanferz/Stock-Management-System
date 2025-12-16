@@ -96,3 +96,15 @@ export const formatPhoneE164 = (raw: string) => {
 
   return `+${phone.countryCallingCode} ${area} ${local}`;
 };
+
+export const toInputDate = (value: unknown): string => {
+  if (value instanceof Date) {
+    return value.toISOString().split("T")[0];
+  }
+
+  if (typeof value === "string") {
+    return value.split("T")[0];
+  }
+
+  return "";
+};

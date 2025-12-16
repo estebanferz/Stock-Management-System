@@ -10,7 +10,7 @@ export const clientTable = pgTable("client", {
   id_number: bigint({mode: "number"}).notNull().unique(),
   birth_date: date(),
   debt: integer().default(0),
-  is_deleted: boolean().default(false)
+  is_deleted: boolean().default(false),
 });
 export type Client = InferSelectModel<typeof clientTable>
 
@@ -31,7 +31,9 @@ export const providerTable = pgTable("provider", {
   phone_number: varchar({length: 255}).notNull(),
   email: varchar({ length: 255 }),
   address: varchar('address', { length: 255 }).notNull(),
+  is_deleted: boolean().default(false),
 });
+export type Provider = InferSelectModel<typeof providerTable>
 
 export const expenseTable = pgTable("expense", {
     expense_id: integer().primaryKey().generatedAlwaysAsIdentity(),
@@ -40,7 +42,10 @@ export const expenseTable = pgTable("expense", {
     description: varchar({ length: 255 }),
     amount: numeric({precision: 12, scale: 2}).notNull(),
     payment_method: varchar({ length: 50 }).notNull(),
-    receipt_number: varchar({ length: 100 }).unique(),
+    receipt_path: varchar({ length: 255 }),
+    receipt_original_name: varchar({ length: 255 }),
+    receipt_mime: varchar({ length: 100 }),
+    receipt_size: integer(),
     provider_id: 
         integer()
         .references(() => providerTable.provider_id),
@@ -89,6 +94,7 @@ export const repairTable = pgTable("repair", {
         integer()  
         .references(() => phoneTable.device_id)
         .notNull(),
+    is_deleted: boolean().default(false),
 });
 export type Repair = InferSelectModel<typeof repairTable>
 
@@ -126,5 +132,7 @@ export const sellerTable = pgTable("seller", {
     phone_number: varchar({ length: 16 }),
     hire_date: date().notNull().default(sql`CURRENT_DATE`),
     pay_date: date().default(sql`CURRENT_DATE`),
+    commission: numeric({precision: 5, scale: 2}).default("0.00"), // Percentage (e.g., 5.00 for 5%)
+    is_deleted: boolean().default(false),
 });
 export type Seller = InferSelectModel<typeof sellerTable>

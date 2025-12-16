@@ -52,9 +52,7 @@ export function TruncatedDescription({ text, words = 2 }: TruncatedDescriptionPr
 
       {/* Popup + Overlay */}
       {open && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-150">
-          
-          {/* Contenedor del popup */}
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-150">          
           <div
             ref={modalRef}
             className="bg-white dark:bg-neutral-900 p-6 rounded-xl shadow-xl max-w-md w-full animate-in zoom-in duration-200"
@@ -67,7 +65,7 @@ export function TruncatedDescription({ text, words = 2 }: TruncatedDescriptionPr
 
             <button
               onClick={() => setOpen(false)}
-              className="mt-4 px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 w-full transition"
+              className="mt-4 px-4 py-2 rounded-lg bg-gray-200 text-black hover:text-white hover:bg-mainColor w-full transition"
             >
               Cerrar
             </button>

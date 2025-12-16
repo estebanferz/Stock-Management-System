@@ -71,6 +71,41 @@
       "when": 1765572667860,
       "tag": "0009_sharp_zaladane",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1765655746512,
+      "tag": "0010_classy_ravenous",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1765715692818,
+      "tag": "0011_late_demogoblin",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1765766382362,
+      "tag": "0012_colorful_red_skull",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1765806154239,
+      "tag": "0013_glossy_zzzax",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1765897633729,
+      "tag": "0014_quiet_serpent_society",
+      "breakpoints": true
     }
   ]
 }

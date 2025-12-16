@@ -1,0 +1,1 @@
+ALTER TABLE "repair" ADD COLUMN "is_deleted" boolean DEFAULT false;

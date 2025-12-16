@@ -9,6 +9,11 @@ import {expenseController} from "./controllers/expenseController";
 import {providerController} from "./controllers/providerController";
 import {saleController} from "./controllers/saleController";
 import {sellerController} from "./controllers/sellerController";
+import { staticPlugin } from "@elysiajs/static";
+import path from "node:path";
+import { existsSync } from "node:fs";
+
+const UPLOADS_DIR = path.join(import.meta.dir, "../uploads");
 
 const app = new Elysia({prefix: '/api'})
   .use(cors({ origin: [
@@ -18,6 +23,13 @@ const app = new Elysia({prefix: '/api'})
   .get("/", () => {
     return { message: "app" };
   })
+  .use(
+    staticPlugin({
+      assets: UPLOADS_DIR,
+      prefix: "/uploads",
+      alwaysStatic: true,
+    })
+  )
   .use(clientController)
   .use(technicianController)
   .use(phoneController)
@@ -26,6 +38,10 @@ const app = new Elysia({prefix: '/api'})
   .use(providerController)
   .use(saleController)
   .use(sellerController)
+  .get("/debug/receipt/:name", ({ params }) => {
+    const abs = path.join(UPLOADS_DIR, "expenses", params.name);
+    return { abs, exists: existsSync(abs) };
+  })
 
   .listen(3000);
 

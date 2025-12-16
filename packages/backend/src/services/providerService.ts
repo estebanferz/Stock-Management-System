@@ -20,12 +20,14 @@ export async function getProviderByFilter(
 }
 
 export const getAllProviders = async () => {
-    return await db.select().from(providerTable);
+    return await db.select().from(providerTable).where(eq(providerTable.is_deleted, false)).orderBy(providerTable.provider_id);
 }
 
 export const getProviderById = async(id: number) => {
     const provider = await db.query.providerTable.findFirst({
-        where: eq(providerTable.provider_id, id),
+        where: and(
+            eq(providerTable.provider_id, id),
+            eq(providerTable.is_deleted, false)),
     });
     
     
@@ -69,8 +71,7 @@ export async function updateProvider(
         .where(eq(providerTable.provider_id, provider_id))
         .returning();
 
-    if (result) {return true}
-    else {return false}
+    return result;
 }
 
 export const deleteProvider = async (provider_id: number) => {

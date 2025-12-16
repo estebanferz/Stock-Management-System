@@ -35,6 +35,7 @@ export function SheetFormExpense({ isOpen, onClose, zIndex, injectedAmount, inje
   const initialLocalTime = getLocalTime()
   const [date, setDate] = useState(initialLocalTime.toISOString().split("T")[0])
   const [time, setTime] = useState(initialLocalTime.toISOString().slice(11, 16))
+  const [receiptFile, setReceiptFile] = useState<File | undefined>(undefined);
 
   const [internalOpen, setInternalOpen] = useState(false) //Only used when not nested
   const isNested = onClose !== undefined
@@ -42,12 +43,10 @@ export function SheetFormExpense({ isOpen, onClose, zIndex, injectedAmount, inje
 
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
   const [form, setForm] = useState({
-    datetime: "",
     category: isNested ? "Producto" : "",
     description: "",
     amount: `${injectedAmount || ""}`,
     payment_method: "Pago",
-    receipt_number: "",
     provider_id: "",
   });
 
@@ -68,12 +67,10 @@ export function SheetFormExpense({ isOpen, onClose, zIndex, injectedAmount, inje
       setTime(t.slice(0, 5));       // HH:MM
 
       setForm({
-        datetime: String(row.datetime) ?? "",
         category: row.category ?? "",
         description: row.description ?? "",
         amount: row.amount ?? "",
         payment_method: row.payment_method ?? "",
-        receipt_number: row.receipt_number ?? "",
         provider_id: String(row.provider_id) ?? "",
       });
 
@@ -102,43 +99,61 @@ export function SheetFormExpense({ isOpen, onClose, zIndex, injectedAmount, inje
       } else {
           setInternalOpen(open)
       }
+      if (!open && !isNested) {
+        setEditingExpense(null);
+        setReceiptFile(undefined); // Limpiar archivo al cerrar
+        setForm({
+          category: isNested ? "Producto" : "",
+          description: "",
+          amount: "",
+          payment_method: "Pago",
+          provider_id: "",
+        });
+        const newLocalTime = getLocalTime();
+        setDate(newLocalTime.toISOString().split("T")[0]);
+        setTime(newLocalTime.toISOString().slice(11, 16));
+      }
   }
 
   const handleSubmitExpense = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
     e.stopPropagation();
 
     const datetime = `${date}T${time}:00Z`;
     const expenseData = {
       ...form,
       datetime: datetime,
-      provider_id: Number(form.provider_id),
+      provider_id: form.provider_id
+        ? Number(form.provider_id)
+        : null,
+      receipt: receiptFile,
     }
+    
 
     try {
       let response;
 
       if (editingExpense) {
-        response = await clientApp.expense({ id: editingExpense.expense_id }).put(expenseData);
+        response = await clientApp.expense({ id: editingExpense.expense_id }).put(expenseData as any);
       } else {
-        response = await clientApp.expense.post(expenseData);
+        response = await clientApp.expense.post(expenseData as any);
       }
-      const { data, error } = response
 
-      if (error) throw error.value
-      
+      const { error } = response;
+      if (error) throw error.value;
+
       if (isNested) {
-          onClose!(); 
-      }else{
-        window.location.href = "/expense"; 
+        onClose!();
+      } else {
+        window.location.href = "/expense";
       }
     } catch (err) {
-      console.error("❌ Error al cargar venta:", err)
-      alert("Error al cargar venta")
-      if (isNested) onClose!(); 
-
+      console.error("❌ Error al cargar gasto:", err);
+      alert("Error al cargar gasto");
+      if (isNested) onClose!();
     }
-  }
+  };
+
   
   const offset = depth * 380;
   const handlePropagationStop = (e: React.MouseEvent) => {
@@ -218,12 +233,19 @@ return (
 
         <div className="grid gap-3">
           <Label>Comprobante</Label>
-          <Input value={form.receipt_number} onChange={(e) => setForm({ ...form, receipt_number: e.target.value })} required />
+          <Input
+            type="file"
+            accept="image/*,application/pdf"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              setReceiptFile(file);
+            }}
+          />
         </div>
 
         <div className="grid gap-3">
           <Label>Proveedor</Label>
-          <SheetSelector type="provider" currentId={form.provider_id} onSelect={(id) => setForm({ ...form, provider_id: id })} />
+          <SheetSelector type="provider" currentId={form.provider_id} onSelect={(id) => setForm({ ...form, provider_id: id ?? ""  })} />
         </div>
       </CustomSheet>
     </form>

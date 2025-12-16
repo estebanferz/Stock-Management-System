@@ -1,7 +1,7 @@
 import { db } from "@server/db/db"
 import { sellerTable } from "@server/db/schema"
 import { and, ilike, eq, sql } from "drizzle-orm"
-import { normalizeShortString } from "../util/formattersBackend";
+import { dateToYMD, normalizeShortString } from "../util/formattersBackend";
 
 
 export const getSellersByFilter = async (
@@ -17,6 +17,7 @@ export const getSellersByFilter = async (
                 name? ilike(sellerTable.name, `%${name}%`) : undefined,
                 hire_date? eq(sql`date(${sellerTable.hire_date})`, hire_date) : undefined,
                 pay_date? eq(sql`date(${sellerTable.pay_date})`, pay_date) : undefined,
+                eq(sellerTable.is_deleted, false),
             )
         );
         
@@ -24,14 +25,15 @@ export const getSellersByFilter = async (
 }
 
 export const getAllSellers = async () => {
-    return await db.select().from(sellerTable);
+    return await db.select().from(sellerTable).where(eq(sellerTable.is_deleted, false)).orderBy(sellerTable.seller_id);
 }
 
 export const getSellerById = async(id: number) => {
-    const sale = await db.query.sellerTable.findFirst({
+    const seller = await db.query.sellerTable.findFirst({
         where: eq(sellerTable.seller_id, id),
     });
-    return sale;
+    
+    return seller;
 }
 
 export const addSeller = async (
@@ -42,6 +44,7 @@ export const addSeller = async (
         phone_number?: string;
         hire_date?: string;
         pay_date?: string;
+        commission?: string;
     }
 ) => {
     const normalizedSeller = {
@@ -67,6 +70,8 @@ export const updateSeller = async (
         email?: string,
         phone_number?: string,
         pay_date?: string,
+        hire_date?: string,
+        commission?: string,
     }
 ) => {
     const result = await db
@@ -80,15 +85,12 @@ export const updateSeller = async (
     return result;
 }
 
-export const deleteSeller = async (
-    seller_id: number
-) => {
+export async function softDeleteSeller(id: number) {
     const result = await db
-        .delete(sellerTable)
-        .where(
-            eq(sellerTable.seller_id, seller_id)
-        )
+        .update(sellerTable)
+        .set({ is_deleted: true })
+        .where(eq(sellerTable.seller_id, id))
         .returning();
 
-    return result;
+    return result.length > 0;
 }

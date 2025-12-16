@@ -33,6 +33,7 @@ export const expenseColumns: Column<Expense>[] = [
     {
         accessorKey: "receipt_number",
         header: "Comprobante",
+        renderKey: "receipt",
     },
     {
         accessorKey: "provider_id",

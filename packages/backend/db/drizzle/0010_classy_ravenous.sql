@@ -1,0 +1,1 @@
+ALTER TABLE "seller" ADD COLUMN "is_deleted" boolean DEFAULT false;

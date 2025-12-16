@@ -1,0 +1,1 @@
+ALTER TABLE "seller" ADD COLUMN "commission" numeric(5, 2) DEFAULT '0.00';

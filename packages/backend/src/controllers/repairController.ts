@@ -1,5 +1,5 @@
 import { Elysia, t } from "elysia";
-import { getRepairsByFilter, getAllRepairs, addRepair, updateRepair, deleteRepair } from "../services/repairService"
+import { getRepairsByFilter, getAllRepairs, addRepair, updateRepair, softDeleteRepair } from "../services/repairService"
 import { repairInsertDTO, repairUpdateDTO } from "@server/db/types"
 
 export const repairController = new Elysia({prefix: "/repair"})
@@ -67,8 +67,8 @@ export const repairController = new Elysia({prefix: "/repair"})
         }
     )
     .put(
-        "/:repair_id",
-        async ({ body, params: { repair_id }, set }) => {
+        "/:id",
+        async ({ body, params: { id }, set }) => {
 
             const updRepair = {
                 repair_state: body.repair_state,
@@ -83,7 +83,7 @@ export const repairController = new Elysia({prefix: "/repair"})
             };
 
             const result = await updateRepair(
-                Number(repair_id),
+                Number(id),
                 updRepair,
             );
             set.status = 200;
@@ -92,6 +92,7 @@ export const repairController = new Elysia({prefix: "/repair"})
         {
             body: t.Object({
                 ...repairUpdateDTO.properties,
+                datetime: t.String({ format: "date-time" })
             }),
             detail: {
                 summary: "Update a repair",
@@ -99,34 +100,8 @@ export const repairController = new Elysia({prefix: "/repair"})
             },
         },
     )
-    .delete(
-        "/:repair_id",
-        async ({ params: { repair_id }, set }) => {
-            const repairIdNum = Number(repair_id);
-            if (!Number.isInteger(repairIdNum) || repairIdNum <= 0) {
-                set.status = 400;
-                return false;
-            }
-
-            const result = await deleteRepair(repairIdNum);
-            if (!result) {
-                set.status = 404;
-                return false;
-            }
-
-            set.status = 200;
-            return true;
-        },
-        {
-            params: t.Object({
-                repair_id: t.Numeric({
-                    minimum: 1,
-                    errorMessage: 'repair_id must be a positive integer',
-                })
-            }),
-            detail: {
-                summary: "Delete a repair",
-                tags: ["repairs"],
-            },
-        },
-    )
+    .delete("/:id", async ({ params: { id }, set }) => {
+        const ok = await softDeleteRepair(Number(id));
+        set.status = ok ? 200 : 404;
+        return ok;
+    });
