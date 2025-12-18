@@ -2,9 +2,6 @@ import type { Column } from "@/components/CustomTable"
 import type { Seller } from "@server/db/schema"
 
 export const sellerColumns: Column<Seller>[] = [
-  { accessorKey: "seller_id", header: "ID" },
-
-  
   { accessorKey: "name", header: "Nombre", renderKey: "general" },
   { accessorKey: "age", header: "Edad" },
   { accessorKey: "email", header: "Email" },

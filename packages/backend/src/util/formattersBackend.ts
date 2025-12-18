@@ -1,3 +1,5 @@
+import { and, ilike, sql } from "drizzle-orm";
+
 export function normalizeShortString(str: string): string {
   return str
     .normalize("NFD")
@@ -22,4 +24,22 @@ export function safeFilename(name: string) {
     .replace(/\s+/g, "_")
     // fallback
     .slice(0, 150) || "comprobante";
+}
+
+
+export function ilikeWordsNormalized(column: any, value?: string) {
+  if (!value) return undefined;
+
+  // normalizamos el input: "Juana Go" -> ["juana", "go"]
+  const words = value
+    .trim()
+    .toLowerCase()
+    .replace(/[-_]+/g, " ")
+    .split(/\s+/)
+    .filter(Boolean);
+
+  // normalizamos el column: "juana-gorriti" -> "juana gorriti"
+  const normalizedCol = sql`regexp_replace(lower(${column}), '[-_]+', ' ', 'g')`;
+
+  return and(...words.map((w) => ilike(normalizedCol as any, `%${w}%`)));
 }

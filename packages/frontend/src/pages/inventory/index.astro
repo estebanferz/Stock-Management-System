@@ -4,11 +4,11 @@ import Layout from "../../layouts/Layout.astro";
 import { SheetFormPhone } from "@/components/SheetForms/SheetFormPhone";
 import { serverApp } from "@/lib/serverAPI";
 import { phoneColumns } from "@/config/PhoneColumnConfig";
-import { PhoneTableManager } from "@/components/TableManager/PhoneTableManager";
 import ActionPanel from "@/components/ActionPanel";
+import { PhonesPageManager } from "@/components/PageManager/PhonePageManager";
 
-const response = await serverApp.phone.all.get();
-const data = response.data || [];
+const response = await serverApp.phone.all.get({ query: { is_deleted: false } });
+const data: any[] = Array.isArray(response.data) ? response.data : [];
     
 
 ---
@@ -16,10 +16,11 @@ const data = response.data || [];
 <Layout title="Inventario">
     <h1 class="w-full text-center text-4xl text-gray-700 font-bold my-5">Inventario</h1>
     
-    <PhoneTableManager 
-        client:load 
-        data={data} 
-        columns={phoneColumns} 
+
+    <PhonesPageManager
+        client:load
+        initialData={data}
+        columns={phoneColumns}
     />
 
     <div class="m-4 mt-20" slot="tercer-columna">

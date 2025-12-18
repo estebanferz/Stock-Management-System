@@ -7,22 +7,33 @@ export const providerController = new Elysia({prefix: '/provider'})
         return { message: "Provider endpoint" };
     })
     .get(
-        "/all",
-        async ({ query }) => {
-            if (query.name) {
-                return await getProviderByFilter(
-                    query.name,
-                ); //Filter by parameter
-            }
+    "/all",
+    async ({ query }) => {
+        const hasFilters =
+        query.name ||
+        query.email ||
+        query.phone_number ||
+        query.address ||
+        query.is_deleted;
 
-            return await getAllProviders();
+        if (hasFilters) {
+        return await getProviderByFilter({
+            name: query.name,
+            email: query.email,
+            phone_number: query.phone_number,
+            address: query.address,
+            is_deleted: query.is_deleted === undefined ? undefined : query.is_deleted === "true",
+        });
+        }
+
+        return await getAllProviders();
+    },
+    {
+        detail: {
+        summary: "Get all providers in DB",
+        tags: ["providers"],
         },
-        {
-            detail: {
-                summary: "Get all providers in DB",
-                tags: ["providers"],
-            },
-        },
+    },
     )
     .get(
         "/:id",

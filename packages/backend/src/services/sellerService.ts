@@ -1,31 +1,63 @@
 import { db } from "@server/db/db"
 import { sellerTable } from "@server/db/schema"
-import { and, ilike, eq, sql } from "drizzle-orm"
-import { dateToYMD, normalizeShortString } from "../util/formattersBackend";
+import { and, ilike, eq, sql, gte, lte } from "drizzle-orm"
+import { normalizeShortString } from "../util/formattersBackend";
 
 
-export const getSellersByFilter = async (
-    name?: string,
-    hire_date?: string,
-    pay_date?: string,
-) => {
-    const result = await db
-        .select()
-        .from(sellerTable)
-        .where(
-            and(
-                name? ilike(sellerTable.name, `%${name}%`) : undefined,
-                hire_date? eq(sql`date(${sellerTable.hire_date})`, hire_date) : undefined,
-                pay_date? eq(sql`date(${sellerTable.pay_date})`, pay_date) : undefined,
-                eq(sellerTable.is_deleted, false),
-            )
-        );
-        
-        return result;
-}
+export const getSellersByFilter = async (filters: {
+  name?: string;
+  hire_date?: string;
+  pay_date?: string;
+  age_min?: string;
+  age_max?: string;
+  commission_min?: string;
+  commission_max?: string;
+  is_deleted?: boolean;
+}) => {
+  return await db
+    .select()
+    .from(sellerTable)
+    .where(
+      and(
+        filters.name
+          ? ilike(sellerTable.name, `%${filters.name}%`)
+          : undefined,
+
+        filters.hire_date
+          ? eq(sql`date(${sellerTable.hire_date})`, filters.hire_date)
+          : undefined,
+
+        filters.pay_date
+          ? eq(sql`date(${sellerTable.pay_date})`, filters.pay_date)
+          : undefined,
+
+        filters.age_min
+          ? gte(sellerTable.age, Number(filters.age_min))
+          : undefined,
+
+        filters.age_max
+          ? lte(sellerTable.age, Number(filters.age_max))
+          : undefined,
+
+        filters.commission_min
+          ? gte(sellerTable.commission, filters.commission_min)
+          : undefined,
+
+        filters.commission_max
+          ? lte(sellerTable.commission, filters.commission_max)
+          : undefined,
+
+        filters.is_deleted !== undefined
+          ? eq(sellerTable.is_deleted, filters.is_deleted)
+          : undefined,
+      ),
+    )
+    .orderBy(sellerTable.seller_id);
+};
+
 
 export const getAllSellers = async () => {
-    return await db.select().from(sellerTable).where(eq(sellerTable.is_deleted, false)).orderBy(sellerTable.seller_id);
+    return await db.select().from(sellerTable).orderBy(sellerTable.seller_id);
 }
 
 export const getSellerById = async(id: number) => {

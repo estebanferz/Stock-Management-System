@@ -4,9 +4,9 @@ import {ActionPanel} from "@/components/ActionPanel";
 import { SheetFormProvider } from "@/components/SheetForms/SheetFormProvider";
 import { serverApp } from "@/lib/serverAPI";
 import { providerColumns } from "@/config/ProviderColumnConfig";
-import { ProviderTableManager } from "@/components/TableManager/ProviderTableManager";
+import { ProviderPageManager } from "@/components/PageManager/ProviderPageManager";
 
-const response = await serverApp.provider.all.get();
+const response = await serverApp.provider.all.get({ query: { is_deleted: false }});
 const data = response.data || [];
 
 ---
@@ -17,10 +17,10 @@ const data = response.data || [];
     Proveedores
   </h1>
 
-  <ProviderTableManager 
-    client:load 
-    data={data} 
-    columns={providerColumns} 
+  <ProviderPageManager
+    client:load
+    initialData={data}
+    columns={providerColumns}
   />
 
   <div class="m-4 mt-20" slot="tercer-columna">

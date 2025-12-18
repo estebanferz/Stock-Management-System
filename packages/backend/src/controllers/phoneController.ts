@@ -1,7 +1,6 @@
 import { Elysia, t } from "elysia";
 import { getAllPhones, getPhonesByFilter, getPhoneById, addPhone, updatePhone, softDeletePhone } from "../services/phoneService";
 import { phoneInsertDTO, phoneUpdateDTO } from "@server/db/types";
-import { date } from "drizzle-orm/mysql-core";
 
 export const phoneController = new Elysia({prefix: '/phone'})
     .get("/", () => {
@@ -10,27 +9,35 @@ export const phoneController = new Elysia({prefix: '/phone'})
     .get(
         "/all",
         async ({ query }) => {
-            if (query.name || 
-                query.device_type || 
-                query.brand ||
-                query.sold) {
-                return await getPhonesByFilter(
-                    query.name,
-                    query.device_type,
-                    query.brand,
-                    query.sold,
-                ); //Filter by parameters
+            if (
+            query.device ||
+            query.imei ||
+            query.color ||
+            query.storage_capacity ||
+            query.battery_health ||
+            query.category ||
+            query.device_type ||
+            query.trade_in ||
+            query.sold ||
+            query.is_deleted
+            ) {
+            return await getPhonesByFilter({
+                device: query.device,
+                imei: query.imei,
+                color: query.color,
+                storage_capacity: query.storage_capacity,
+                battery_health: query.battery_health,
+                category: query.category,
+                device_type: query.device_type,
+                trade_in: query.trade_in,
+                sold: query.sold,
+                is_deleted: query.is_deleted === undefined ? undefined : query.is_deleted === "true",
+            });
             }
 
             return await getAllPhones();
         },
         {
-            query: t.Object({
-                name: t.Optional(t.String()),
-                device_type: t.Optional(t.String()),
-                brand: t.Optional(t.String()),
-                sold: t.Optional(t.String()), // llega como string siempre
-            }),
             detail: {
                 summary: "Get all phones in DB",
                 tags: ["phones"],
@@ -92,6 +99,7 @@ export const phoneController = new Elysia({prefix: '/phone'})
 
             const updPhone = {
                 name: body.name,
+                datetime: new Date(body.datetime),
                 brand: body.brand,
                 imei: body.imei,
                 device_type: body.device_type,

@@ -84,7 +84,7 @@ export function CustomTable<T>({
 
       {/* Tabla */}
 
-      <div className="max-h-96 overflow-auto shadow-lg border rounded-lg relative">
+      <div className="h-80 bg-white overflow-auto  border rounded-lg relative">
         {/* tabla: ocupa TODO el ancho del contenedor */}
         <table className="w-full table-auto">
           <thead>

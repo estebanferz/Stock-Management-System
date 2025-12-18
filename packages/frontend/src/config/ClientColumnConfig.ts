@@ -2,7 +2,6 @@ import type { Column } from "@/components/CustomTable"
 import type { Client } from "@server/db/schema"
 
 export const clientColumns: Column<Client>[] = [
-  { accessorKey: "client_id", header: "ID" },
 
   {
     accessorKey: "name",
@@ -21,5 +20,10 @@ export const clientColumns: Column<Client>[] = [
   { 
     accessorKey: "id_number", 
     header: "DNI" 
+  },
+  { 
+    accessorKey: "debt", 
+    header: "Deuda",
+    renderKey: "money"
   },
 ]

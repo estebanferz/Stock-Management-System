@@ -3,12 +3,9 @@ import type { Technician } from "@server/db/schema"
 
 export const technicianColumns: Column<Technician>[] = [
     {
-        accessorKey: "technician_id",
-        header: "ID" 
-    },
-    {
         accessorKey: "name",
-        header: "Nombre"
+        header: "Nombre",
+        renderKey: "general"
     },
     
     { 

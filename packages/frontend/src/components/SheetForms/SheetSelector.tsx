@@ -9,6 +9,7 @@ interface SheetSelectorProps {
     type: 'client' | 'seller' | 'device' | 'technician' | 'provider';
     currentId: string;
     onSelect: (id: string, price?: string) => void;
+    depth?: number;
 }
 
 interface DataSearchSheetProps extends SheetSelectorProps {
@@ -112,9 +113,10 @@ const DataSearchSheet: React.FC<DataSearchSheetProps> = ({ type, onSelect, setIs
 };
 
 
-export function SheetSelector({ type, currentId, onSelect }: SheetSelectorProps) {
+export function SheetSelector({ type, currentId, onSelect, depth = 1 }: SheetSelectorProps) {
     const [isOpen, setIsOpen] = useState(false);
     const [displayName, setDisplayName] = useState(`Seleccionar ${type}`);
+
 
     const apiMap = {
         client: { endpoint: clientApp.client, nameKey: 'name' },
@@ -158,11 +160,13 @@ export function SheetSelector({ type, currentId, onSelect }: SheetSelectorProps)
             <Search className="w-4 h-4 ml-2" />
         </Button>
     );
+
+    const offset = depth * 380;
     
     return (
         <CustomSheet
             side="right" 
-            className="right-[380px]"
+            style={{ right: `${offset}px` }}
             isOpen={isOpen}
             isModal={false}
             zIndex={50}

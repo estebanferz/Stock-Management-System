@@ -1,11 +1,11 @@
 import { technicianTable } from "@server/db/schema.ts";
-import { db } from "@server/db/db.ts";
-import { eq } from "drizzle-orm";  
+import { db } from "@server/db/db";
+import { and, eq, ilike } from "drizzle-orm";
 import { parsePhoneNumberFromString } from 'libphonenumber-js';
 import { normalizeShortString } from "../util/formattersBackend";
 
 export const getAllTechnicians = async () => {
-    return await db.select().from(technicianTable).where(eq(technicianTable.is_deleted, false)).orderBy(technicianTable.technician_id);
+    return await db.select().from(technicianTable).orderBy(technicianTable.technician_id);
 }
 
 export const getTechnicianById = async(id: number) => {
@@ -13,9 +13,36 @@ export const getTechnicianById = async(id: number) => {
         where: eq(technicianTable.technician_id, id),
     });
     
-    
     return technician;
 }
+
+export async function getTechniciansByFilter(filters: {
+  name?: string;
+  speciality?: string;
+  state?: string;
+  email?: string;
+  phone_number?: string;
+  is_deleted?: boolean;
+}) {
+  return await db
+    .select()
+    .from(technicianTable)
+    .where(
+      and(
+        filters.name ? ilike(technicianTable.name, `%${filters.name}%`) : undefined,
+        filters.speciality ? ilike(technicianTable.speciality, `%${filters.speciality}%`) : undefined,
+        filters.state ? ilike(technicianTable.state, `%${filters.state}%`) : undefined,
+        filters.email ? ilike(technicianTable.email, `%${filters.email}%`) : undefined,
+        filters.phone_number ? ilike(technicianTable.phone_number, `%${filters.phone_number}%`) : undefined,
+
+        filters.is_deleted !== undefined
+          ? eq(technicianTable.is_deleted, filters.is_deleted)
+          : undefined,
+      )
+    )
+    .orderBy(technicianTable.technician_id);
+}
+
 
 export const addTechnician = async (newTechnician: {
     name: string;

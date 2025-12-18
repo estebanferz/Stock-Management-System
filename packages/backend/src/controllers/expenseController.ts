@@ -8,27 +8,38 @@ export const expenseController = new Elysia({prefix: "/expense"})
         return { message: "Expense endpoint" };
     })
     .get(
-        "/all",
-        async ({ query }) => {
-            if (query.datetime || 
-                query.category || 
-                query.payment_method) {
-                return await getExpensesByFilter(
-                    query.datetime,
-                    query.category,
-                    query.payment_method,
-                ); //Filter by parameters
-            }
+    "/all",
+    async ({ query }) => {
+        if (
+        query.date ||
+        query.category ||
+        query.payment_method ||
+        query.provider_id ||
+        query.amount_min ||
+        query.amount_max ||
+        query.is_deleted
+        ) {
+        return await getExpensesByFilter({
+            date: query.date,
+            category: query.category,
+            payment_method: query.payment_method,
+            provider_id: query.provider_id,
+            amount_min: query.amount_min,
+            amount_max: query.amount_max,
+            is_deleted: query.is_deleted === undefined ? undefined : query.is_deleted === "true",
+        });
+        }
 
-            return await getAllExpenses();
+        return await getAllExpenses();
+    },
+    {
+        detail: {
+        summary: "Get all expenses in DB",
+        tags: ["expenses"],
         },
-        {
-            detail: {
-                summary: "Get all expenses in DB",
-                tags: ["expenses"],
-            },
-        },
+    },
     )
+
     .get("/:id/receipt", async ({ params, set }) => {
         const expenseId = Number(params.id);
 

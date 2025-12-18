@@ -3,10 +3,6 @@ import type { Phone } from "@server/db/schema"
 
 export const phoneColumns: Column<Phone>[] = [
     {
-        accessorKey: "device_id",
-        header: "ID",
-    },
-    {
         accessorKey: "brand",
         header: "Marca",
         renderKey: "general"
@@ -32,7 +28,7 @@ export const phoneColumns: Column<Phone>[] = [
     },
     {
         accessorKey: "battery_health",
-        header: "% Bat.",
+        header: "%Bat.",
     },
        {
         accessorKey: "storage_capacity",
@@ -55,6 +51,7 @@ export const phoneColumns: Column<Phone>[] = [
     {
         accessorKey: "deposit",
         header: "Depósito",
+        renderKey: "general",
     },
        {
         accessorKey: "sold",

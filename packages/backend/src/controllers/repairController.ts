@@ -7,32 +7,40 @@ export const repairController = new Elysia({prefix: "/repair"})
         return { message: "Repair endpoint" };
     })
     .get(
-        "/all",
-        async ({ query }) => {
-            if (query.datetime || 
-                query.repair_state || 
-                query.priority ||
-                query.client_id ||
-                query.technician_id ||
-                query.device_id) {
-                return await getRepairsByFilter(
-                    query.datetime,
-                    query.repair_state,
-                    query.priority,
-                    Number(query.client_id),
-                    Number(query.technician_id),
-                    Number(query.device_id)
-                ); //Filter by parameters
-            }
+    "/all",
+    async ({ query }) => {
+        if (
+        query.date ||
+        query.repair_state ||
+        query.priority ||
+        query.client_id ||
+        query.technician_id ||
+        query.device_id ||
+        query.cost_min ||
+        query.cost_max ||
+        query.is_deleted
+        ) {
+        return await getRepairsByFilter({
+            date: query.date,
+            repair_state: query.repair_state,
+            priority: query.priority,
+            client_id: query.client_id,
+            technician_id: query.technician_id,
+            device_id: query.device_id,
+            cost_min: query.cost_min,
+            cost_max: query.cost_max,
+            is_deleted: query.is_deleted === undefined ? undefined : query.is_deleted === "true",
+        });
+        }
 
-            return await getAllRepairs();
+        return await getAllRepairs();
+    },
+    {
+        detail: {
+        summary: "Get all repairs in DB",
+        tags: ["repairs"],
         },
-        {
-            detail: {
-                summary: "Get all repairs in DB",
-                tags: ["repairs"],
-            },
-        },
+    }
     )
     .post(
         "/",
@@ -71,6 +79,7 @@ export const repairController = new Elysia({prefix: "/repair"})
         async ({ body, params: { id }, set }) => {
 
             const updRepair = {
+                datetime: body.datetime ? new Date(body.datetime) : undefined,
                 repair_state: body.repair_state,
                 priority: body.priority,
                 description: body.description,
