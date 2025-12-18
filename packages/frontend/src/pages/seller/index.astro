@@ -5,23 +5,21 @@ import { SheetFormSeller } from "@/components/SheetForms/SheetFormSeller";
 import { serverApp } from "@/lib/serverAPI";
 import { sellerColumns } from "@/config/SellerColumnConfig";
 import ActionPanel from "@/components/ActionPanel";
-import { SellerTableManager } from "@/components/TableManager/SellerTableManager";
+import { SellerPageManager } from "@/components/PageManager/SellerPageManager";
 
-const response = await serverApp.seller.all.get();
+const response = await serverApp.seller.all.get({ query: { is_deleted: false } });
 const data = response.data || [];
-    
 
 ---
 
 <Layout title="Vendedores">
     <h1 class="w-full text-center text-4xl text-gray-700 font-bold my-5">Vendedores</h1>
     
-    <SellerTableManager 
-        client:load 
-        data={data} 
-        columns={sellerColumns} 
+    <SellerPageManager
+        client:load
+        initialData={data}
+        columns={sellerColumns}
     />
-
     <div class="m-4 mt-20" slot="tercer-columna">
         <ActionPanel client:load />
     </div>

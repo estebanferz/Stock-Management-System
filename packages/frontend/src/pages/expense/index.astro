@@ -4,21 +4,36 @@ import Layout from "../../layouts/Layout.astro";
 import { SheetFormExpense } from "@/components/SheetForms/SheetFormExpense";
 import { serverApp } from "@/lib/serverAPI";
 import { expenseColumns } from "@/config/ExpenseColumnConfig";
-import { ExpenseTableManager } from "@/components/TableManager/ExpenseTableManager";
 import ActionPanel from "@/components/ActionPanel";
+import { ExpensesPageManager } from "@/components/PageManager/ExpensePageManager";
 
-const response = await serverApp.expense.all.get();
-const data = response.data || [];
     
+const [expensesRes, providerRes] = await Promise.all([
+    serverApp.expense.all.get({ query : { is_deleted: false }}),
+    serverApp.provider.all.get(),
+]);
 
+const expenses = expensesRes.data ?? [];
+const providers = providerRes.data ?? [];
+
+const providerNameById = new Map<number, string>(
+    providers.map((c: any) => [c.provider_id, c.name ?? "—"])
+);
+
+const data = expenses.map((expense: any) => ({
+  ...expense,
+  provider_name: providerNameById.get(expense.provider_id) ?? "—",
+}));
 ---
 
 <Layout title="Gastos">
     <h1 class="w-full text-center text-4xl text-gray-700 font-bold my-5">Gastos</h1>
-    <ExpenseTableManager 
-        client:load 
-        data={data} 
-        columns={expenseColumns} 
+    
+    <ExpensesPageManager
+    client:load
+    initialExpenses={expenses}
+    providers={providers}
+    columns={expenseColumns}
     />
 
     <div class="m-4 mt-20" slot="tercer-columna">

@@ -245,7 +245,7 @@ return (
 
         <div className="grid gap-3">
           <Label>Proveedor</Label>
-          <SheetSelector type="provider" currentId={form.provider_id} onSelect={(id) => setForm({ ...form, provider_id: id ?? ""  })} />
+          <SheetSelector depth={isNested ? depth : 1} type="provider" currentId={form.provider_id} onSelect={(id) => setForm({ ...form, provider_id: id ?? ""  })} />
         </div>
       </CustomSheet>
     </form>

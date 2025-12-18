@@ -9,29 +9,32 @@ export const saleController = new Elysia({prefix: '/sale'})
         return { message: "Sale endpoint" };
     })
     .get(
-        "/all",
-        async ({ query }) => {
-            if (query.datetime ||
-                query.client_id ||
-                query.seller_id ||
-                query.device_id
-            ) {
-                return await getSaleByFilter(
-                    query.datetime,
-                    query.client_id,
-                    query.seller_id, 
-                    query.device_id
-                ); //Filter by parameter
-            }
+    "/all",
+    async ({ query }) => {
+        if (
+        query.date ||
+        query.client_id ||
+        query.seller_id ||
+        query.device_id ||
+        query.is_deleted
+        ) {
+        return await getSaleByFilter({
+            date: query.date,
+            client_id: query.client_id,
+            seller_id: query.seller_id,
+            device_id: query.device_id,
+            is_deleted: query.is_deleted === undefined ? undefined : query.is_deleted === "true",
+        });
+        }
 
-            return await getAllSales();
+        return await getAllSales();
+    },
+    {
+        detail: {
+        summary: "Get all sales in DB",
+        tags: ["sales"],
         },
-        {
-            detail: {
-                summary: "Get all sales in DB",
-                tags: ["sales"],
-            },
-        },
+    },
     )
     .get(
         "/:id",
@@ -82,6 +85,7 @@ export const saleController = new Elysia({prefix: '/sale'})
         async ({ body, params: { id }, set }) => {
 
             const updSale = {
+                datetime: body.datetime ? new Date(body.datetime) : undefined,
                 total_amount: body.total_amount,
                 payment_method: body.payment_method,
                 debt: body.debt,

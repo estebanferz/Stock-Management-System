@@ -83,7 +83,7 @@ export function SheetFormRepair() {
     e.preventDefault()
     e.stopPropagation()
 
-    const datetime = `${date} ${time}:00`;
+    const datetime = `${date}T${time}:00Z`;
     const repairData = {
       ...form,
       datetime: datetime,

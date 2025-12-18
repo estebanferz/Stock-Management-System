@@ -1,5 +1,5 @@
 import {Elysia} from "elysia";
-import {getAllClients, getClientByFilter, getClientById, updateClient, addClient, softDeleteClient} from "../services/clientService";
+import {getAllClients, getClientByFilter, getClientById, updateClient, addClient, softDeleteClient, getDebts, getTotalDebt} from "../services/clientService";
 import {clientInsertDTO, clientUpdateDTO} from "@server/db/types";
 import { t } from "elysia";
 
@@ -11,12 +11,17 @@ export const clientController = new Elysia({prefix: '/client'})
     .get(
         "/all",
         async ({ query }) => {
-            if (query.name || query.id_number || query.email || query.phone_number) {
+            if (query.name || query.id_number || query.email || query.phone_number || query.is_deleted) {
+                let is_deleted: boolean | undefined = undefined;
+                if (query.is_deleted !== undefined) {
+                    is_deleted = (query.is_deleted === 'true');
+                }
                 return await getClientByFilter(
                     query.name,
                     query.id_number,
                     query.email,
                     query.phone_number,
+                    is_deleted,
                 ); //Filter by parameters
             }
 
@@ -51,7 +56,8 @@ export const clientController = new Elysia({prefix: '/client'})
                 id_number: Number(body.id_number),
                 ...(body.email && { email: body.email }),
                 ...(body.phone_number && { phone_number: body.phone_number }),
-                ...(body.birth_date && { birth_date: body.birth_date })
+                ...(body.birth_date && { birth_date: body.birth_date }),
+                ...(body.debt && { debt: body.debt }),
             };
             
             const result = await addClient(newClient);
@@ -78,7 +84,8 @@ export const clientController = new Elysia({prefix: '/client'})
                 id_number: Number(body.id_number),
                 ...(body.email && { email: body.email }),
                 ...(body.phone_number && { phone_number: body.phone_number }),
-                ...(body.birth_date && { birth_date: body.birth_date })
+                ...(body.birth_date && { birth_date: body.birth_date }),
+                ...(body.debt && { debt: body.debt }),
             };
             const result = await updateClient(
                 Number(id),
@@ -102,4 +109,23 @@ export const clientController = new Elysia({prefix: '/client'})
         const ok = await softDeleteClient(Number(id));
         set.status = ok ? 200 : 404;
         return ok;
-    });
+    })
+    .get("/debts", async() => {
+        return await getDebts();
+    },
+    {
+        detail: {
+            summary: "Get all debts",
+            tags: ["sales"],
+        },
+    })
+    .get("/total-debt", async() => {
+        return await getTotalDebt();
+    },
+    {
+        detail: {
+            summary: "Get total debt amount",
+            tags: ["sales"],
+        },
+    }
+    );

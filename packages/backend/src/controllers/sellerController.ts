@@ -7,26 +7,38 @@ export const sellerController = new Elysia({prefix: "/seller"})
         return { message: "Seller endpoint" };
     })
     .get(
-        "/all",
-        async ({ query }) => {
-            if (query.name || 
-                query.hire_date || 
-                query.pay_date) {
-                return await getSellersByFilter(
-                    query.name,
-                    query.hire_date,
-                    query.pay_date,
-                ); //Filter by parameters
-            }
+    "/all",
+    async ({ query }) => {
+        if (
+        query.name ||
+        query.hire_date ||
+        query.pay_date ||
+        query.age_min ||
+        query.age_max ||
+        query.commission_min ||
+        query.commission_max ||
+        query.is_deleted
+        ) {
+        return await getSellersByFilter({
+            name: query.name,
+            hire_date: query.hire_date,
+            pay_date: query.pay_date,
+            age_min: query.age_min,
+            age_max: query.age_max,
+            commission_min: query.commission_min,
+            commission_max: query.commission_max,
+            is_deleted: query.is_deleted === undefined ? undefined : query.is_deleted === "true",
+        });
+        }
 
-            return await getAllSellers();
+        return await getAllSellers();
+    },
+    {
+        detail: {
+        summary: "Get all sellers in DB",
+        tags: ["sellers"],
         },
-        {
-            detail: {
-                summary: "Get all sellers in DB",
-                tags: ["sellers"],
-            },
-        },
+    },
     )
     .post(
         "/",

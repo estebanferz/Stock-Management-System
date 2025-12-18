@@ -3,10 +3,6 @@ import type { Expense } from "@server/db/schema"
 
 export const expenseColumns: Column<Expense>[] = [
     {
-        accessorKey: "expense_id",
-        header: "ID",
-    },
-    {
         accessorKey: "datetime",
         header: "Fecha",
         renderKey: "date",
@@ -36,8 +32,12 @@ export const expenseColumns: Column<Expense>[] = [
         renderKey: "receipt",
     },
     {
-        accessorKey: "provider_id",
+        accessorKey: "provider_name",
         header: "Proveedor",
+        renderKey: "general"
     },
-
+    {
+        accessorKey: "is_deleted",
+        header: "HOLA",
+    },
 ]

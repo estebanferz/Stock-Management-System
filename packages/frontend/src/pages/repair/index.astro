@@ -5,21 +5,55 @@ import { SheetFormRepair } from "@/components/SheetForms/SheetFormRepair";
 import { serverApp } from "@/lib/serverAPI";
 import { repairColumns } from "@/config/RepairColumnConfig";
 import ActionPanel from "@/components/ActionPanel";
-import { RepairTableManager } from "@/components/TableManager/RepairTableManager";
+import { RepairPageManager } from "@/components/PageManager/RepairPageManager";
 
-const response = await serverApp.repair.all.get();
-const data = response.data || [];
-    
+const [repairsRes, clientsRes, techniciansRes, phonesRes] = await Promise.all([
+  serverApp.repair.all.get({ query: { is_deleted: false }}),
+  serverApp.client.all.get(),
+  serverApp.technician.all.get(),
+  serverApp.phone.all.get(),
+]);
+
+const repairs = repairsRes.data ?? [];
+const clients = clientsRes.data ?? [];
+const technicians = techniciansRes.data ?? [];
+const phones = phonesRes.data ?? [];
+
+const clientNameById = new Map<number, string>(
+  clients.map((c: any) => [c.client_id, c.name ?? "—"])
+);
+
+const technicianNameById = new Map<number, string>(
+  technicians.map((t: any) => [t.technician_id, t.name ?? "—"])
+);
+
+const phoneLabelById = new Map<number, string>(
+  phones.map((p: any) => [
+    p.device_id,
+    p.name ?? "-",
+  ])
+);
+
+const data = repairs.map((repair: any) => ({
+  ...repair,
+  client_name: clientNameById.get(repair.client_id) ?? "—",
+  technician_name: technicianNameById.get(repair.technician_id) ?? "—",
+  device_name: phoneLabelById.get(repair.device_id) ?? "—",
+}));
 
 ---
 
 <Layout title="Reparaciones">
     <h1 class="w-full text-center text-4xl text-gray-700 font-bold my-5">Reparaciones</h1>
     
-    <RepairTableManager 
-        client:load 
-        data={data} 
-        columns={repairColumns} 
+
+    <RepairPageManager
+      client:load
+      initialRepairs={repairs}
+      clients={clients}
+      technicians={technicians}
+      phones={phones}
+      columns={repairColumns}
     />
 
     <div class="m-4 mt-20" slot="tercer-columna">

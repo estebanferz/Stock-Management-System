@@ -1,5 +1,5 @@
 import { Elysia, t } from "elysia";
-import { getAllTechnicians, getTechnicianById, addTechnician, updateTechnician, softDeleteTechnician } from "../services/technicianService";
+import { getAllTechnicians, getTechnicianById, addTechnician, updateTechnician, softDeleteTechnician, getTechniciansByFilter } from "../services/technicianService";
 import { technicianInsertDTO, technicianUpdateDTO } from "@server/db/types"; 
 
 export const technicianController = new Elysia({prefix: '/technician'})
@@ -7,16 +7,35 @@ export const technicianController = new Elysia({prefix: '/technician'})
         return { message: "Technician endpoint" };
     })
     .get(
-        "/all",
-        async () => {
-            return await getAllTechnicians();
+    "/all",
+    async ({ query }) => {
+        const hasFilters =
+        query.name ||
+        query.speciality ||
+        query.state ||
+        query.email ||
+        query.phone_number ||
+        query.is_deleted;
+
+        if (hasFilters) {
+        return await getTechniciansByFilter({
+            name: query.name,
+            speciality: query.speciality,
+            state: query.state,
+            email: query.email,
+            phone_number: query.phone_number,
+            is_deleted: query.is_deleted === undefined ? undefined : query.is_deleted === "true",
+        });
+        }
+
+        return await getAllTechnicians();
+    },
+    {
+        detail: {
+        summary: "Get all technicians in DB",
+        tags: ["technicians"],
         },
-        {
-            detail: {
-                summary: "Get all technicians in DB",
-                tags: ["technicians"],
-            },
-        },
+    },
     )
     .get(
         "/:id",
@@ -34,7 +53,6 @@ export const technicianController = new Elysia({prefix: '/technician'})
     .post(
         "/",
         async ({body, set}) => {
-
             const newTechnician = {
                 name: body.name,
                 ...(body.email && { email: body.email }),

@@ -140,6 +140,7 @@ useEffect(() => {
     e.stopPropagation()
 
     const datetime = `${date}T${time}:00Z`;
+    alert("Submitting phone with datetime:" + datetime);
     const phoneData = {
       ...form,
       datetime: datetime,
@@ -169,7 +170,7 @@ useEffect(() => {
             onClose();
         }
       }else{
-        window.location.href = "/phone"; 
+        window.location.reload(); 
       }
     } catch (err) {
       console.error("Error al cargar celular:", err);

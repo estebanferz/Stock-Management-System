@@ -1,36 +1,69 @@
 import { db } from "@server/db/db";
 import { repairTable } from "@server/db/schema.ts";
-import { ilike, and, eq, sql, is } from "drizzle-orm"
+import { ilike, and, eq, sql, is, gte, lte } from "drizzle-orm"
 import { normalizeShortString } from "../util/formattersBackend";
 
-export const getRepairsByFilter = async (
-    datetime?: string,
-    repair_state?: string,
-    priority?: string,
-    client_id?: number,
-    technician_id?: number,
-    device_id?: number,
-) => {
-    const result = await db
-        .select()
-        .from(repairTable)
-        .where(
-            and(
-                datetime? eq(sql`date(${repairTable.datetime})`, datetime) : undefined,
-                repair_state? ilike(repairTable.repair_state, `%${repair_state}%`) : undefined,
-                priority? ilike(repairTable.priority, `%${priority}%`) : undefined,
-                client_id? eq(repairTable.client_id, client_id) : undefined,
-                technician_id? eq(repairTable.technician_id, technician_id) : undefined,
-                device_id? eq(repairTable.device_id, device_id) : undefined,
-                eq(repairTable.is_deleted, false),
-            )
-        );
+export const getRepairsByFilter = async (filters: {
+  date?: string;
+  repair_state?: string;
+  priority?: string;
+  client_id?: string;
+  technician_id?: string;
+  device_id?: string;
+  cost_min?: string;
+  cost_max?: string;
+  is_deleted?: boolean;
+}) => {
+    console.log("filters.is_deleted:", filters.is_deleted, typeof filters.is_deleted);
 
-        return result;
-}
+  return await db
+    .select()
+    .from(repairTable)
+    .where(
+      and(
+        filters.date
+          ? eq(sql`date(${repairTable.datetime})`, filters.date)
+          : undefined,
+
+        filters.repair_state
+          ? eq(repairTable.repair_state, filters.repair_state)
+          : undefined,
+
+        filters.priority
+          ? eq(repairTable.priority, filters.priority)
+          : undefined,
+
+        filters.client_id
+          ? eq(repairTable.client_id, Number(filters.client_id))
+          : undefined,
+
+        filters.technician_id
+          ? eq(repairTable.technician_id, Number(filters.technician_id))
+          : undefined,
+
+        filters.device_id
+          ? eq(repairTable.device_id, Number(filters.device_id))
+          : undefined,
+
+        filters.cost_min
+          ? gte(repairTable.client_cost, filters.cost_min)
+          : undefined,
+
+        filters.cost_max
+          ? lte(repairTable.client_cost, filters.cost_max)
+          : undefined,
+
+        filters.is_deleted !== undefined
+          ? eq(repairTable.is_deleted, filters.is_deleted)
+          : undefined,
+      )
+    )
+    .orderBy(repairTable.datetime);
+};
+
 
 export const getAllRepairs = async () => {
-    return await db.select().from(repairTable).where(eq(repairTable.is_deleted, false)).orderBy(repairTable.repair_id);
+    return await db.select().from(repairTable).orderBy(repairTable.repair_id);
 }
 
 export const addRepair = async (
@@ -78,6 +111,7 @@ export const updateRepair = async (
         client_id?: number;
         technician_id?: number;
         device_id?: number;
+        datetime?: Date;
     }
 ) => {
     const result = await db

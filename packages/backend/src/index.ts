@@ -23,13 +23,6 @@ const app = new Elysia({prefix: '/api'})
   .get("/", () => {
     return { message: "app" };
   })
-  .use(
-    staticPlugin({
-      assets: UPLOADS_DIR,
-      prefix: "/uploads",
-      alwaysStatic: true,
-    })
-  )
   .use(clientController)
   .use(technicianController)
   .use(phoneController)
@@ -38,10 +31,6 @@ const app = new Elysia({prefix: '/api'})
   .use(providerController)
   .use(saleController)
   .use(sellerController)
-  .get("/debug/receipt/:name", ({ params }) => {
-    const abs = path.join(UPLOADS_DIR, "expenses", params.name);
-    return { abs, exists: existsSync(abs) };
-  })
 
   .listen(3000);
 

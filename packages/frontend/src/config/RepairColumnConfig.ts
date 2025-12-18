@@ -3,25 +3,24 @@ import type { Repair } from "@server/db/schema";
 
 export const repairColumns: Column<Repair>[] = [
     {
-        accessorKey: "repair_id",
-        header: "ID",
-    },
-    {
         accessorKey: "datetime",
         header: "Fecha",
         renderKey: "date",
     },
     {
-        accessorKey: "client_id",
+        accessorKey: "client_name",
         header: "Cliente",
+        renderKey: "general"
     },
     {
-        accessorKey: "technician_id",
+        accessorKey: "technician_name",
         header: "Técnico",
+        renderKey: "general"
     },
     {
-        accessorKey: "device_id",
+        accessorKey: "device_name",
         header: "Dispositivo",
+        renderKey: "general"
     },
     {
         accessorKey: "repair_state",
@@ -31,6 +30,7 @@ export const repairColumns: Column<Repair>[] = [
     {
         accessorKey: "priority",
         header: "Prioridad",
+        renderKey: "general"
     },
     {
         accessorKey: "description",

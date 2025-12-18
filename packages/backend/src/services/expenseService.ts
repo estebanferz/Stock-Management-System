@@ -1,6 +1,6 @@
 import { db } from "@server/db/db";
 import { expenseTable } from "@server/db/schema.ts";
-import { ilike, and, eq, sql } from "drizzle-orm";
+import { ilike, and, eq, sql, gte, lte } from "drizzle-orm";
 import { normalizeShortString } from "../util/formattersBackend"
 import { mkdir, unlink } from "node:fs/promises";
 import path from "node:path";
@@ -150,28 +150,55 @@ export async function updateExpenseWithReceipt(
     .returning();
 }
 
-export async function getExpensesByFilter(
-    datetime?: string,
-    category?: string,
-    payment_method?: string,
-){
-
-    const result = await db
+export async function getExpensesByFilter(filters: {
+  date?: string;
+  category?: string;
+  payment_method?: string;
+  provider_id?: string;
+  amount_min?: string;
+  amount_max?: string;
+  is_deleted?: boolean;
+}) {
+  return await db
     .select()
     .from(expenseTable)
     .where(
       and(
-        datetime ? eq(sql`date(${expenseTable.datetime})`, `%${datetime}%`) : undefined,
-        category ? ilike(expenseTable.category, `%${category}%`) : undefined, // ya convertido y validado
-        payment_method ? ilike(expenseTable.payment_method, `%${payment_method}%`) : undefined,
+        filters.date
+          ? eq(sql`date(${expenseTable.datetime})`, filters.date)
+          : undefined,
+
+        filters.category
+          ? ilike(expenseTable.category, `%${filters.category}%`)
+          : undefined,
+
+        filters.payment_method
+          ? ilike(expenseTable.payment_method, `%${filters.payment_method}%`)
+          : undefined,
+
+        filters.provider_id
+          ? eq(expenseTable.provider_id, Number(filters.provider_id))
+          : undefined,
+
+        filters.amount_min
+          ? gte(expenseTable.amount, filters.amount_min)
+          : undefined,
+
+        filters.amount_max
+          ? lte(expenseTable.amount, filters.amount_max)
+          : undefined,
+
+        filters.is_deleted !== undefined
+          ? eq(expenseTable.is_deleted, filters.is_deleted)
+          : eq(expenseTable.is_deleted, false),
       ),
-    );
-    
-    return result;
+    )
+    .orderBy(sql`${expenseTable.datetime} DESC`);
 }
 
+
 export const getAllExpenses = async () => {
-    return await db.select().from(expenseTable).where(eq(expenseTable.is_deleted, false)).orderBy(expenseTable.expense_id);
+    return await db.select().from(expenseTable).orderBy(expenseTable.expense_id);
 }
 
 export const addExpense = async ( newExpense: {

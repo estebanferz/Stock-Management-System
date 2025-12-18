@@ -1,26 +1,35 @@
 import { db } from "@server/db/db";
 import { providerTable } from "@server/db/schema.ts";
 import { ilike, and, eq } from "drizzle-orm"
-import { normalizeShortString } from "../util/formattersBackend";
+import { normalizeShortString, ilikeWordsNormalized } from "../util/formattersBackend";
 
-export async function getProviderByFilter(
-    name?: string,
-){
-
-    const result = await db
+export async function getProviderByFilter(filters: {
+  name?: string;
+  email?: string;
+  phone_number?: string;
+  address?: string;
+  is_deleted?: boolean;
+}) {
+  return await db
     .select()
     .from(providerTable)
     .where(
       and(
-        name ? ilike(providerTable.name, `%${name}%`) : undefined,
-      ),
-    );
-    
-    return result;
+        filters.name ? ilike(providerTable.name, `%${filters.name}%`) : undefined,
+        filters.email ? ilike(providerTable.email, `%${filters.email}%`) : undefined,
+        filters.phone_number ? ilike(providerTable.phone_number, `%${filters.phone_number}%`) : undefined,
+        filters.address ? ilikeWordsNormalized(providerTable.address, filters.address) : undefined,
+
+        filters.is_deleted !== undefined
+          ? eq(providerTable.is_deleted, filters.is_deleted)
+          : undefined,
+      )
+    )
+    .orderBy(providerTable.provider_id);
 }
 
 export const getAllProviders = async () => {
-    return await db.select().from(providerTable).where(eq(providerTable.is_deleted, false)).orderBy(providerTable.provider_id);
+    return await db.select().from(providerTable).orderBy(providerTable.provider_id);
 }
 
 export const getProviderById = async(id: number) => {

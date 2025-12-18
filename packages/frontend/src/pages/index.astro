@@ -1,5 +1,5 @@
 ---
-import Layout from '../layouts/Layout.astro';
+import LayoutDashboard from '../layouts/LayoutDashboard.astro';
 import CustomCard from "@/components/CustomCard";
 import { SalesChart } from "@/components/SalesChart";
 import { serverApp } from "@/lib/serverAPI";
@@ -16,9 +16,9 @@ const expenseData = await serverApp.expense['expenses'].get()
 const expensesFormatted = expenseData.data || []
 const saleDataByMonth = await serverApp.sale['sales-by-month'].get();
 const saleDataFormatted = SalesDataByMonth(saleDataByMonth.data || []) || [];
-const deudoresCount = await serverApp.sale['debts'].get()
+const deudoresCount = await serverApp.client['debts'].get()
 const deudoresCountFormatted = deudoresCount.data?.length || 0;
-const totalDebt = await serverApp.sale['total-debt'].get()
+const totalDebt = await serverApp.client['total-debt'].get()
 const totalDebtFormatted = totalDebt.data || 0;
 
 const phoneSoldCount = await serverApp.sale["products-sold-count"].get()
@@ -40,8 +40,8 @@ const secondaryData = `
 `;
 ---
 
-<Layout title="StockManagement">
-	<h1 class="w-full text-center text-4xl text-gray-700 font-bold my-5">Dashboard</h1>
+<LayoutDashboard title="StockManagement">
+	<h1 class="px-3 w-full text-left text-4xl text-gray-700 font-bold my-5">Dashboard</h1>
 	<div class="grid grid-cols-3">
 		<CustomCard title="Ingresos Netos" amount=`$${net_income}` />
 		<CustomCard title="Unidades Vendidas" amount={String(units_sold_count)} />

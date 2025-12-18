@@ -5,20 +5,19 @@ import { SheetFormTechnician } from "@/components/SheetForms/SheetFormTechnician
 import { serverApp } from "@/lib/serverAPI";
 import { technicianColumns } from "@/config/TechnicianColumnConfig";
 import ActionPanel from "@/components/ActionPanel";
-import { TechnicianTableManager } from "@/components/TableManager/TechnicianTableManager";
+import { TechnicianPageManager } from "@/components/PageManager/TechnicianPageManager";
 
-const response = await serverApp.technician.all.get();
+const response = await serverApp.technician.all.get({ query: { is_deleted: false }});
 const data = response.data || [];
-console.log(data)
 ---
 
 <Layout title="Clientes">
     <h1 class="w-full text-center text-4xl text-gray-700 font-bold my-5">Técnicos</h1>
     
-    <TechnicianTableManager 
-        client:load 
-        data={data} 
-        columns={technicianColumns} 
+    <TechnicianPageManager
+        client:load
+        initialData={data}
+        columns={technicianColumns}
     />
 
     <div class="m-4 mt-20" slot="tercer-columna">

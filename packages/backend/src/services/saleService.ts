@@ -1,32 +1,46 @@
 import { db } from "@server/db/db";
-import { saleTable, expenseTable, phoneTable } from "@server/db/schema.ts";
+import { saleTable, expenseTable, phoneTable, clientTable } from "@server/db/schema.ts";
 import { and, eq, sql } from "drizzle-orm"
 import { normalizeShortString } from "../util/formattersBackend";
 
-export async function getSaleByFilter(
-    datetime?: string,
-    client_id?: string,
-    seller_id?: string,
-    device_id?: string,
-){
-    const result = await db
+export async function getSaleByFilter(filters: {
+  date?: string;        // YYYY-MM-DD
+  client_id?: string;
+  seller_id?: string;
+  device_id?: string;
+  is_deleted?: boolean;
+}) {
+  return await db
     .select()
     .from(saleTable)
     .where(
       and(
-        datetime ? eq(sql`date(${saleTable.datetime})`, `%${datetime}%`) : undefined,
-        client_id ? eq(saleTable.client_id, Number(client_id)) : undefined,
-        seller_id ? eq(saleTable.seller_id, Number(seller_id)) : undefined,
-        device_id ? eq(saleTable.device_id, Number(device_id)) : undefined,
-        eq(saleTable.is_deleted, false),
-      ),
-    );
-    
-    return result;
+        filters.date
+          ? eq(sql`date(${saleTable.datetime})`, filters.date)
+          : undefined,
+
+        filters.client_id
+          ? eq(saleTable.client_id, Number(filters.client_id))
+          : undefined,
+
+        filters.seller_id
+          ? eq(saleTable.seller_id, Number(filters.seller_id))
+          : undefined,
+
+        filters.device_id
+          ? eq(saleTable.device_id, Number(filters.device_id))
+          : undefined,
+
+        filters.is_deleted !== undefined
+          ? eq(saleTable.is_deleted, filters.is_deleted)
+          : undefined,
+      )
+    )
+    .orderBy(saleTable.datetime);
 }
 
 export const getAllSales = async () => {
-    return await db.select().from(saleTable).where(eq(saleTable.is_deleted, false)).orderBy(sql`${saleTable.datetime} DESC`);
+    return await db.select().from(saleTable).orderBy(sql`${saleTable.datetime} DESC`);
 }
 
 export const getSaleById = async(id: number) => {
@@ -83,15 +97,69 @@ export async function updateSale(
     return result;
 }
 
-export async function softDeleteSale(id: number) {
-    const result = await db
-        .update(saleTable)
-        .set({ is_deleted: true })
-        .where(eq(saleTable.sale_id, id))
-        .returning();
 
-    return result.length > 0;
+export async function softDeleteSale(id: number) {
+  return await db.transaction(async (tx) => {
+    // get sale before delete
+    const saleRows = await tx
+      .select()
+      .from(saleTable)
+      .where(eq(saleTable.sale_id, id));
+
+    if (saleRows.length === 0) return false;
+
+    const sale = saleRows[0];
+    
+    if (!sale || sale.is_deleted) {
+      return false;
+    }
+
+    // softDelete sale
+    await tx
+      .update(saleTable)
+      .set({ is_deleted: true })
+      .where(eq(saleTable.sale_id, id));
+
+    // update phone, sold: false
+    if (sale.device_id) {
+      await tx
+        .update(phoneTable)
+        .set({ sold: false })
+        .where(eq(phoneTable.device_id, sale.device_id));
+    }
+
+    // if debt, update client's debt
+    if (sale.debt && sale.debt_amount && sale.client_id) {
+      const debtToSubtract = Math.round(Number(sale.debt_amount));
+
+      const clientRows = await tx
+        .select()
+        .from(clientTable)
+        .where(eq(clientTable.client_id, sale.client_id));
+
+      if (clientRows.length > 0) {
+        const client = clientRows[0];
+        
+        if (!client || client.is_deleted) {
+            return false;
+        }
+
+        const newDebt = Math.max(
+          0,
+          Number(client.debt) - debtToSubtract
+        );
+
+        await tx
+          .update(clientTable)
+          .set({ debt: newDebt })
+          .where(eq(clientTable.client_id, sale.client_id));
+      }
+    }
+
+    return true;
+  });
 }
+
 
 export const getGrossIncome = async () => {
     const income = await db
@@ -134,7 +202,7 @@ export const getNetIncome = async () => {
 
     const expenses = Number(total_expenses);
 
-    return Number(grossIncome) - expenses;
+    return Number((Number(grossIncome) - expenses).toFixed(2));
 }
 
 export const getSalesCountByMonth = async () => {

@@ -1,6 +1,6 @@
 import { db } from '../../db/db';
 import { clientTable } from '../../db/schema';
-import { eq, and, ilike } from "drizzle-orm";
+import { eq, and, ilike, gte, gt, sql } from "drizzle-orm";
 import { clientUpdateDTO } from "@server/db/types";
 import { normalizeShortString } from "@server/src/util/formattersBackend";
 
@@ -10,6 +10,7 @@ export async function getClientByFilter(
     id_number?: string,
     email?: string,
     phone_number?: string,
+    is_deleted?: boolean,
 ){
 
     const result = await db
@@ -18,17 +19,18 @@ export async function getClientByFilter(
     .where(
       and(
         name ? ilike(clientTable.name, `%${name}%`) : undefined,
-        id_number ? eq(clientTable.id_number, Number(id_number)) : undefined, // ya convertido y validado
+        id_number ? eq(clientTable.id_number, Number(id_number)) : undefined, 
         email ? ilike(clientTable.email, `%${email}%`) : undefined,
         phone_number ? ilike(clientTable.phone_number, `%${phone_number}%`) : undefined,
+        is_deleted !== undefined ? eq(clientTable.is_deleted, is_deleted) : undefined,
       ),
-    );
+    ).orderBy(clientTable.client_id);
     
     return result;
 }
 
 export async function getAllClients() {
-    return await db.select().from(clientTable).where(eq(clientTable.is_deleted, false)).orderBy(clientTable.client_id);
+    return await db.select().from(clientTable).orderBy(clientTable.client_id);
 }
 
 export const getClientById = async(id: number) => {
@@ -57,6 +59,7 @@ export const addClient = async (newClient: {
     phone_number?: string;
     id_number: number;
     birth_date?: string;
+    debt?: number;
 }) => {
     const normalizedClient = {
         ...newClient,
@@ -79,4 +82,29 @@ export async function softDeleteClient(id: number) {
         .returning();
 
     return result.length > 0;
+}
+
+export const getDebts = async() => {
+    const debts = await db
+        .select()
+        .from(clientTable)
+        .where(and(gt(clientTable.debt, 0), eq(clientTable.is_deleted, false)));
+
+    console.log(debts);
+    return debts;
+}
+
+export const getTotalDebt = async() => {
+    const debts = await db
+        .select({
+            total_debt: sql`SUM(${clientTable.debt})`,
+        })
+        .from(clientTable)
+        .where(and(eq(clientTable.is_deleted, false)));
+    
+    const { total_debt } = debts[0] ?? { total_debt: 0 };
+
+    const debt = Number(total_debt);
+
+    return Number(debt);
 }

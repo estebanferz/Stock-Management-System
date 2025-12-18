@@ -4,9 +4,9 @@ import {ActionPanel} from "@/components/ActionPanel";
 import { SheetFormClient } from "@/components/SheetForms/SheetFormClient";
 import { serverApp } from "@/lib/serverAPI";
 import { clientColumns } from "@/config/ClientColumnConfig";
-import { ClientsTableManager } from "@/components/TableManager/ClientsTableManager";
+import { ClientsPageManager } from "@/components/PageManager/ClientPageManager";
 
-const response = await serverApp.client.all.get();
+const response = await serverApp.client.all.get({ query: { is_deleted: false } });
 const data = response.data || [];
 
 ---
@@ -17,9 +17,9 @@ const data = response.data || [];
     Clientes
   </h1>
 
-  <ClientsTableManager 
+  <ClientsPageManager 
     client:load 
-    data={data} 
+    initialData={data} 
     columns={clientColumns} 
   />
 
