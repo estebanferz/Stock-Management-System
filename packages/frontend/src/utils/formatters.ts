@@ -61,20 +61,24 @@ export const generalStringFormat = (v: string) => {
 export const SalesDataByMonth = (SalesData: any[]) => {
   
   return SalesData.map((sale) => {
-  const dateObject = new Date(sale.month_start_date);
+    const dateObject = new Date(sale.month_start_date);
 
-  const monthName = dateObject.toLocaleString("es-ES", {
-    month: "long",
+    const monthIndex = dateObject.getUTCMonth(); // 👈 CLAVE
+    const months = [
+      "enero", "febrero", "marzo", "abril", "mayo", "junio",
+      "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"
+    ];
+
+    const monthName = months[monthIndex];
+
+
+    const newSaleObject = {
+      ...sale, // Copia todas las propiedades existentes
+      month: monthName, // Añade la nueva propiedad 'month'
+    };
+
+    return newSaleObject;
   });
-
-
-  const newSaleObject = {
-    ...sale, // Copia todas las propiedades existentes
-    month: monthName, // Añade la nueva propiedad 'month'
-  };
-
-  return newSaleObject;
-});
 }
 
 export const formatPhoneE164 = (raw: string) => {

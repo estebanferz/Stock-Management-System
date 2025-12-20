@@ -1,25 +1,36 @@
-import React from "react";
-
-interface CustomCardProps{
-  title: string,
-  amount: string,
+type Props = {
+  title: string;
+  amount: string;
+  icon?: string | { src: string };
   secondaryData?: string,
-}
+};
 
-export default function CustomCard({ title, amount, secondaryData }: CustomCardProps) {
+export default function StatCard({ title, amount, icon, secondaryData }: Props) {
+  const iconSrc = typeof icon === "string" ? icon : icon?.src;
+
   return (
-    <div className="m-2 p-6 rounded-2xl shadow-xl bg-white hover:bg-gray-100 flex flex-col gap-2">
-      <h2 className="text-xl font-semibold text-gray-700 text-center">
-        {title}
-      </h2>
-      <div className="flex justify-evenly items-center">
-        {secondaryData && (
-          <div className="text-4xl font-bold text-gray-900 text-center" dangerouslySetInnerHTML={{ __html: secondaryData }} />
-        )}
-        <p className="text-4xl font-bold text-gray-900 text-center">
-          {amount}
-        </p>
+    <div className=" w-full h-32 rounded-2xl border-black bg-white p-4 shadow-lg">
+      <div className="flex flex-row h-full w-full items-center">
+        {/* Icon block (top-left) */}
+        <div className="flex md:h-1/2 lg:h-3/4 aspect-square rounded-2xl bg-gray-300 opacity-85 shadow-lg items-center justify-center">
+          {iconSrc && <img src={iconSrc} className="h-1/2 w-1/2 fill-current" alt="" />}
+        </div>
+
+        {/* Title (top-ish, centered-left) */}
+        <div className="flex flex-col gap-2 text-sm font-normal text-black w-full p-3">
+          {title}
+          <div className="lg:text-xl md:text-lg font-extrabold text-gray-700">
+              {secondaryData && ( 
+                <div className="md:text-lg lg:text-xl font-bold text-gray-900" dangerouslySetInnerHTML={{ __html: secondaryData }} /> 
+              )}
+
+              <p className="md:text-lg lg:text-xl font-bold text-gray-900"> 
+                {amount} 
+              </p> 
+          </div>
+        </div>
       </div>
+        {/* Amount (bottom-right-ish) */}
     </div>
   );
 }

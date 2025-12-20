@@ -36,9 +36,9 @@ const DataSearchSheet: React.FC<DataSearchSheetProps> = ({ type, onSelect, setIs
         try {
             let result
             if (type == "device"){
-                result = await endpoint.all.get({query: { sold:"false" }}); 
+                result = await endpoint.all.get({query: { sold:"false", is_deleted: false }}); 
             }else{
-                result = await endpoint.all.get(); 
+                result = await endpoint.all.get({query: { is_deleted: false }}); 
             }
             const rawData = result.data as any; 
             const items = Array.isArray(rawData) ? rawData : rawData?.data || [];

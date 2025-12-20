@@ -36,8 +36,4 @@ export const expenseColumns: Column<Expense>[] = [
         header: "Proveedor",
         renderKey: "general"
     },
-    {
-        accessorKey: "is_deleted",
-        header: "HOLA",
-    },
 ]

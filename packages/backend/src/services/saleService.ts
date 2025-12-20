@@ -1,6 +1,6 @@
 import { db } from "@server/db/db";
 import { saleTable, expenseTable, phoneTable, clientTable } from "@server/db/schema.ts";
-import { and, eq, sql } from "drizzle-orm"
+import { and, eq, gte, lt, sql } from "drizzle-orm"
 import { normalizeShortString } from "../util/formattersBackend";
 
 export async function getSaleByFilter(filters: {
@@ -36,7 +36,7 @@ export async function getSaleByFilter(filters: {
           : undefined,
       )
     )
-    .orderBy(saleTable.datetime);
+    .orderBy(sql`${saleTable.datetime} DESC`);
 }
 
 export const getAllSales = async () => {
@@ -205,20 +205,53 @@ export const getNetIncome = async () => {
     return Number((Number(grossIncome) - expenses).toFixed(2));
 }
 
-export const getSalesCountByMonth = async () => {
-  
-  const salesByMonth = await db
+type SalesByMonthRow = {
+  month_start_date: string; // lo devuelve la DB (timestamp)
+  count: number;
+};
+
+export const getSalesByMonth = async (year: number) => {
+  const start = new Date(Date.UTC(year, 0, 1));      // 1 Jan
+  const end = new Date(Date.UTC(year + 1, 0, 1));    // 1 Jan next year
+
+  // 1) Traemos solo lo que existe en DB (agrupado por mes)
+  const rows = await db
     .select({
       month_start_date: sql<string>`DATE_TRUNC('month', ${saleTable.datetime})`,
-      count: sql<number>`CAST(COUNT(*) AS INTEGER)`, 
+      count: sql<number>`CAST(COUNT(*) AS INTEGER)`,
     })
     .from(saleTable)
-    .where(eq(saleTable.is_deleted, false))
+    .where(
+      and(
+        eq(saleTable.is_deleted, false),
+        gte(saleTable.datetime, start),
+        lt(saleTable.datetime, end)
+      )
+    )
     .groupBy(sql`DATE_TRUNC('month', ${saleTable.datetime})`)
-    .orderBy(sql`DATE_TRUNC('month', ${saleTable.datetime}) ASC`); 
-    
-  return salesByMonth;
+    .orderBy(sql`DATE_TRUNC('month', ${saleTable.datetime}) ASC`);
+
+  // 2) Armamos un map mes(0-11) -> count
+  const countsByMonth = new Map<number, number>();
+  for (const r of rows as SalesByMonthRow[]) {
+    const d = new Date(r.month_start_date);
+    const monthIndex = d.getUTCMonth(); // 0-11
+    countsByMonth.set(monthIndex, Number(r.count) || 0);
+  }
+
+  // 3) Devolvemos SIEMPRE 12 meses (rellenando faltantes con 0)
+  const filled = Array.from({ length: 12 }, (_, i) => {
+    const monthStart = new Date(Date.UTC(year, i, 1));
+    return {
+      month_start_date: monthStart.toISOString(),
+      count: countsByMonth.get(i) ?? 0,
+    };
+  });
+
+  return filled;
 };
+
+
 
 export const getProductSoldCount = async() => {
     

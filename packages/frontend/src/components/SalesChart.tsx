@@ -39,7 +39,6 @@ export function SalesChart({ data }: { data?: SaleChart[] }){
         <ChartTooltip content={<ChartTooltipContent />} />
         <ChartLegend content={<ChartLegendContent />} />
         <Bar dataKey="count" fill="var(--color-count)" radius={4} />
-        <Bar dataKey="mobile" fill="var(--color-mobile)" radius={4} />
       </BarChart>
     </ChartContainer>
   )
