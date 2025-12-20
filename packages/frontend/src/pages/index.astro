@@ -6,15 +6,24 @@ import { serverApp } from "@/lib/serverAPI";
 import { SalesDataByMonth } from '@/utils/formatters';
 import { PieChart } from '@/components/PieChart';
 import { generalStringFormat } from "@/utils/formatters";
+import { SalesAnnualSection } from "@/components/SalesAnnualSection";
+import moneyIcon from '../assets/money-income.svg';
+import devicesIcon from '../assets/devices.svg';
+import grossincome from "../assets/gross-income.svg"
+import expenseIcon from '../assets/expense.svg';
+import debtIcon from "../assets/debt.svg";
 const resultGross = await serverApp.sale['gross-income'].get()
 const gross_income = String(resultGross.data);
 const resultNet = await serverApp.sale['net-income'].get()
 const net_income = String(resultNet.data);
-const saleData = await serverApp.sale.all.get();
+const saleData = await serverApp.sale.all.get({ query: { is_deleted: false }});
 const units_sold_count = saleData.data?.length ?? 0;
 const expenseData = await serverApp.expense['expenses'].get()
 const expensesFormatted = expenseData.data || []
-const saleDataByMonth = await serverApp.sale['sales-by-month'].get();
+const initialYear = new Date().getFullYear();
+const saleDataByMonth = await serverApp.sale["sales-by-month"].get({
+  query: { year: String(initialYear) },
+});
 const saleDataFormatted = SalesDataByMonth(saleDataByMonth.data || []) || [];
 const deudoresCount = await serverApp.client['debts'].get()
 const deudoresCountFormatted = deudoresCount.data?.length || 0;
@@ -41,22 +50,28 @@ const secondaryData = `
 ---
 
 <LayoutDashboard title="StockManagement">
-	<h1 class="px-3 w-full text-left text-4xl text-gray-700 font-bold my-5">Dashboard</h1>
-	<div class="grid grid-cols-3">
-		<CustomCard title="Ingresos Netos" amount=`$${net_income}` />
-		<CustomCard title="Unidades Vendidas" amount={String(units_sold_count)} />
-		<CustomCard title="Ingresos Brutos" amount=`$${gross_income}` />
+	<h1 class="px-3 w-full text-left text-4xl text-gray-700 font-bold mt-5 mb-2">Dashboard</h1>
+	<p class="px-3 mb-8 text-sm text-gray-600 font-medium">Resumen completo de tu negocio con métricas clave</p>
+	<div class="px-3 grid grid-cols-4 gap-3 mb-4">
+		<CustomCard title="Unidades Vendidas" amount={String(units_sold_count)} icon={devicesIcon}/>
+		<CustomCard title="Ingresos Netos" amount=`$${net_income}` icon={moneyIcon}/>
+		<CustomCard title="Ingresos Brutos" amount=`$${gross_income}` icon={grossincome}/>
+		<CustomCard title="Gastos Totales" amount=`$${expensesFormatted}` icon={expenseIcon}/>
 	</div>
-	<div class="grid grid-cols-2 gap-4">
-		<div class="flex justify-center w-full p-3 m-2 bg-white hover:bg-gray-50 shadow-lg rounded-2xl">
-			<SalesChart client:load data={saleDataFormatted}/>
-		</div>
-		<div class="flex justify-center w-auto p-3 m-2 bg-white hover:bg-gray-50 shadow-lg rounded-2xl">
+	<div class="px-3">
+		<SalesAnnualSection
+			client:load
+			initialYear={initialYear}
+			initialData={saleDataFormatted}
+		/>
+	</div>
+	</div>
+	<div class="flex flex-row gap-3 mt-4 px-3 mb-10">
+		<div class="flex justify-center w-1/2 p-3 bg-white hover:bg-gray-50 rounded-2xl shadow-lg">
 			<PieChart data={pieChartData} className="flex justify-center" client:load/>
 		</div>
-	</div>
-	<div class="grid grid-cols-2">
-		<CustomCard title="Gastos Totales" amount=`$${expensesFormatted}`/>
-		<CustomCard title="Deudores" amount=`$${totalDebtFormatted}` secondaryData={secondaryData}/>
+		<div class="w-1/2">
+			<CustomCard title="Deudores" amount=`$${totalDebtFormatted}` secondaryData={secondaryData} icon={debtIcon}/>
+		</div>
 	</div>
 </Layout>

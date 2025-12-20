@@ -1,7 +1,7 @@
 import { Elysia, t } from "elysia";
 import { getAllSales, getSaleByFilter, getSaleById, addSale, updateSale, softDeleteSale } from "../services/saleService";
 import { saleInsertDTO, saleUpdateDTO } from "@server/db/types";
-import { getGrossIncome, getNetIncome, getSalesCountByMonth, getProductSoldCount, getDebts, getTotalDebt } from "../services/saleService";
+import { getGrossIncome, getNetIncome, getSalesByMonth, getProductSoldCount, getDebts, getTotalDebt } from "../services/saleService";
 import { db } from "@server/db/db";
 
 export const saleController = new Elysia({prefix: '/sale'})
@@ -139,15 +139,26 @@ export const saleController = new Elysia({prefix: '/sale'})
             },
         }
     )
-    .get("/sales-by-month", async () => {
-        return await getSalesCountByMonth();
-    },
-    {
+    .get(
+        "/sales-by-month",
+        async ({ query }) => {
+        const year = Number(query.year);
+
+        if (!year || isNaN(year)) {
+            throw new Error("Invalid year");
+        }
+
+        return await getSalesByMonth(year);
+        },
+        {
+        query: t.Object({
+            year: t.String(),
+        }),
         detail: {
-            summary: "Get net income",
+            summary: "Get sales grouped by month for a given year",
             tags: ["sales"],
         },
-    }
+        }
     )
     .get("/products-sold-count", async () => {
         return await getProductSoldCount();

@@ -1,5 +1,5 @@
 import { Elysia, t } from "elysia";
-import { getAllProviders, getProviderByFilter, getProviderById, addProvider, updateProvider, deleteProvider } from "../services/providerService";
+import { getAllProviders, getProviderByFilter, getProviderById, addProvider, updateProvider, softDeleteProvider } from "../services/providerService";
 import { providerInsertDTO, providerUpdateDTO } from "@server/db/types";
 
 export const providerController = new Elysia({prefix: '/provider'})
@@ -101,34 +101,8 @@ export const providerController = new Elysia({prefix: '/provider'})
             },
         },
     )
-    .delete(
-        "/:id",
-        async ({ params: { id }, set }) => {
-            const providerIdNum = Number(id);
-            if (!Number.isInteger(providerIdNum) || providerIdNum <= 0) {
-                set.status = 400;
-                return false;
-            }
-
-            const result = await deleteProvider(providerIdNum);
-            if (!result) {
-                set.status = 404;
-                return false;
-            }
-
-            set.status = 200;
-            return true;
-        },
-        {
-            params: t.Object({
-                id: t.Numeric({
-                    minimum: 1,
-                    errorMessage: 'provider_id must be a positive integer',
-                })
-            }),
-            detail: {
-                summary: "Delete a provider",
-                tags: ["providers"],
-            },
-        },
-    )
+    .delete("/:id", async ({ params: { id }, set }) => {
+        const ok = await softDeleteProvider(Number(id));
+        set.status = ok ? 200 : 404;
+        return ok;
+    });

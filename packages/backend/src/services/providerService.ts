@@ -83,12 +83,12 @@ export async function updateProvider(
     return result;
 }
 
-export const deleteProvider = async (provider_id: number) => {
+export async function softDeleteProvider(id: number) {
     const result = await db
-        .delete(providerTable)
-        .where(eq(providerTable.provider_id, provider_id))
+        .update(providerTable)
+        .set({ is_deleted: true })
+        .where(eq(providerTable.provider_id, id))
         .returning();
 
-    if (result.length > 0) {return true}
-    else {return false}
+    return result.length > 0;
 }

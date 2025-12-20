@@ -18,13 +18,13 @@ export const phoneColumns: Column<Phone>[] = [
         renderKey: "money",
     },
     {
-        accessorKey: "imei",
-        header: "IMEI",
+        accessorKey: "buy_cost",
+        header: "Costo",
+        renderKey: "money",
     },
     {
-        accessorKey: "device_type",
-        header: "Tipo",
-        renderKey: "general"
+        accessorKey: "imei",
+        header: "IMEI",
     },
     {
         accessorKey: "battery_health",
@@ -42,11 +42,6 @@ export const phoneColumns: Column<Phone>[] = [
         accessorKey: "category",
         header: "Categoría",
         renderKey: "general"
-    },
-       {
-        accessorKey: "buy_cost",
-        header: "Costo",
-        renderKey: "money",
     },
     {
         accessorKey: "deposit",
