@@ -13,6 +13,8 @@ WORKDIR /app
 # si estos archivos cambian.
 COPY package.json bun.lock ./
 COPY packages/frontend/package.json ./packages/frontend/
+COPY packages/backend/package.json ./packages/backend/
+
 # (Si tienes más paquetes en tu monorepo, copia sus package.json aquí)
 
 # 4. Instalar TODAS las dependencias (incluyendo devDependencies)
