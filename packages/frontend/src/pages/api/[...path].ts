@@ -2,48 +2,33 @@ import type { APIRoute } from "astro";
 
 export const prerender = false;
 
-export const GET: APIRoute = async () => {
-  return new Response("API OK", { status: 200 });
-};
-
-function normalizePath(pathParam: unknown): string {
-  if (typeof pathParam === "string") return pathParam;
-  if (Array.isArray(pathParam)) return pathParam.map(String).join("/");
-  return "";
-}
-
 export const ALL: APIRoute = async ({ request, params }) => {
-  const backendOrigin = process.env.SERVER_API_URL;
-  if (!backendOrigin) {
-    return new Response("Missing SERVER_API_URL", { status: 500 });
+  const backendBase = process.env.SERVER_API_BASE;
+  if (!backendBase) {
+    return new Response("Missing SERVER_API_BASE", { status: 500 });
   }
 
   const incoming = new URL(request.url);
-  const path = normalizePath((params as any).path);
+  const path =
+    typeof (params as any).path === "string"
+      ? (params as any).path
+      : Array.isArray((params as any).path)
+      ? (params as any).path.join("/")
+      : "";
 
-  // 🔥 ACA está la clave:
-  // Astro recibe /api/expense/all
-  // Backend espera /api/expense/all
-  // Entonces NO volvemos a agregar /api
-  const target = new URL(
-    `/api/${path}${incoming.search}`,
-    backendOrigin
-  );
+  // 🔑 Backend YA vive en /api
+  const target = `${backendBase}/${path}${incoming.search}`;
 
   const headers = new Headers(request.headers);
   headers.delete("host");
 
-  const method = request.method;
-  const body =
-    method === "GET" || method === "HEAD"
-      ? undefined
-      : await request.arrayBuffer();
-
-  const res = await fetch(target.toString(), {
-    method,
+  const res = await fetch(target, {
+    method: request.method,
     headers,
-    body,
-    redirect: "manual",
+    body:
+      request.method === "GET" || request.method === "HEAD"
+        ? undefined
+        : await request.arrayBuffer(),
   });
 
   return new Response(res.body, {
