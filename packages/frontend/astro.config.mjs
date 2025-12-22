@@ -1,7 +1,5 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
-import vercel from "@astrojs/vercel/serverless"; // o "@astrojs/vercel/edge"
-
 
 // Importa las integraciones que instalaste
 import node from '@astrojs/node';
@@ -13,7 +11,7 @@ import react from '@astrojs/react';
 export default defineConfig({
   // Define el modo de renderizado a "servidor" (SSR)
   output: 'server',
-  adapter: vercel({}),
+  adapter: node({ mode: "standalone" }),
   vite: {
     server: {
       host: true,

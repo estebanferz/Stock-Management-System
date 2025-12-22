@@ -1,0 +1,81 @@
+---
+
+import Layout from "../../layouts/Layout.astro";
+import { SheetFormSale } from "@/components/SheetForms/SheetFormSale";
+import { serverApp } from "@/lib/serverAPI";
+import { saleColumns } from "@/config/SaleColumnConfig.client";
+import ActionPanel from "@/components/ActionPanel";
+import { SalesPageManager } from "@/components/PageManager/SalePageManager";
+
+
+// 1) Traer todo en paralelo
+const [salesRes, clientsRes, sellersRes, phonesRes] = await Promise.all([
+  serverApp.sale.all.get(),
+  serverApp.client.all.get(),
+  serverApp.seller.all.get(),
+  serverApp.phone.all.get(),
+]);
+
+const sales = salesRes.data ?? [];
+const clients = clientsRes.data ?? [];
+const sellers = sellersRes.data ?? [];
+const phones = phonesRes.data ?? [];
+
+// 2) Mapas id -> nombre/label
+const clientNameById = new Map<number, string>(
+  clients.map((c: any) => [c.client_id, c.name ?? "—"])
+);
+
+const sellerNameById = new Map<number, string>(
+  sellers.map((s: any) => [s.seller_id, s.name ?? "—"])
+);
+
+// Ajustá esto al “nombre” que quieras mostrar del dispositivo
+const phoneLabelById = new Map<number, string>(
+  phones.map((p: any) => [
+    p.device_id,
+    p.name ?? "-",
+  ])
+);
+
+// 3) Enriquecer ventas con nombres
+const data = sales.map((sale: any) => ({
+  ...sale,
+  client_name: clientNameById.get(sale.client_id) ?? "—",
+  seller_name: sellerNameById.get(sale.seller_id) ?? "—",
+  device_name: phoneLabelById.get(sale.device_id) ?? "—",
+}));
+
+console.log("Ventas:", data);
+
+---
+
+<Layout title="Ventas">
+    <h1 class="w-full text-center text-4xl text-gray-700 font-bold my-5">Ventas</h1>
+    
+    <SalesPageManager
+        client:load
+        initialSales={sales}
+        clients={clients}
+        sellers={sellers}
+        phones={phones}
+        columns={saleColumns}
+      />
+
+    <div class="m-4 mt-20" slot="tercer-columna">
+        <ActionPanel client:load />
+    </div>
+
+    <div class="group absolute bottom-10 right-10">
+        <span 
+        class="absolute bottom-full right-0 mb-2 whitespace-nowrap rounded-md border bg-white px-4 py-2 
+           text-sm font-medium text-black shadow-lg
+           opacity-0 scale-95 transition-all duration-200 
+           group-hover:opacity-100 group-hover:scale-100
+           pointer-events-none"
+        >
+        Nueva Venta
+        </span>
+        <SheetFormSale zIndex={70} client:load/>
+    </div>
+</Layout>

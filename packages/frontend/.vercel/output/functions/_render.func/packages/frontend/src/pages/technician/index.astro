@@ -1,0 +1,39 @@
+---
+
+import Layout from "../../layouts/Layout.astro";
+import { SheetFormTechnician } from "@/components/SheetForms/SheetFormTechnician";
+import { serverApp } from "@/lib/serverAPI";
+import { technicianColumns } from "@/config/TechnicianColumnConfig";
+import ActionPanel from "@/components/ActionPanel";
+import { TechnicianPageManager } from "@/components/PageManager/TechnicianPageManager";
+
+const response = await serverApp.technician.all.get({ query: { is_deleted: false }});
+const data = response.data || [];
+---
+
+<Layout title="Tecnicos">
+    <h1 class="w-full text-center text-4xl text-gray-700 font-bold my-5">Técnicos</h1>
+    
+    <TechnicianPageManager
+        client:load
+        initialData={data}
+        columns={technicianColumns}
+    />
+
+    <div class="m-4 mt-20" slot="tercer-columna">
+        <ActionPanel client:load />
+    </div>
+
+    <div class="group absolute bottom-10 right-10">
+        <span 
+        class="absolute bottom-full right-0 mb-2 whitespace-nowrap rounded-md border bg-white px-4 py-2 
+           text-sm font-medium text-black shadow-lg
+           opacity-0 scale-95 transition-all duration-200 
+           group-hover:opacity-100 group-hover:scale-100
+           pointer-events-none"
+        >
+        Nuevo Técnico
+        </span>
+        <SheetFormTechnician zIndex={60} client:load/>
+    </div>
+</Layout>

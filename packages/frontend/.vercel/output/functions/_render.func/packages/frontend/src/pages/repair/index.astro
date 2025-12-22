@@ -1,0 +1,75 @@
+---
+
+import Layout from "../../layouts/Layout.astro";
+import { SheetFormRepair } from "@/components/SheetForms/SheetFormRepair";
+import { serverApp } from "@/lib/serverAPI";
+import { repairColumns } from "@/config/RepairColumnConfig";
+import ActionPanel from "@/components/ActionPanel";
+import { RepairPageManager } from "@/components/PageManager/RepairPageManager";
+
+const [repairsRes, clientsRes, techniciansRes, phonesRes] = await Promise.all([
+  serverApp.repair.all.get({ query: { is_deleted: false }}),
+  serverApp.client.all.get(),
+  serverApp.technician.all.get(),
+  serverApp.phone.all.get(),
+]);
+
+const repairs = repairsRes.data ?? [];
+const clients = clientsRes.data ?? [];
+const technicians = techniciansRes.data ?? [];
+const phones = phonesRes.data ?? [];
+
+const clientNameById = new Map<number, string>(
+  clients.map((c: any) => [c.client_id, c.name ?? "—"])
+);
+
+const technicianNameById = new Map<number, string>(
+  technicians.map((t: any) => [t.technician_id, t.name ?? "—"])
+);
+
+const phoneLabelById = new Map<number, string>(
+  phones.map((p: any) => [
+    p.device_id,
+    p.name ?? "-",
+  ])
+);
+
+const data = repairs.map((repair: any) => ({
+  ...repair,
+  client_name: clientNameById.get(repair.client_id) ?? "—",
+  technician_name: technicianNameById.get(repair.technician_id) ?? "—",
+  device_name: phoneLabelById.get(repair.device_id) ?? "—",
+}));
+
+---
+
+<Layout title="Reparaciones">
+    <h1 class="w-full text-center text-4xl text-gray-700 font-bold my-5">Reparaciones</h1>
+    
+
+    <RepairPageManager
+      client:load
+      initialRepairs={repairs}
+      clients={clients}
+      technicians={technicians}
+      phones={phones}
+      columns={repairColumns}
+    />
+
+    <div class="m-4 mt-20" slot="tercer-columna">
+        <ActionPanel client:load />
+    </div>
+
+    <div class="group absolute bottom-10 right-10">
+        <span 
+        class="absolute bottom-full right-0 mb-2 whitespace-nowrap rounded-md border bg-white px-4 py-2 
+           text-sm font-medium text-black shadow-lg
+           opacity-0 scale-95 transition-all duration-200 
+           group-hover:opacity-100 group-hover:scale-100
+           pointer-events-none"
+        >
+        Nueva Reparación
+        </span>
+        <SheetFormRepair client:load/>
+    </div>
+</Layout>
