@@ -1,5 +1,11 @@
 import type { APIRoute } from "astro";
 
+export const prerender = false;
+
+export const GET: APIRoute = async () => {
+  return new Response("API OK", { status: 200 });
+};
+
 function normalizePath(pathParam: unknown): string {
   if (typeof pathParam === "string") return pathParam;
   if (Array.isArray(pathParam)) return pathParam.map(String).join("/");
