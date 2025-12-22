@@ -7,26 +7,33 @@ function normalizePath(pathParam: unknown): string {
 }
 
 export const ALL: APIRoute = async ({ request, params }) => {
-  const backendBase = process.env.SERVER_API_URL;
-  if (!backendBase) {
-    return new Response("Missing SERVER_API_URL", { status: 500 });
+  const backendOrigin = process.env.SERVER_API_ORIGIN;
+  if (!backendOrigin) {
+    return new Response("Missing SERVER_API_ORIGIN", { status: 500 });
   }
 
   const incoming = new URL(request.url);
   const path = normalizePath((params as any).path);
 
-  // backendBase debería terminar en /api
-  const base = backendBase.endsWith("/") ? backendBase : `${backendBase}/`;
-  const target = new URL(`${path}${incoming.search}`, base);
+  // 🔥 ACA está la clave:
+  // Astro recibe /api/expense/all
+  // Backend espera /api/expense/all
+  // Entonces NO volvemos a agregar /api
+  const target = new URL(
+    `/api/${path}${incoming.search}`,
+    backendOrigin
+  );
 
   const headers = new Headers(request.headers);
   headers.delete("host");
 
-  const method = request.method.toUpperCase();
+  const method = request.method;
   const body =
-    method === "GET" || method === "HEAD" ? undefined : await request.arrayBuffer();
+    method === "GET" || method === "HEAD"
+      ? undefined
+      : await request.arrayBuffer();
 
-  const res = await fetch(target, {
+  const res = await fetch(target.toString(), {
     method,
     headers,
     body,
