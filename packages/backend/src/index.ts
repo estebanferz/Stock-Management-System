@@ -9,11 +9,8 @@ import {expenseController} from "./controllers/expenseController";
 import {providerController} from "./controllers/providerController";
 import {saleController} from "./controllers/saleController";
 import {sellerController} from "./controllers/sellerController";
-import { staticPlugin } from "@elysiajs/static";
-import path from "node:path";
-import { existsSync } from "node:fs";
 
-const UPLOADS_DIR = path.join(import.meta.dir, "../uploads");
+const port = Number(process.env.PORT ?? 3000);
 
 const app = new Elysia({prefix: '/api'})
   .use(cors({ origin: [
@@ -23,6 +20,7 @@ const app = new Elysia({prefix: '/api'})
   .get("/", () => {
     return { message: "app" };
   })
+  .get("/health", () => ({ status: "ok" }))
   .use(clientController)
   .use(technicianController)
   .use(phoneController)
@@ -32,7 +30,10 @@ const app = new Elysia({prefix: '/api'})
   .use(saleController)
   .use(sellerController)
 
-  .listen(3000);
+  .listen({
+    hostname: "0.0.0.0",
+    port,
+  });
 
 console.log(
   `🦊 Elysia is running in http://${app.server?.hostname}:${app.server?.port}`
