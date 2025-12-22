@@ -3,7 +3,7 @@ import type { App } from "@server/src/index";
 
 const origin =
   import.meta.env.SSR
-    ? process.env.SERVER_API_BASE!.replace(/\/api$/, "")
+    ? process.env.SERVER_API_URL!.replace(/\/api$/, "")
     : window.location.origin;
 
 export const serverApp = treaty<App>(origin).api;
