@@ -3,9 +3,9 @@ import type { APIRoute } from "astro";
 export const prerender = false;
 
 export const ALL: APIRoute = async ({ request, params }) => {
-  const backendBase = process.env.SERVER_API_BASE;
+  const backendBase = process.env.SERVER_API_URL;
   if (!backendBase) {
-    return new Response("Missing SERVER_API_BASE", { status: 500 });
+    return new Response("Missing SERVER_API_URL", { status: 500 });
   }
 
   const incoming = new URL(request.url);
