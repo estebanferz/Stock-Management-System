@@ -13,9 +13,9 @@ function normalizePath(pathParam: unknown): string {
 }
 
 export const ALL: APIRoute = async ({ request, params }) => {
-  const backendOrigin = process.env.SERVER_API_ORIGIN;
+  const backendOrigin = process.env.SERVER_API_URL;
   if (!backendOrigin) {
-    return new Response("Missing SERVER_API_ORIGIN", { status: 500 });
+    return new Response("Missing SERVER_API_URL", { status: 500 });
   }
 
   const incoming = new URL(request.url);
