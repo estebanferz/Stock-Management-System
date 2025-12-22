@@ -31,8 +31,18 @@ export const ALL: APIRoute = async ({ request, params }) => {
         : await request.arrayBuffer(),
   });
 
+  const responseHeaders = new Headers(res.headers);
+
+  // ❌ headers que NO deben forwardearse
+  responseHeaders.delete("content-encoding");
+  responseHeaders.delete("content-length");
+  responseHeaders.delete("transfer-encoding");
+
+  // opcional pero sano
+  responseHeaders.delete("connection");
+
   return new Response(res.body, {
     status: res.status,
-    headers: res.headers,
+    headers: responseHeaders,
   });
 };
