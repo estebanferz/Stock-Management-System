@@ -10,7 +10,7 @@ import { SalesPageManager } from "@/components/PageManager/SalePageManager";
 
 // 1) Traer todo en paralelo
 const [salesRes, clientsRes, sellersRes, phonesRes] = await Promise.all([
-  serverApp.sale.all.get(),
+  serverApp.sale.all.get({query : { is_deleted: false }}),
   serverApp.client.all.get(),
   serverApp.seller.all.get(),
   serverApp.phone.all.get(),
