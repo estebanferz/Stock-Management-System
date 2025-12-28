@@ -1,6 +1,7 @@
 import { Elysia } from "elysia";
 import { swagger } from "@elysiajs/swagger";
 import { cors } from "@elysiajs/cors";
+import { authController } from "./controllers/authController";
 import {clientController} from "./controllers/clientController";
 import {technicianController} from "./controllers/technicianController";
 import {phoneController} from "./controllers/phoneController";
@@ -21,6 +22,7 @@ const app = new Elysia({prefix: '/api'})
     return { message: "app" };
   })
   .get("/health", () => ({ status: "ok" }))
+  .use(authController)
   .use(clientController)
   .use(technicianController)
   .use(phoneController)
