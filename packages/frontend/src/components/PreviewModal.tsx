@@ -17,7 +17,7 @@ export function PreviewModal({
 }: PreviewModalProps) {
     
     const API = import.meta.env.PUBLIC_API_URL;
-    const src = `${API}/api/expense/${expenseId}/receipt`;
+    const src = `${API}/expense/${expenseId}/receipt`;
 
     const isPdf = mime === "application/pdf" || (fileName?.toLowerCase().endsWith(".pdf") ?? false);
     const isImage = (mime?.startsWith("image/") ?? false);

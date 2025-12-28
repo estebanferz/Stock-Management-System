@@ -1,0 +1,14 @@
+---
+import "@/styles/tailwind.css";
+import LayoutLogin from "@/layouts/LayoutLogin.astro";
+---
+
+<LayoutLogin>
+  <div slot="body" class="flex h-full w-full items-center justify-center p-6">
+    <div
+      class="h-fit w-full max-w-lg rounded-xl border border-gray-200 bg-gray-50 p-6 shadow-lg"
+    >
+      <slot />
+    </div>
+  </div>
+</LayoutLogin>

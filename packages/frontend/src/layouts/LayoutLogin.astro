@@ -1,0 +1,41 @@
+---
+
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="description" content="Astro description" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" href="/favicon-32x32.png" />
+    <meta name="generator" content={Astro.generator} />
+    <title>Login</title>
+  </head>
+  <body class="">
+    <div class="flex h-screen w-screen md:grid md:grid-cols-5">
+      <div class="relative flex h-full w-full flex-col items-center justify-center md:col-span-3 overflow-hidden">
+        <div class="absolute inset-0 bg-cover bg-center bg-[url('../assets/background.svg')] blur-md scale-110"></div>
+        <div class="relative z-10 w-full h-full">
+          <slot name="body" />
+        </div>
+      </div>
+
+      <div
+        class="hidden md:col-span-2 md:flex md:items-center md:justify-center"
+      >
+        <div
+          class="h-full w-full items-center justify-center backdrop-grayscale-[.35]"
+        >
+            <a href="/" class="w-full">
+              <img
+                src="/login-background.png"
+                alt="Logo"
+                class="h-full w-full object-cover drop-shadow-4xl"
+              />
+            </a>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
