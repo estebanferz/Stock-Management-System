@@ -1,191 +1,221 @@
 import { Elysia, t } from "elysia";
-import { getAllSales, getSaleByFilter, getSaleById, addSale, updateSale, softDeleteSale } from "../services/saleService";
+import {
+  getAllSales,
+  getSaleByFilter,
+  getSaleById,
+  addSale,
+  updateSale,
+  softDeleteSale,
+  getGrossIncome,
+  getNetIncome,
+  getSalesByMonth,
+  getProductSoldCount,
+  getDebts,
+  getTotalDebt,
+} from "../services/saleService";
 import { saleInsertDTO, saleUpdateDTO } from "@server/db/types";
-import { getGrossIncome, getNetIncome, getSalesByMonth, getProductSoldCount, getDebts, getTotalDebt } from "../services/saleService";
-import { db } from "@server/db/db";
+import { requireAuth } from "../middlewares/requireAuth";
 
-export const saleController = new Elysia({prefix: '/sale'})
-    .get("/", () => {
-        return { message: "Sale endpoint" };
-    })
-    .get(
+export const saleController = new Elysia({ prefix: "/sale" })
+  .use(requireAuth)
+
+  .get("/", () => {
+    return { message: "Sale endpoint" };
+  })
+
+  .get(
     "/all",
-    async ({ query }) => {
-        if (
-        query.date ||
-        query.client_id ||
-        query.seller_id ||
-        query.device_id ||
-        query.is_deleted
-        ) {
-        return await getSaleByFilter({
-            date: query.date,
-            client_id: query.client_id,
-            seller_id: query.seller_id,
-            device_id: query.device_id,
-            is_deleted: query.is_deleted === undefined ? undefined : query.is_deleted === "true",
+    async (ctx) => {
+      const userId = ctx.user.user_id;
+      const { query } = ctx;
+
+      if (query.date || query.client_id || query.seller_id || query.device_id || query.is_deleted) {
+        return await getSaleByFilter(userId, {
+          date: query.date,
+          client_id: query.client_id,
+          seller_id: query.seller_id,
+          device_id: query.device_id,
+          is_deleted: query.is_deleted === undefined ? undefined : query.is_deleted === "true",
         });
-        }
+      }
 
-        return await getAllSales();
+      return await getAllSales(userId);
     },
     {
-        detail: {
-        summary: "Get all sales in DB",
+      detail: {
+        summary: "Get all sales in DB (scoped by user)",
         tags: ["sales"],
-        },
-    },
-    )
-    .get(
-        "/:id",
-        async (req) => {
-            const { id } = req.params;
-            return await getSaleById(Number(id));
-        },
-        {
-            detail: {
-                summary: "Get sale details by ID",
-                tags: ["sales"],
-            },
-        }
-    )
-    .post(
-        "/",
-        async ({body, set}) => {
-
-            const newSale = {
-                datetime: body.datetime ? new Date(body.datetime) : undefined,
-                total_amount: body.total_amount,
-                payment_method: body.payment_method,
-                debt: body.debt,
-                ...(body.debt_amount && {debt_amount: body.debt_amount}),
-                client_id: body.client_id,
-                seller_id: body.seller_id,
-                device_id: body.device_id,
-                ...(body.trade_in_device && {trade_in_device: body.trade_in_device}),
-            };
-            
-            const result = await addSale(newSale);
-            set.status = 201;
-            return result;
-        },
-        {
-            body: t.Object({
-                ...saleInsertDTO.properties,
-                datetime: t.Optional(t.String({ format: "date-time" }))
-            }),
-            detail: {
-                summary: "Insert a new sale",
-                tags: ["sales"],
-            },
-        }
-    )
-    .put(
-        "/:id",
-        async ({ body, params: { id }, set }) => {
-
-            const updSale = {
-                datetime: body.datetime ? new Date(body.datetime) : undefined,
-                total_amount: body.total_amount,
-                payment_method: body.payment_method,
-                debt: body.debt,
-                ...(body.debt_amount && {debt_amount: body.debt_amount}),
-                client_id: body.client_id,
-                seller_id: body.seller_id,
-                device_id: body.device_id, 
-            };
-
-            const result = await updateSale(
-                Number(id),
-                updSale,
-            );
-            set.status = 200;
-            return result;
-        },
-        {
-            body: t.Object({
-                ...saleUpdateDTO.properties,
-                datetime: t.Optional(t.String({ format: "date-time" }))
-            }),
-            detail: {
-                summary: "Update a sale",
-                tags: ["sales"],
-            },
-        },
-    )
-    .delete("/:id", async ({ params: { id }, set }) => {
-        const ok = await softDeleteSale(Number(id));
-        set.status = ok ? 200 : 404;
-        return ok;
-    })
-    .get("/gross-income", async () => {
-            const grossIncome = await getGrossIncome();
-            return grossIncome;
-        },
-        {
-            detail: {
-                summary: "Get gross income",
-                tags: ["sales"],
-            },
-        })
-    .get("/net-income", async () => {
-            const netIncome = await getNetIncome();
-            return netIncome;
-        },
-        {
-            detail: {
-                summary: "Get net income",
-                tags: ["sales"],
-            },
-        }
-    )
-    .get(
-        "/sales-by-month",
-        async ({ query }) => {
-        const year = Number(query.year);
-
-        if (!year || isNaN(year)) {
-            throw new Error("Invalid year");
-        }
-
-        return await getSalesByMonth(year);
-        },
-        {
-        query: t.Object({
-            year: t.String(),
-        }),
-        detail: {
-            summary: "Get sales grouped by month for a given year",
-            tags: ["sales"],
-        },
-        }
-    )
-    .get("/products-sold-count", async () => {
-        return await getProductSoldCount();
-    },
-    {
-        detail: {
-            summary: "Get products sold count",
-            tags: ["sales"],
-        },
+      },
     }
-    )
-    .get("/debts", async() => {
-        return await getDebts();
+  )
+
+  .get(
+    "/:id",
+    async (ctx) => {
+      const userId = ctx.user.user_id;
+      const saleId = Number(ctx.params.id);
+      return await getSaleById(userId, saleId);
     },
     {
-        detail: {
-            summary: "Get all debts",
-            tags: ["sales"],
-        },
-    })
-    .get("/total-debt", async() => {
-        return await getTotalDebt();
-    },
-    {
-        detail: {
-            summary: "Get total debt amount",
-            tags: ["sales"],
-        },
+      detail: {
+        summary: "Get sale details by ID (scoped by user)",
+        tags: ["sales"],
+      },
     }
-    );
+  )
+
+  .post(
+    "/",
+    async (ctx) => {
+      const userId = ctx.user.user_id;
+      const { body, set } = ctx;
+
+      const newSale = {
+        user_id: userId, // ✅ backend-only
+        datetime: body.datetime ? new Date(body.datetime) : undefined,
+        total_amount: body.total_amount,
+        payment_method: body.payment_method,
+        debt: body.debt,
+        ...(body.debt_amount && { debt_amount: body.debt_amount }),
+        client_id: body.client_id,
+        seller_id: body.seller_id,
+        device_id: body.device_id,
+        ...(body.trade_in_device && { trade_in_device: body.trade_in_device }),
+      };
+
+      const result = await addSale(userId, newSale);
+      set.status = 201;
+      return result;
+    },
+    {
+      body: t.Object({
+        ...saleInsertDTO.properties,
+        datetime: t.Optional(t.String({ format: "date-time" })),
+      }),
+      detail: {
+        summary: "Insert a new sale (scoped by user)",
+        tags: ["sales"],
+      },
+    }
+  )
+
+  .put(
+    "/:id",
+    async (ctx) => {
+      const userId = ctx.user.user_id;
+      const saleId = Number(ctx.params.id);
+      const { body, set } = ctx;
+
+      const updSale = {
+        datetime: body.datetime ? new Date(body.datetime) : undefined,
+        total_amount: body.total_amount,
+        payment_method: body.payment_method,
+        debt: body.debt,
+        ...(body.debt_amount && { debt_amount: body.debt_amount }),
+        client_id: body.client_id,
+        seller_id: body.seller_id,
+        device_id: body.device_id,
+        ...(body.trade_in_device && { trade_in_device: body.trade_in_device }),
+      };
+
+      const result = await updateSale(userId, saleId, updSale);
+      set.status = 200;
+      return result;
+    },
+    {
+      body: t.Object({
+        ...saleUpdateDTO.properties,
+        datetime: t.Optional(t.String({ format: "date-time" })),
+      }),
+      detail: {
+        summary: "Update a sale (scoped by user)",
+        tags: ["sales"],
+      },
+    }
+  )
+
+  .delete("/:id", async (ctx) => {
+    const userId = ctx.user.user_id;
+    const saleId = Number(ctx.params.id);
+
+    const ok = await softDeleteSale(userId, saleId);
+    ctx.set.status = ok ? 200 : 404;
+    return ok;
+  })
+
+  .get(
+    "/gross-income",
+    async (ctx) => {
+      const userId = ctx.user.user_id;
+      return await getGrossIncome(userId);
+    },
+    {
+      detail: { summary: "Get gross income (scoped by user)", tags: ["sales"] },
+    }
+  )
+
+  .get(
+    "/net-income",
+    async (ctx) => {
+      const userId = ctx.user.user_id;
+      return await getNetIncome(userId);
+    },
+    {
+      detail: { summary: "Get net income (scoped by user)", tags: ["sales"] },
+    }
+  )
+
+  .get(
+    "/sales-by-month",
+    async (ctx) => {
+      const userId = ctx.user.user_id;
+      const year = Number(ctx.query.year);
+
+      if (!year || isNaN(year)) {
+        ctx.set.status = 400;
+        return { ok: false, message: "Invalid year" };
+      }
+
+      return await getSalesByMonth(userId, year);
+    },
+    {
+      query: t.Object({ year: t.String() }),
+      detail: {
+        summary: "Get sales grouped by month for a given year (scoped by user)",
+        tags: ["sales"],
+      },
+    }
+  )
+
+  .get(
+    "/products-sold-count",
+    async (ctx) => {
+      const userId = ctx.user.user_id;
+      return await getProductSoldCount(userId);
+    },
+    {
+      detail: { summary: "Get products sold count (scoped by user)", tags: ["sales"] },
+    }
+  )
+
+  .get(
+    "/debts",
+    async (ctx) => {
+      const userId = ctx.user.user_id;
+      return await getDebts(userId);
+    },
+    {
+      detail: { summary: "Get all debts (scoped by user)", tags: ["sales"] },
+    }
+  )
+
+  .get(
+    "/total-debt",
+    async (ctx) => {
+      const userId = ctx.user.user_id;
+      return await getTotalDebt(userId);
+    },
+    {
+      detail: { summary: "Get total debt amount (scoped by user)", tags: ["sales"] },
+    }
+  );

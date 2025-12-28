@@ -2,14 +2,19 @@ import { Elysia, t } from "elysia";
 import { getAllExpenses, getExpensesByFilter, addExpense, updateExpense, softDeleteExpense, getTotalExpenses, addExpenseWithReceipt, updateExpenseWithReceipt, getExpenseReceiptFile } from "../services/expenseService";
 import { expenseInsertDTO, expenseUpdateDTO } from "@server/db/types";
 import { safeFilename } from "../util/formattersBackend";
+import { requireAuth } from "../middlewares/requireAuth";
 
 export const expenseController = new Elysia({prefix: "/expense"})
+    .use(requireAuth)
     .get("/", () => {
         return { message: "Expense endpoint" };
     })
     .get(
     "/all",
-    async ({ query }) => {
+    async (ctx) => {
+        const userId = ctx.user.user_id
+        const { query } = ctx
+
         if (
         query.date ||
         query.category ||
@@ -18,8 +23,8 @@ export const expenseController = new Elysia({prefix: "/expense"})
         query.amount_min ||
         query.amount_max ||
         query.is_deleted
-        ) {
-        return await getExpensesByFilter({
+        ){
+        return await getExpensesByFilter(userId, {
             date: query.date,
             category: query.category,
             payment_method: query.payment_method,
@@ -30,7 +35,7 @@ export const expenseController = new Elysia({prefix: "/expense"})
         });
         }
 
-        return await getAllExpenses();
+        return await getAllExpenses(userId);
     },
     {
         detail: {
@@ -40,31 +45,34 @@ export const expenseController = new Elysia({prefix: "/expense"})
     },
     )
 
-    .get("/:id/receipt", async ({ params, set }) => {
-        const expenseId = Number(params.id);
+    .get("/:id/receipt", async (ctx) => {
+        const userId = ctx.user.user_id;
+        const expenseId = Number(ctx.params.id);
 
-        const receipt = await getExpenseReceiptFile(expenseId);
+        const receipt = await getExpenseReceiptFile(userId, expenseId);
 
         if (!receipt) {
-            set.status = 404;
+            ctx.set.status = 404;
             return;
         }
 
         const filename = safeFilename(receipt.originalName);
 
-        set.headers["Content-Type"] = receipt.mime;
+        ctx.set.headers["Content-Type"] = receipt.mime;
 
         // ✅ filename ASCII-safe
-        set.headers["Content-Disposition"] =
+        ctx.set.headers["Content-Disposition"] =
             `inline; filename="${filename}"`;
 
         return receipt.file;
     })
     .post(
     "/",
-    async ({ body, set }) => {
+    async (ctx) => {
+        const userId = ctx.user.user_id;
+        const { body, set } = ctx;
         try {
-        const result = await addExpenseWithReceipt(body);
+        const result = await addExpenseWithReceipt(userId, body);
         set.status = 201;
         return result;
         } catch (err: any) {
@@ -104,9 +112,12 @@ export const expenseController = new Elysia({prefix: "/expense"})
     )
     .put(
     "/:id",
-    async ({ body, params: { id }, set }) => {
+    async (ctx) => {
+        const userId = ctx.user.user_id;
+        const expenseId = Number(ctx.params.id);
+        const { body, set } = ctx;
         try {
-        const result = await updateExpenseWithReceipt(Number(id), body);
+        const result = await updateExpenseWithReceipt(userId, expenseId, body);
         set.status = 200;
         return result;
         } catch (err: any) {
@@ -148,13 +159,16 @@ export const expenseController = new Elysia({prefix: "/expense"})
         },
     }
     )
-    .delete("/:id", async ({ params: { id }, set }) => {
-        const ok = await softDeleteExpense(Number(id));
-        set.status = ok ? 200 : 404;
+    .delete("/:id", async (ctx) => {
+        const userId = ctx.user.user_id;
+        const expenseId = Number(ctx.params.id);
+        const ok = await softDeleteExpense(userId, expenseId);
+        ctx.set.status = ok ? 200 : 404;
         return ok;
     })
-    .get("/expenses", async () => {
-            const expenses = await getTotalExpenses();
+    .get("/expenses", async (ctx) => {
+            const userId = ctx.user.user_id
+            const expenses = await getTotalExpenses(userId);
             return expenses;
         },
         {

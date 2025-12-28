@@ -1,131 +1,180 @@
-import {Elysia} from "elysia";
-import {getAllClients, getClientByFilter, getClientById, updateClient, addClient, softDeleteClient, getDebts, getTotalDebt} from "../services/clientService";
-import {clientInsertDTO, clientUpdateDTO} from "@server/db/types";
-import { t } from "elysia";
+import { Elysia, t } from "elysia";
+import {
+  getAllClients,
+  getClientByFilter,
+  getClientById,
+  updateClient,
+  addClient,
+  softDeleteClient,
+  getDebts,
+  getTotalDebt,
+} from "../services/clientService";
+import { clientInsertDTO, clientUpdateDTO } from "@server/db/types";
+import { requireAuth } from "../middlewares/requireAuth";
 
+export const clientController = new Elysia({ prefix: "/client" })
+  .use(requireAuth)
 
-export const clientController = new Elysia({prefix: '/client'})
-    .get("/", () => {
-        return { message: "Client endpoint" };
-    })
-    .get(
-        "/all",
-        async ({ query }) => {
-            if (query.name || query.id_number || query.email || query.phone_number || query.is_deleted) {
-                let is_deleted: boolean | undefined = undefined;
-                if (query.is_deleted !== undefined) {
-                    is_deleted = (query.is_deleted === 'true');
-                }
-                return await getClientByFilter(
-                    query.name,
-                    query.id_number,
-                    query.email,
-                    query.phone_number,
-                    is_deleted,
-                ); //Filter by parameters
-            }
+  .get("/", () => {
+    return { message: "Client endpoint" };
+  })
 
-            return await getAllClients();
-        },
-        {
-            detail: {
-                summary: "Get all clients in DB",
-                tags: ["clients"],
-            },
-        },
-    )
-    .get(
-        "/:id",
-        async (req) => {
-            const { id } = req.params;
-            return await getClientById(Number(id));
-        },
-        {
-            detail: {
-                summary: "Get client details by ID",
-                tags: ["clients"],
-            },
+  .get(
+    "/all",
+    async (ctx) => {
+      const userId = ctx.user.user_id;
+      const { query } = ctx;
+
+      if (
+        query.name ||
+        query.id_number ||
+        query.email ||
+        query.phone_number ||
+        query.is_deleted
+      ) {
+        let is_deleted: boolean | undefined = undefined;
+        if (query.is_deleted !== undefined) {
+          is_deleted = query.is_deleted === "true";
         }
-    )
-    .post(
-        "/",
-        async ({body, set}) => {
 
-            const newClient = {
-                name: body.name,
-                id_number: Number(body.id_number),
-                ...(body.email && { email: body.email }),
-                ...(body.phone_number && { phone_number: body.phone_number }),
-                ...(body.birth_date && { birth_date: body.birth_date }),
-                ...(body.debt && { debt: body.debt }),
-            };
-            
-            const result = await addClient(newClient);
-            set.status = 201;
-            return result;
-        },
-        {
-            body: t.Object({
-                ...clientInsertDTO.properties,
-                id_number: t.String(),
-            }),
-            detail: {
-                summary: "Insert a new client",
-                tags: ["clients"],
-            },
-        }
-    )
-    .put(
-        "/:id",
-        async ({ body, params: { id }, set }) => {
+        return await getClientByFilter(
+          userId,
+          query.name,
+          query.id_number,
+          query.email,
+          query.phone_number,
+          is_deleted
+        );
+      }
 
-            const updClient = {
-                name: body.name,
-                id_number: Number(body.id_number),
-                ...(body.email && { email: body.email }),
-                ...(body.phone_number && { phone_number: body.phone_number }),
-                ...(body.birth_date && { birth_date: body.birth_date }),
-                ...(body.debt && { debt: body.debt }),
-            };
-            const result = await updateClient(
-                Number(id),
-                updClient,
-            );
-            set.status = 200;
-            return result;
-        },
-        {
-            body: t.Object({
-                ...clientUpdateDTO.properties,
-                id_number: t.String(),
-            }),
-            detail: {
-                summary: "Update a client",
-                tags: ["clients"],
-            },
-        },
-    )
-    .delete("/:id", async ({ params: { id }, set }) => {
-        const ok = await softDeleteClient(Number(id));
-        set.status = ok ? 200 : 404;
-        return ok;
-    })
-    .get("/debts", async() => {
-        return await getDebts();
+      return await getAllClients(userId);
     },
     {
-        detail: {
-            summary: "Get all debts",
-            tags: ["sales"],
-        },
-    })
-    .get("/total-debt", async() => {
-        return await getTotalDebt();
-    },
-    {
-        detail: {
-            summary: "Get total debt amount",
-            tags: ["sales"],
-        },
+      detail: {
+        summary: "Get all clients in DB (scoped by user)",
+        tags: ["clients"],
+      },
     }
-    );
+  )
+
+  .get(
+    "/:id",
+    async (ctx) => {
+      const userId = ctx.user.user_id;
+      const { id } = ctx.params;
+
+      return await getClientById(userId, Number(id));
+    },
+    {
+      detail: {
+        summary: "Get client details by ID (scoped by user)",
+        tags: ["clients"],
+      },
+    }
+  )
+
+  .post(
+    "/",
+    async ({ body, set, user }) => {
+      const userId = user.user_id;
+
+      const newClient = {
+        user_id: userId,
+        name: body.name,
+        id_number: Number(body.id_number),
+        ...(body.email && { email: body.email }),
+        ...(body.phone_number && { phone_number: body.phone_number }),
+        ...(body.birth_date && { birth_date: body.birth_date }),
+        ...(body.debt && { debt: body.debt }),
+      };
+
+      console.log("[client.post] ctx.user:", ctx.user);
+      console.log("[client.post] userId:", userId, typeof userId);
+      console.log("[client.post] newClient:", newClient);
+
+      const result = await addClient(newClient);
+      set.status = 201;
+      return result;
+    },
+    {
+      body: t.Object({
+        ...clientInsertDTO.properties,
+        id_number: t.String(),
+      }),
+      detail: {
+        summary: "Insert a new client (scoped by user)",
+        tags: ["clients"],
+      },
+    }
+  )
+
+  .put(
+    "/:id",
+    async (ctx) => {
+      const userId = ctx.user.user_id;
+      const { body, params: { id }, set } = ctx;
+
+      const updClient = {
+        user_id: userId,
+        name: body.name,
+        id_number: Number(body.id_number),
+        ...(body.email && { email: body.email }),
+        ...(body.phone_number && { phone_number: body.phone_number }),
+        ...(body.birth_date && { birth_date: body.birth_date }),
+        ...(body.debt && { debt: body.debt }),
+      };
+
+      const result = await updateClient(userId, Number(id), updClient);
+
+      set.status = 200;
+      return result;
+    },
+    {
+      body: t.Object({
+        ...clientUpdateDTO.properties,
+        id_number: t.String(),
+      }),
+      detail: {
+        summary: "Update a client (scoped by user)",
+        tags: ["clients"],
+      },
+    }
+  )
+
+  .delete("/:id", async (ctx) => {
+    const userId = ctx.user.user_id;
+    const { id } = ctx.params;
+
+    const ok = await softDeleteClient(userId, Number(id));
+
+    ctx.set.status = ok ? 200 : 404;
+    return ok;
+  })
+
+  .get(
+    "/debts",
+    async (ctx) => {
+      const userId = ctx.user.user_id;
+      return await getDebts(userId);
+    },
+    {
+      detail: {
+        summary: "Get all debts (scoped by user)",
+        tags: ["sales"],
+      },
+    }
+  )
+
+  .get(
+    "/total-debt",
+    async (ctx) => {
+      const userId = ctx.user.user_id;
+      return await getTotalDebt(userId);
+    },
+    {
+      detail: {
+        summary: "Get total debt amount (scoped by user)",
+        tags: ["sales"],
+      },
+    }
+  );
