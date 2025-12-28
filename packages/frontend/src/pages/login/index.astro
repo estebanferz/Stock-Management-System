@@ -1,0 +1,9 @@
+---
+import "@/styles/tailwind.css";
+import LoginForm from "@/components/Login/LoginForm";
+import LayoutAuth from "@/layouts/LayoutAuth.astro";
+---
+
+<LayoutAuth>
+  <LoginForm client:load />
+</LayoutAuth>
