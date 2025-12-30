@@ -33,3 +33,13 @@ export const sellerUpdateDTO = t.Omit(sellerSchema, ["seller_id", "user_id"]);
 export const saleSchema = createInsertSchema(saleTable);
 export const saleInsertDTO = t.Omit(saleSchema, ["sale_id", "user_id"]);
 export const saleUpdateDTO = t.Omit(saleSchema, ["sale_id", "user_id"]);
+
+export type AuthUser = {
+  id: number;
+  email: string;
+  role?: string | null;
+};
+
+export const SESSION_COOKIE = "session"
+export const SESSION_DAYS = 7;
+export const ROUNDS = 12;

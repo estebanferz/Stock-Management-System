@@ -8,19 +8,16 @@ import {
   getTechniciansByFilter,
 } from "../services/technicianService";
 import { technicianInsertDTO, technicianUpdateDTO } from "@server/db/types";
-import { requireAuth } from "../middlewares/requireAuth";
+import { protectedController } from "../util/protectedController";
 
 export const technicianController = new Elysia({ prefix: "/technician" })
-  .use(requireAuth)
-
-  .get("/", () => {
-    return { message: "Technician endpoint" };
-  })
+  .get("/", () => ({ message: "Technician endpoint" }))
 
   .get(
     "/all",
-    async ({query, user}) => {
-      const userId = user!.user_id;
+    protectedController(async (ctx) => {
+      const userId = ctx.user.id;
+      const query = ctx.query;
 
       const hasFilters =
         query.name ||
@@ -37,12 +34,13 @@ export const technicianController = new Elysia({ prefix: "/technician" })
           state: query.state,
           email: query.email,
           phone_number: query.phone_number,
-          is_deleted: query.is_deleted === undefined ? undefined : query.is_deleted === "true",
+          is_deleted:
+            query.is_deleted === undefined ? undefined : query.is_deleted === "true",
         });
       }
 
       return await getAllTechnicians(userId);
-    },
+    }),
     {
       detail: {
         summary: "Get all technicians in DB (scoped by user)",
@@ -53,11 +51,11 @@ export const technicianController = new Elysia({ prefix: "/technician" })
 
   .get(
     "/:id",
-    async ({params: {id}, user}) => {
-      const userId = user!.user_id;
-      const techId = Number(id);
+    protectedController(async (ctx) => {
+      const userId = ctx.user.id;
+      const techId = Number(ctx.params.id);
       return await getTechnicianById(userId, techId);
-    },
+    }),
     {
       detail: {
         summary: "Get technician details by ID (scoped by user)",
@@ -68,8 +66,9 @@ export const technicianController = new Elysia({ prefix: "/technician" })
 
   .post(
     "/",
-    async ({ body, set, user }) => {
-      const userId = user!.user_id;
+    protectedController(async (ctx) => {
+      const userId = ctx.user.id;
+      const body = ctx.body;
 
       const newTechnician = {
         user_id: userId,
@@ -81,9 +80,9 @@ export const technicianController = new Elysia({ prefix: "/technician" })
       };
 
       const result = await addTechnician(userId, newTechnician);
-      set.status = 201;
+      ctx.set.status = 201;
       return result;
-    },
+    }),
     {
       body: t.Object({
         ...technicianInsertDTO.properties,
@@ -97,9 +96,10 @@ export const technicianController = new Elysia({ prefix: "/technician" })
 
   .put(
     "/:id",
-    async ({params: {id}, body, set, user}) => {
-      const userId = user!.user_id;
-      const techId = Number(id);
+    protectedController(async (ctx) => {
+      const userId = ctx.user.id;
+      const techId = Number(ctx.params.id);
+      const body = ctx.body;
 
       const updTechnician = {
         name: body.name,
@@ -110,9 +110,9 @@ export const technicianController = new Elysia({ prefix: "/technician" })
       };
 
       const result = await updateTechnician(userId, techId, updTechnician);
-      set.status = 200;
+      ctx.set.status = 200;
       return result;
-    },
+    }),
     {
       body: t.Object({
         ...technicianUpdateDTO.properties,
@@ -124,11 +124,14 @@ export const technicianController = new Elysia({ prefix: "/technician" })
     }
   )
 
-  .delete("/:id", async ({params: {id}, set, user}) => {
-    const userId = user!.user_id;
-    const techId = Number(id);
+  .delete(
+    "/:id",
+    protectedController(async (ctx) => {
+      const userId = ctx.user.id;
+      const techId = Number(ctx.params.id);
 
-    const ok = await softDeleteTechnician(userId, techId);
-    set.status = ok ? 200 : 404;
-    return ok;
-  });
+      const ok = await softDeleteTechnician(userId, techId);
+      ctx.set.status = ok ? 200 : 404;
+      return ok;
+    })
+  );

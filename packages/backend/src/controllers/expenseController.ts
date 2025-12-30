@@ -1,20 +1,27 @@
 import { Elysia, t } from "elysia";
-import { getAllExpenses, getExpensesByFilter, addExpense, updateExpense, softDeleteExpense, getTotalExpenses, addExpenseWithReceipt, updateExpenseWithReceipt, getExpenseReceiptFile } from "../services/expenseService";
+import {
+  getAllExpenses,
+  getExpensesByFilter,
+  addExpenseWithReceipt,
+  updateExpenseWithReceipt,
+  softDeleteExpense,
+  getTotalExpenses,
+  getExpenseReceiptFile,
+} from "../services/expenseService";
 import { expenseInsertDTO, expenseUpdateDTO } from "@server/db/types";
 import { safeFilename } from "../util/formattersBackend";
-import { requireAuth } from "../middlewares/requireAuth";
+import { protectedController } from "../util/protectedController";
 
-export const expenseController = new Elysia({prefix: "/expense"})
-    .use(requireAuth)
-    .get("/", () => {
-        return { message: "Expense endpoint" };
-    })
-    .get(
+export const expenseController = new Elysia({ prefix: "/expense" })
+  .get("/", () => ({ message: "Expense endpoint" }))
+
+  .get(
     "/all",
-    async ({query, user}) => {
-        const userId = user!.user_id
+    protectedController(async (ctx) => {
+      const { query, user } = ctx;
+      const userId = user.id;
 
-        if (
+      if (
         query.date ||
         query.category ||
         query.payment_method ||
@@ -22,158 +29,166 @@ export const expenseController = new Elysia({prefix: "/expense"})
         query.amount_min ||
         query.amount_max ||
         query.is_deleted
-        ){
+      ) {
         return await getExpensesByFilter(userId, {
-            date: query.date,
-            category: query.category,
-            payment_method: query.payment_method,
-            provider_id: query.provider_id,
-            amount_min: query.amount_min,
-            amount_max: query.amount_max,
-            is_deleted: query.is_deleted === undefined ? undefined : query.is_deleted === "true",
+          date: query.date,
+          category: query.category,
+          payment_method: query.payment_method,
+          provider_id: query.provider_id,
+          amount_min: query.amount_min,
+          amount_max: query.amount_max,
+          is_deleted:
+            query.is_deleted === undefined
+              ? undefined
+              : query.is_deleted === "true",
         });
-        }
+      }
 
-        return await getAllExpenses(userId);
-    },
+      return await getAllExpenses(userId);
+    }),
     {
-        detail: {
+      detail: {
         summary: "Get all expenses in DB",
         tags: ["expenses"],
-        },
-    },
-    )
+      },
+    }
+  )
 
-    .get("/:id/receipt", async ({params: {id}, user, set}) => {
-        const userId = user!.user_id;
-        const expenseId = Number(id);
+  .get(
+    "/:id/receipt",
+    protectedController(async (ctx) => {
+      const userId = ctx.user.id;
+      const expenseId = Number(ctx.params.id);
 
-        const receipt = await getExpenseReceiptFile(userId, expenseId);
+      const receipt = await getExpenseReceiptFile(userId, expenseId);
 
-        if (!receipt) {
-            set.status = 404;
-            return;
-        }
+      if (!receipt) {
+        ctx.set.status = 404;
+        return;
+      }
 
-        const filename = safeFilename(receipt.originalName);
+      const filename = safeFilename(receipt.originalName);
 
-        set.headers["Content-Type"] = receipt.mime;
+      ctx.set.headers["Content-Type"] = receipt.mime;
+      ctx.set.headers["Content-Disposition"] =
+        `inline; filename="${filename}"`;
 
-        // ✅ filename ASCII-safe
-        set.headers["Content-Disposition"] =
-            `inline; filename="${filename}"`;
-
-        return receipt.file;
+      return receipt.file;
     })
-    .post(
-    "/",
-    async ({ body, set, user }) => {
-        const userId = user!.user_id;
+  )
 
-        try {
+  .post(
+    "/",
+    protectedController(async (ctx) => {
+      const { body, set, user } = ctx;
+      const userId = user.id;
+
+      try {
         const result = await addExpenseWithReceipt(userId, body);
         set.status = 201;
         return result;
-        } catch (err: any) {
+      } catch (err: any) {
         switch (err.message) {
-            case "INVALID_RECEIPT_TYPE":
+          case "INVALID_RECEIPT_TYPE":
             set.status = 400;
             return { error: "Tipo de archivo no permitido" };
 
-            case "RECEIPT_TOO_LARGE":
+          case "RECEIPT_TOO_LARGE":
             set.status = 400;
             return { error: "El archivo supera los 5MB" };
 
-            default:
+          default:
             throw err;
         }
-        }
-    },
+      }
+    }),
     {
-        body: t.Object({
+      body: t.Object({
         ...expenseInsertDTO.properties,
-
-        datetime: t.Optional(
-            t.String({ format: "date-time" })
-        ),
-
+        datetime: t.Optional(t.String({ format: "date-time" })),
         receipt: t.Optional(t.File()),
-
         provider_id: t.Optional(
-            t.Union([t.Integer(), t.Null(), t.String()])
+          t.Union([t.Integer(), t.Null(), t.String()])
         ),
-        }),
-        detail: {
+      }),
+      detail: {
         summary: "Insert a new expense (with optional receipt)",
         tags: ["expenses"],
-        },
+      },
     }
-    )
-    .put(
-    "/:id",
-    async ({ params: {id}, body, set, user }) => {
-        const userId = user!.user_id;
-        const expenseId = Number(id);
+  )
 
-        try {
-        const result = await updateExpenseWithReceipt(userId, expenseId, body);
+  .put(
+    "/:id",
+    protectedController(async (ctx) => {
+      const { body, set, user } = ctx;
+      const userId = user.id;
+      const expenseId = Number(ctx.params.id);
+
+      try {
+        const result = await updateExpenseWithReceipt(
+          userId,
+          expenseId,
+          body
+        );
         set.status = 200;
         return result;
-        } catch (err: any) {
+      } catch (err: any) {
         switch (err.message) {
-            case "INVALID_RECEIPT_TYPE":
+          case "INVALID_RECEIPT_TYPE":
             set.status = 400;
             return { error: "Tipo de archivo no permitido" };
 
-            case "RECEIPT_TOO_LARGE":
+          case "RECEIPT_TOO_LARGE":
             set.status = 400;
             return { error: "El archivo supera los 5MB" };
 
-            case "EXPENSE_NOT_FOUND":
+          case "EXPENSE_NOT_FOUND":
             set.status = 404;
             return { error: "Gasto no encontrado" };
 
-            default:
+          default:
             throw err;
         }
-        }
-    },
+      }
+    }),
     {
-        body: t.Object({
+      body: t.Object({
         ...expenseUpdateDTO.properties,
-
-        datetime: t.Optional(
-            t.String({ format: "date-time" })
-        ),
-
+        datetime: t.Optional(t.String({ format: "date-time" })),
         receipt: t.Optional(t.File()),
-
         provider_id: t.Optional(
-            t.Union([t.Integer(), t.Null(), t.String()])
+          t.Union([t.Integer(), t.Null(), t.String()])
         ),
-        }),
-        detail: {
+      }),
+      detail: {
         summary: "Update an expense (with optional receipt)",
         tags: ["expenses"],
-        },
+      },
     }
-    )
-    .delete("/:id", async ({params: {id}, set, user}) => {
-        const userId = user!.user_id;
-        const expenseId = Number(id);
-        const ok = await softDeleteExpense(userId, expenseId);
-        set.status = ok ? 200 : 404;
-        return ok;
+  )
+
+  .delete(
+    "/:id",
+    protectedController(async (ctx) => {
+      const userId = ctx.user.id;
+      const expenseId = Number(ctx.params.id);
+
+      const ok = await softDeleteExpense(userId, expenseId);
+      ctx.set.status = ok ? 200 : 404;
+      return ok;
     })
-    .get("/expenses", async ({ user }) => {
-            const userId = user!.user_id
-            const expenses = await getTotalExpenses(userId);
-            return expenses;
-        },
-        {
-            detail: {
-                summary: "Get expenses",
-                tags: ["sales"],
-            },
-        }
-    )
+  )
+
+  .get(
+    "/expenses",
+    protectedController(async (ctx) => {
+      return await getTotalExpenses(ctx.user.id);
+    }),
+    {
+      detail: {
+        summary: "Get expenses",
+        tags: ["sales"],
+      },
+    }
+  );

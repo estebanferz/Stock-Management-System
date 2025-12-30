@@ -23,6 +23,7 @@ export const sessionTable = pgTable("sessions", {
       .defaultNow(),
     expires_at: timestamp({ withTimezone: true }).notNull(),
     last_used: timestamp({ withTimezone: true }),
+    revoked_at: timestamp("revoked_at", { withTimezone: true }),
   },
   (t) => ({
     user_idx: index("sessions_user_id_idx").on(t.user_id),

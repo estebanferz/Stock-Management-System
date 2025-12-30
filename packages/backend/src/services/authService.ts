@@ -1,12 +1,11 @@
-// src/services/authService.ts
 import { db } from "../../db/db";
 import { userTable, sessionTable } from "../../db/schema";
-import { eq, and, gt } from "drizzle-orm";
+import { eq, and, gt, isNull } from "drizzle-orm";
 import { randomBytes } from "crypto";
 import { hash, compare } from "bcryptjs";
+import { type AuthUser } from "@server/db/types";
+import { SESSION_DAYS, ROUNDS } from "@server/db/types";
 
-const SESSION_DAYS = 7;
-const ROUNDS = 12;
 
 function normalizeEmail(email: string) {
   return email.trim().toLowerCase();
@@ -21,12 +20,6 @@ function addDays(date: Date, days: number) {
   d.setDate(d.getDate() + days);
   return d;
 }
-
-type AuthUser = {
-  id: number;
-  email: string;
-  role?: string | null;
-};
 
 type ServiceResult =
   | { ok: true; status: 200 | 201; user: AuthUser; sessionId: string }
@@ -138,9 +131,11 @@ export async function login(emailRaw: string, password: string): Promise<Service
     };
 }
 
-export async function logout(sessionId?: string | null) {
-  if (!sessionId) return;
-  await db.delete(sessionTable).where(eq(sessionTable.session_id, sessionId));
+export async function logout(sessionId: string) {
+  await db
+    .update(sessionTable)
+    .set({ revoked_at: new Date() })
+    .where(eq(sessionTable.session_id, sessionId));
 }
 
 export async function me(sessionId?: string | null): Promise<
@@ -156,9 +151,14 @@ export async function me(sessionId?: string | null): Promise<
       session_id: sessionTable.session_id,
       user_id: sessionTable.user_id,
       expires_at: sessionTable.expires_at,
+      revoked_at: sessionTable.revoked_at,
     })
     .from(sessionTable)
-    .where(and(eq(sessionTable.session_id, sessionId), gt(sessionTable.expires_at, now)))
+    .where(and(
+      eq(sessionTable.session_id, sessionId),
+      gt(sessionTable.expires_at, now),
+      isNull(sessionTable.revoked_at)
+    ))
     .limit(1);
     
     const [s] = session;

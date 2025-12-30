@@ -8,19 +8,16 @@ import {
   softDeleteSeller,
 } from "../services/sellerService";
 import { sellerInsertDTO, sellerUpdateDTO } from "@server/db/types";
-import { requireAuth } from "../middlewares/requireAuth";
+import { protectedController } from "../util/protectedController";
 
 export const sellerController = new Elysia({ prefix: "/seller" })
-  .use(requireAuth)
-
-  .get("/", () => {
-    return { message: "Seller endpoint" };
-  })
+  .get("/", () => ({ message: "Seller endpoint" }))
 
   .get(
     "/all",
-    async ({query, user}) => {
-      const userId = user!.user_id;
+    protectedController(async (ctx) => {
+      const userId = ctx.user.id;
+      const query = ctx.query;
 
       if (
         query.name ||
@@ -40,12 +37,15 @@ export const sellerController = new Elysia({ prefix: "/seller" })
           age_max: query.age_max,
           commission_min: query.commission_min,
           commission_max: query.commission_max,
-          is_deleted: query.is_deleted === undefined ? undefined : query.is_deleted === "true",
+          is_deleted:
+            query.is_deleted === undefined
+              ? undefined
+              : query.is_deleted === "true",
         });
       }
 
       return await getAllSellers(userId);
-    },
+    }),
     {
       detail: {
         summary: "Get all sellers in DB (scoped by user)",
@@ -56,8 +56,9 @@ export const sellerController = new Elysia({ prefix: "/seller" })
 
   .post(
     "/",
-    async ({ body, set, user }) => {
-      const userId = user!.user_id;
+    protectedController(async (ctx) => {
+      const userId = ctx.user.id;
+      const body = ctx.body;
 
       const newSeller = {
         user_id: userId,
@@ -71,9 +72,9 @@ export const sellerController = new Elysia({ prefix: "/seller" })
       };
 
       const result = await addSeller(userId, newSeller);
-      set.status = 201;
+      ctx.set.status = 201;
       return result;
-    },
+    }),
     {
       body: t.Object({
         ...sellerInsertDTO.properties,
@@ -87,11 +88,12 @@ export const sellerController = new Elysia({ prefix: "/seller" })
 
   .get(
     "/:id",
-    async ({params: {id}, user}) => {
-      const userId = user!.user_id;
-      const sellerId = Number(id);
+    protectedController(async (ctx) => {
+      const userId = ctx.user.id;
+      const sellerId = Number(ctx.params.id);
+
       return await getSellerById(userId, sellerId);
-    },
+    }),
     {
       detail: {
         summary: "Get seller details by ID (scoped by user)",
@@ -102,9 +104,10 @@ export const sellerController = new Elysia({ prefix: "/seller" })
 
   .put(
     "/:id",
-    async ({params: {id}, body, set, user}) => {
-      const userId = user!.user_id;
-      const sellerId = Number(id);
+    protectedController(async (ctx) => {
+      const userId = ctx.user.id;
+      const sellerId = Number(ctx.params.id);
+      const body = ctx.body;
 
       const updSeller = {
         name: body.name,
@@ -117,9 +120,9 @@ export const sellerController = new Elysia({ prefix: "/seller" })
       };
 
       const result = await updateSeller(userId, sellerId, updSeller);
-      set.status = 200;
+      ctx.set.status = 200;
       return result;
-    },
+    }),
     {
       body: t.Object({
         ...sellerUpdateDTO.properties,
@@ -131,11 +134,14 @@ export const sellerController = new Elysia({ prefix: "/seller" })
     }
   )
 
-  .delete("/:id", async ({params: {id}, set, user}) => {
-    const userId = user!.user_id;
-    const sellerId = Number(id);
+  .delete(
+    "/:id",
+    protectedController(async (ctx) => {
+      const userId = ctx.user.id;
+      const sellerId = Number(ctx.params.id);
 
-    const ok = await softDeleteSeller(userId, sellerId);
-    set.status = ok ? 200 : 404;
-    return ok;
-  });
+      const ok = await softDeleteSeller(userId, sellerId);
+      ctx.set.status = ok ? 200 : 404;
+      return ok;
+    })
+  );

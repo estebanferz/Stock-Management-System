@@ -8,22 +8,23 @@ import {
   softDeleteProvider,
 } from "../services/providerService";
 import { providerInsertDTO, providerUpdateDTO } from "@server/db/types";
-import { requireAuth } from "../middlewares/requireAuth";
+import { protectedController } from "../util/protectedController";
 
 export const providerController = new Elysia({ prefix: "/provider" })
-  .use(requireAuth)
-
-  .get("/", () => {
-    return { message: "Provider endpoint" };
-  })
+  .get("/", () => ({ message: "Provider endpoint" }))
 
   .get(
     "/all",
-    async ({query, user}) => {
-      const userId = user!.user_id;
+    protectedController(async (ctx) => {
+      const userId = ctx.user.id;
+      const query = ctx.query;
 
       const hasFilters =
-        query.name || query.email || query.phone_number || query.address || query.is_deleted;
+        query.name ||
+        query.email ||
+        query.phone_number ||
+        query.address ||
+        query.is_deleted;
 
       if (hasFilters) {
         return await getProviderByFilter(userId, {
@@ -31,12 +32,13 @@ export const providerController = new Elysia({ prefix: "/provider" })
           email: query.email,
           phone_number: query.phone_number,
           address: query.address,
-          is_deleted: query.is_deleted === undefined ? undefined : query.is_deleted === "true",
+          is_deleted:
+            query.is_deleted === undefined ? undefined : query.is_deleted === "true",
         });
       }
 
       return await getAllProviders(userId);
-    },
+    }),
     {
       detail: {
         summary: "Get all providers in DB (scoped by user)",
@@ -47,12 +49,12 @@ export const providerController = new Elysia({ prefix: "/provider" })
 
   .get(
     "/:id",
-    async ({params: {id}, user}) => {
-      const userId = user!.user_id;
-      const providerId = Number(id);
+    protectedController(async (ctx) => {
+      const userId = ctx.user.id;
+      const providerId = Number(ctx.params.id);
 
       return await getProviderById(userId, providerId);
-    },
+    }),
     {
       detail: {
         summary: "Get provider details by ID (scoped by user)",
@@ -63,8 +65,9 @@ export const providerController = new Elysia({ prefix: "/provider" })
 
   .post(
     "/",
-    async ({ body, set, user }) => {
-      const userId = user!.user_id;
+    protectedController(async (ctx) => {
+      const userId = ctx.user.id;
+      const body = ctx.body;
 
       const newProvider = {
         user_id: userId,
@@ -75,9 +78,9 @@ export const providerController = new Elysia({ prefix: "/provider" })
       };
 
       const result = await addProvider(newProvider);
-      set.status = 201;
+      ctx.set.status = 201;
       return result;
-    },
+    }),
     {
       body: t.Object({
         ...providerInsertDTO.properties,
@@ -91,9 +94,10 @@ export const providerController = new Elysia({ prefix: "/provider" })
 
   .put(
     "/:id",
-    async ({ params: {id}, body, set, user }) => {
-      const userId = user!.user_id;
-      const providerId = Number(id);
+    protectedController(async (ctx) => {
+      const userId = ctx.user.id;
+      const providerId = Number(ctx.params.id);
+      const body = ctx.body;
 
       const updProvider = {
         name: body.name,
@@ -103,9 +107,9 @@ export const providerController = new Elysia({ prefix: "/provider" })
       };
 
       const result = await updateProvider(userId, providerId, updProvider);
-      set.status = 200;
+      ctx.set.status = 200;
       return result;
-    },
+    }),
     {
       body: t.Object({
         ...providerUpdateDTO.properties,
@@ -117,11 +121,14 @@ export const providerController = new Elysia({ prefix: "/provider" })
     }
   )
 
-  .delete("/:id", async ({params: {id}, set, user}) => {
-    const userId = user!.user_id;
-    const providerId = Number(id);
+  .delete(
+    "/:id",
+    protectedController(async (ctx) => {
+      const userId = ctx.user.id;
+      const providerId = Number(ctx.params.id);
 
-    const ok = await softDeleteProvider(userId, providerId);
-    set.status = ok ? 200 : 404;
-    return ok;
-  });
+      const ok = await softDeleteProvider(userId, providerId);
+      ctx.set.status = ok ? 200 : 404;
+      return ok;
+    })
+  );
