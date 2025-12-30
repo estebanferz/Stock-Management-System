@@ -7,8 +7,6 @@ import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
 import { clientApp } from "@/lib/clientAPI";
 
-const PUBLIC_FRONTEND_URL = import.meta.env.PUBLIC_FRONTEND_URL as string;
-
 interface FormData {
   email: string;
   contraseña: string;
@@ -16,7 +14,7 @@ interface FormData {
 
 // Google Sign-in Button Component
 const GoogleSignInButton = () => (
-  <a href={`${PUBLIC_FRONTEND_URL}/api/auth/google`} className="w-full">
+  <a href="/api/auth/google" className="w-full">
     <button
       type="button"
       aria-label="Sign in with Google"
@@ -88,7 +86,7 @@ export default function LoginForm() {
         const data = response.data;
 
         if (data?.ok) {
-          window.location.assign(import.meta.env.PUBLIC_FRONTEND_URL + "/");
+          window.location.assign("/");
           return undefined;
         }
 
