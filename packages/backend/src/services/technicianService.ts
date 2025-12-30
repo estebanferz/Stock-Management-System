@@ -69,9 +69,8 @@ export const addTechnician = async (
 
   const normalizedTechnician = {
     ...newTechnician,
-    user_id: userId, // ✅ force server-side
+    user_id: userId,
     name: normalizeShortString(newTechnician.name),
-    speciality: normalizeShortString(newTechnician.speciality),
     state: normalizeShortString(newTechnician.state),
     email,
     phone_number,
@@ -111,7 +110,7 @@ export const updateTechnician = async (
   const normalizedUpd = {
     ...technician_upd,
     name: technician_upd.name ? normalizeShortString(technician_upd.name) : undefined,
-    speciality: technician_upd.speciality ? normalizeShortString(technician_upd.speciality) : undefined,
+    speciality: technician_upd.speciality ? technician_upd.speciality : undefined,
     state: technician_upd.state ? normalizeShortString(technician_upd.state) : undefined,
     email: technician_upd.email?.trim().toLowerCase(),
     phone_number: technician_upd.phone_number?.trim(),

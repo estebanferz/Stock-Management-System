@@ -79,22 +79,31 @@ export const authController = new Elysia({ prefix: "/auth" })
         },
     })
     .get(
-        "/me",
-        async ({ set, cookie }) => {
+    "/me",
+    async ({ set, cookie }) => {
         const rawSession = cookie[SESSION_COOKIE]?.value;
         const sessionId = typeof rawSession === "string" ? rawSession : undefined;
+
+        if (!sessionId) {
+        set.status = 401;
+        return { ok: false, error: "UNAUTHORIZED" };
+        }
 
         const result = await me(sessionId);
 
         if (!result.ok) {
+            const sessionCookie = cookie[SESSION_COOKIE];
+
+            if (sessionCookie) {
+            sessionCookie.remove();
+            }
+
             set.status = result.status;
-            return { ok: false };
+            return { ok: false, error: "UNAUTHORIZED" };
         }
 
-        set.status = 200;
         return { ok: true, user: result.user };
-        },
-        {
+    },
+    {
         detail: { summary: "Get current user from session", tags: ["auth"] },
-        }
-    );
+    });

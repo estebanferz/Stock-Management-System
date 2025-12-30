@@ -34,7 +34,7 @@ export async function getAllClients(userId: number) {
   return await db
     .select()
     .from(clientTable)
-    .where(eq(clientTable.user_id, userId)) // ✅
+    .where(eq(clientTable.user_id, userId))
     .orderBy(clientTable.client_id);
 }
 

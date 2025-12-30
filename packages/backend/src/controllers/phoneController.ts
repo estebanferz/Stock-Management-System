@@ -17,9 +17,9 @@ export const phoneController = new Elysia({ prefix: "/phone" })
   })
   .get(
     "/all",
-    async (ctx) => {
-      const userId = ctx.user.user_id;
-      const { query } = ctx;
+    async ({query, user}) => {
+      const userId = user!.user_id;
+
 
       if (
         query.device ||
@@ -59,9 +59,9 @@ export const phoneController = new Elysia({ prefix: "/phone" })
   )
   .get(
     "/:id",
-    async (ctx) => {
-      const userId = ctx.user.user_id;
-      const phoneId = Number(ctx.params.id);
+    async ({params: {id}, user}) => {
+      const userId = user!.user_id;
+      const phoneId = Number(id);
 
       return await getPhoneById(userId, phoneId);
     },
@@ -74,9 +74,8 @@ export const phoneController = new Elysia({ prefix: "/phone" })
   )
   .post(
     "/",
-    async (ctx) => {
-      const userId = ctx.user.user_id;
-      const { body, set } = ctx;
+    async ({body, set, user}) => {
+      const userId = user!.user_id;
 
       const newPhone = {
         user_id: userId,
@@ -113,10 +112,9 @@ export const phoneController = new Elysia({ prefix: "/phone" })
   )
   .put(
     "/:id",
-    async (ctx) => {
-      const userId = ctx.user.user_id;
-      const phoneId = Number(ctx.params.id);
-      const { body, set } = ctx;
+    async ({ params: {id}, body, set, user }) => {
+      const userId = user!.user_id;
+      const phoneId = Number(id);
 
       const updPhone = {
         userId,
@@ -152,11 +150,11 @@ export const phoneController = new Elysia({ prefix: "/phone" })
       },
     }
   )
-  .delete("/:id", async (ctx) => {
-    const userId = ctx.user.user_id;
-    const phoneId = Number(ctx.params.id);
+  .delete("/:id", async ({params: {id}, set, user}) => {
+    const userId = user!.user_id;
+    const phoneId = Number(id);
 
     const ok = await softDeletePhone(userId, phoneId);
-    ctx.set.status = ok ? 200 : 404;
+    set.status = ok ? 200 : 404;
     return ok;
   });

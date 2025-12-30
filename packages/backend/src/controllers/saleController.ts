@@ -25,9 +25,8 @@ export const saleController = new Elysia({ prefix: "/sale" })
 
   .get(
     "/all",
-    async (ctx) => {
-      const userId = ctx.user.user_id;
-      const { query } = ctx;
+    async ({query, user}) => {
+      const userId = user!.user_id;
 
       if (query.date || query.client_id || query.seller_id || query.device_id || query.is_deleted) {
         return await getSaleByFilter(userId, {
@@ -51,9 +50,9 @@ export const saleController = new Elysia({ prefix: "/sale" })
 
   .get(
     "/:id",
-    async (ctx) => {
-      const userId = ctx.user.user_id;
-      const saleId = Number(ctx.params.id);
+    async ({params: {id}, user}) => {
+      const userId = user!.user_id;
+      const saleId = Number(id);
       return await getSaleById(userId, saleId);
     },
     {
@@ -66,12 +65,11 @@ export const saleController = new Elysia({ prefix: "/sale" })
 
   .post(
     "/",
-    async (ctx) => {
-      const userId = ctx.user.user_id;
-      const { body, set } = ctx;
+    async ({ body, set, user }) => {
+      const userId = user!.user_id;
 
       const newSale = {
-        user_id: userId, // ✅ backend-only
+        user_id: userId,
         datetime: body.datetime ? new Date(body.datetime) : undefined,
         total_amount: body.total_amount,
         payment_method: body.payment_method,
@@ -101,10 +99,9 @@ export const saleController = new Elysia({ prefix: "/sale" })
 
   .put(
     "/:id",
-    async (ctx) => {
-      const userId = ctx.user.user_id;
-      const saleId = Number(ctx.params.id);
-      const { body, set } = ctx;
+    async ({ params: {id}, body, set, user }) => {
+      const userId = user!.user_id;
+      const saleId = Number(id);
 
       const updSale = {
         datetime: body.datetime ? new Date(body.datetime) : undefined,
@@ -134,19 +131,19 @@ export const saleController = new Elysia({ prefix: "/sale" })
     }
   )
 
-  .delete("/:id", async (ctx) => {
-    const userId = ctx.user.user_id;
-    const saleId = Number(ctx.params.id);
+  .delete("/:id", async ({params: {id}, set, user}) => {
+    const userId = user!.user_id;
+    const saleId = Number(id);
 
     const ok = await softDeleteSale(userId, saleId);
-    ctx.set.status = ok ? 200 : 404;
+    set.status = ok ? 200 : 404;
     return ok;
   })
 
   .get(
     "/gross-income",
-    async (ctx) => {
-      const userId = ctx.user.user_id;
+    async ({user}) => {
+      const userId = user!.user_id;
       return await getGrossIncome(userId);
     },
     {
@@ -156,8 +153,8 @@ export const saleController = new Elysia({ prefix: "/sale" })
 
   .get(
     "/net-income",
-    async (ctx) => {
-      const userId = ctx.user.user_id;
+    async ({user}) => {
+      const userId = user!.user_id;
       return await getNetIncome(userId);
     },
     {
@@ -167,12 +164,12 @@ export const saleController = new Elysia({ prefix: "/sale" })
 
   .get(
     "/sales-by-month",
-    async (ctx) => {
-      const userId = ctx.user.user_id;
-      const year = Number(ctx.query.year);
+    async ({query, user, set}) => {
+      const userId = user!.user_id;
+      const year = Number(query.year);
 
       if (!year || isNaN(year)) {
-        ctx.set.status = 400;
+        set.status = 400;
         return { ok: false, message: "Invalid year" };
       }
 
@@ -189,8 +186,8 @@ export const saleController = new Elysia({ prefix: "/sale" })
 
   .get(
     "/products-sold-count",
-    async (ctx) => {
-      const userId = ctx.user.user_id;
+    async ({user}) => {
+      const userId = user!.user_id;
       return await getProductSoldCount(userId);
     },
     {
@@ -200,8 +197,8 @@ export const saleController = new Elysia({ prefix: "/sale" })
 
   .get(
     "/debts",
-    async (ctx) => {
-      const userId = ctx.user.user_id;
+    async ({user}) => {
+      const userId = user!.user_id;
       return await getDebts(userId);
     },
     {
@@ -211,8 +208,8 @@ export const saleController = new Elysia({ prefix: "/sale" })
 
   .get(
     "/total-debt",
-    async (ctx) => {
-      const userId = ctx.user.user_id;
+    async ({user}) => {
+      const userId = user!.user_id;
       return await getTotalDebt(userId);
     },
     {

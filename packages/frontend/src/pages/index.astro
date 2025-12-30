@@ -1,7 +1,6 @@
 ---
 import LayoutDashboard from '../layouts/LayoutDashboard.astro';
 import CustomCard from "@/components/CustomCard";
-import { SalesChart } from "@/components/SalesChart";
 import { serverApp } from "@/lib/serverAPI";
 import { SalesDataByMonth } from '@/utils/formatters';
 import { PieChart } from '@/components/PieChart';
@@ -12,34 +11,45 @@ import devicesIcon from '../assets/devices.svg';
 import grossincome from "../assets/gross-income.svg"
 import expenseIcon from '../assets/expense.svg';
 import debtIcon from "../assets/debt.svg";
+import { requireAuth } from "@/lib/requireAuth";
+const user = await requireAuth(Astro);
+if (!user) return Astro.redirect("/login");
 const resultGross = await serverApp.sale['gross-income'].get()
 const gross_income = String(resultGross.data);
 const resultNet = await serverApp.sale['net-income'].get()
 const net_income = String(resultNet.data);
 const saleData = await serverApp.sale.all.get({ query: { is_deleted: false }});
-const units_sold_count = saleData.data?.length ?? 0;
+const units_sold_count = Array.isArray(saleData.data)
+  ? saleData.data.length
+  : 0;
 const expenseData = await serverApp.expense['expenses'].get()
 const expensesFormatted = expenseData.data || []
 const initialYear = new Date().getFullYear();
 const saleDataByMonth = await serverApp.sale["sales-by-month"].get({
   query: { year: String(initialYear) },
 });
-const saleDataFormatted = SalesDataByMonth(saleDataByMonth.data || []) || [];
+const row = Array.isArray(saleDataByMonth.data) ? saleDataByMonth.data : []
+const saleDataFormatted = SalesDataByMonth(row);
 const deudoresCount = await serverApp.client['debts'].get()
-const deudoresCountFormatted = deudoresCount.data?.length || 0;
+const deudoresCountFormatted = Array.isArray(deudoresCount.data)
+  ? deudoresCount.data.length
+  : 0;
 const totalDebt = await serverApp.client['total-debt'].get()
 const totalDebtFormatted = totalDebt.data || 0;
 
-const phoneSoldCount = await serverApp.sale["products-sold-count"].get()
-const phoneSoldCountFormatted = phoneSoldCount.data || []
-const formattedDataName = phoneSoldCountFormatted.map((item) => ({
+type ProductSoldCount = { name: string; sold_count: number };
+const phoneSoldCount = await serverApp.sale["products-sold-count"].get();
+const rows: ProductSoldCount[] = Array.isArray(phoneSoldCount.data)
+  ? phoneSoldCount.data
+  : [];
+const formattedDataName = rows.map((item: ProductSoldCount) => ({
   ...item,
   name: generalStringFormat(item.name),
 }));
 
-const pieChartData = [
-  ['Producto', 'Unidades Vendidas'],
-  ...formattedDataName.map(item => [item.name, item.sold_count]) 
+const pieChartData: (string | number)[][] = [
+  ["Producto", "Unidades Vendidas"],
+  ...formattedDataName.map((item) => [item.name, item.sold_count]),
 ];
 
 const secondaryData = `
@@ -49,7 +59,7 @@ const secondaryData = `
 `;
 ---
 
-<LayoutDashboard title="StockManagement">
+<LayoutDashboard title="StockManagement" user={user}>
 	<h1 class="px-3 w-full text-left text-4xl text-gray-700 font-bold mt-5 mb-2">Dashboard</h1>
 	<p class="px-3 mb-8 text-sm text-gray-600 font-medium">Resumen completo de tu negocio con métricas clave</p>
 	<div class="px-3 grid grid-cols-4 gap-3 mb-4">

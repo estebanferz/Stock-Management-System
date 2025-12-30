@@ -61,4 +61,5 @@ export const requireAuth = new Elysia({ name: "requireAuth" })
         set.status = 401;
         return { ok: false, message: "Unauthorized" };
         }
-    });
+    })
+    .as("scoped");
