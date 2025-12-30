@@ -6,12 +6,17 @@ import { serverApp } from "@/lib/serverAPI";
 import { technicianColumns } from "@/config/TechnicianColumnConfig";
 import ActionPanel from "@/components/ActionPanel";
 import { TechnicianPageManager } from "@/components/PageManager/TechnicianPageManager";
-
+import { requireAuth } from "@/lib/requireAuth";
+const user = await requireAuth(Astro);
+if (!user) return Astro.redirect("/login");
 const response = await serverApp.technician.all.get({ query: { is_deleted: false }});
-const data = response.data || [];
+
+const data = Array.isArray(response.data)
+    ? response.data
+    : [];
 ---
 
-<Layout title="Tecnicos">
+<Layout title="Tecnicos" user={user}>
     <h1 class="w-full text-center text-4xl text-gray-700 font-bold my-5">Técnicos</h1>
     
     <TechnicianPageManager

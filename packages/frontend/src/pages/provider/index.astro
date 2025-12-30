@@ -5,13 +5,18 @@ import { SheetFormProvider } from "@/components/SheetForms/SheetFormProvider";
 import { serverApp } from "@/lib/serverAPI";
 import { providerColumns } from "@/config/ProviderColumnConfig";
 import { ProviderPageManager } from "@/components/PageManager/ProviderPageManager";
+import { requireAuth } from "@/lib/requireAuth";
 
+const user = await requireAuth(Astro);
+if (!user) return Astro.redirect("/login");
 const response = await serverApp.provider.all.get({ query: { is_deleted: false }});
-const data = response.data || [];
+const data = Array.isArray(response.data)
+    ? response.data
+    : [];
 
 ---
 
-<Layout title="Proveedores">
+<Layout title="Proveedores" user={user}>
 
   <h1 class="w-full text-center text-4xl text-gray-700 font-bold my-5">
     Proveedores

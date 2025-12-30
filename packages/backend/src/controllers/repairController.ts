@@ -18,9 +18,8 @@ export const repairController = new Elysia({ prefix: "/repair" })
 
   .get(
     "/all",
-    async (ctx) => {
-      const userId = ctx.user.user_id;
-      const { query } = ctx;
+    async ({query, user}) => {
+      const userId = user!.user_id;
 
       if (
         query.date ||
@@ -58,12 +57,11 @@ export const repairController = new Elysia({ prefix: "/repair" })
 
   .post(
     "/",
-    async (ctx) => {
-      const userId = ctx.user.user_id;
-      const { body, set } = ctx;
+    async ({body, set, user}) => {
+      const userId = user!.user_id;
 
       const newRepair = {
-        user_id: userId, // ✅ desde backend
+        user_id: userId, 
         datetime: body.datetime ? new Date(body.datetime) : undefined,
         repair_state: body.repair_state,
         priority: body.priority,
@@ -94,10 +92,9 @@ export const repairController = new Elysia({ prefix: "/repair" })
 
   .put(
     "/:id",
-    async (ctx) => {
-      const userId = ctx.user.user_id;
-      const repairId = Number(ctx.params.id);
-      const { body, set } = ctx;
+    async ({ params: {id}, body, set, user }) => {
+      const userId = user!.user_id;
+      const repairId = Number(id);
 
       const updRepair = {
         datetime: body.datetime ? new Date(body.datetime) : undefined,
@@ -128,11 +125,11 @@ export const repairController = new Elysia({ prefix: "/repair" })
     }
   )
 
-  .delete("/:id", async (ctx) => {
-    const userId = ctx.user.user_id;
-    const repairId = Number(ctx.params.id);
+  .delete("/:id", async ({params: {id}, set, user}) => {
+    const userId = user!.user_id;
+    const repairId = Number(id);
 
     const ok = await softDeleteRepair(userId, repairId);
-    ctx.set.status = ok ? 200 : 404;
+    set.status = ok ? 200 : 404;
     return ok;
   });

@@ -6,15 +6,22 @@ import { serverApp } from "@/lib/serverAPI";
 import { expenseColumns } from "@/config/ExpenseColumnConfig";
 import ActionPanel from "@/components/ActionPanel";
 import { ExpensesPageManager } from "@/components/PageManager/ExpensePageManager";
+import { requireAuth } from "@/lib/requireAuth";
 
+const user = await requireAuth(Astro);
+if (!user) return Astro.redirect("/login");
     
-const [expensesRes, providerRes] = await Promise.all([
+const [expensesRes, providersRes] = await Promise.all([
     serverApp.expense.all.get({ query : { is_deleted: false }}),
     serverApp.provider.all.get(),
 ]);
 
-const expenses = expensesRes.data ?? [];
-const providers = providerRes.data ?? [];
+const expenses = Array.isArray(expensesRes.data)
+    ? expensesRes.data
+    : [];
+const providers = Array.isArray(providersRes.data)
+    ? providersRes.data
+    : [];
 
 const providerNameById = new Map<number, string>(
     providers.map((c: any) => [c.provider_id, c.name ?? "—"])
@@ -26,7 +33,7 @@ const data = expenses.map((expense: any) => ({
 }));
 ---
 
-<Layout title="Gastos">
+<Layout title="Gastos" user={user}>
     <h1 class="w-full text-center text-4xl text-gray-700 font-bold my-5">Gastos</h1>
     
     <ExpensesPageManager

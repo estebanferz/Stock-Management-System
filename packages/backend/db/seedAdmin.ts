@@ -4,8 +4,8 @@ import { eq } from "drizzle-orm";
 import { hash } from "bcryptjs";
 
 async function main() {
-  const email = "admin@local.com";
-  const password = "Admin1234!";
+  const email = "user@local.com";
+  const password = "User1234!";
 
   const existing = await db
     .select({ user_id: userTable.user_id })

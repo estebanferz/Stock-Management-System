@@ -19,9 +19,8 @@ export const sellerController = new Elysia({ prefix: "/seller" })
 
   .get(
     "/all",
-    async (ctx) => {
-      const userId = ctx.user.user_id;
-      const { query } = ctx;
+    async ({query, user}) => {
+      const userId = user!.user_id;
 
       if (
         query.name ||
@@ -57,12 +56,11 @@ export const sellerController = new Elysia({ prefix: "/seller" })
 
   .post(
     "/",
-    async (ctx) => {
-      const userId = ctx.user.user_id;
-      const { body, set } = ctx;
+    async ({ body, set, user }) => {
+      const userId = user!.user_id;
 
       const newSeller = {
-        user_id: userId, // ✅ backend-only
+        user_id: userId,
         name: body.name,
         age: body.age,
         ...(body.email && { email: body.email }),
@@ -89,9 +87,9 @@ export const sellerController = new Elysia({ prefix: "/seller" })
 
   .get(
     "/:id",
-    async (ctx) => {
-      const userId = ctx.user.user_id;
-      const sellerId = Number(ctx.params.id);
+    async ({params: {id}, user}) => {
+      const userId = user!.user_id;
+      const sellerId = Number(id);
       return await getSellerById(userId, sellerId);
     },
     {
@@ -104,10 +102,9 @@ export const sellerController = new Elysia({ prefix: "/seller" })
 
   .put(
     "/:id",
-    async (ctx) => {
-      const userId = ctx.user.user_id;
-      const sellerId = Number(ctx.params.id);
-      const { body, set } = ctx;
+    async ({params: {id}, body, set, user}) => {
+      const userId = user!.user_id;
+      const sellerId = Number(id);
 
       const updSeller = {
         name: body.name,
@@ -134,11 +131,11 @@ export const sellerController = new Elysia({ prefix: "/seller" })
     }
   )
 
-  .delete("/:id", async (ctx) => {
-    const userId = ctx.user.user_id;
-    const sellerId = Number(ctx.params.id);
+  .delete("/:id", async ({params: {id}, set, user}) => {
+    const userId = user!.user_id;
+    const sellerId = Number(id);
 
     const ok = await softDeleteSeller(userId, sellerId);
-    ctx.set.status = ok ? 200 : 404;
+    set.status = ok ? 200 : 404;
     return ok;
   });

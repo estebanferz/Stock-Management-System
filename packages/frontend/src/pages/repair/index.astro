@@ -6,18 +6,28 @@ import { serverApp } from "@/lib/serverAPI";
 import { repairColumns } from "@/config/RepairColumnConfig";
 import ActionPanel from "@/components/ActionPanel";
 import { RepairPageManager } from "@/components/PageManager/RepairPageManager";
+import { requireAuth } from "@/lib/requireAuth";
 
+const user = await requireAuth(Astro);
+if (!user) return Astro.redirect("/login");
 const [repairsRes, clientsRes, techniciansRes, phonesRes] = await Promise.all([
   serverApp.repair.all.get({ query: { is_deleted: false }}),
   serverApp.client.all.get(),
   serverApp.technician.all.get(),
   serverApp.phone.all.get(),
 ]);
-
-const repairs = repairsRes.data ?? [];
-const clients = clientsRes.data ?? [];
-const technicians = techniciansRes.data ?? [];
-const phones = phonesRes.data ?? [];
+const repairs = Array.isArray(repairsRes.data)
+    ? repairsRes.data
+    : [];
+const clients = Array.isArray(clientsRes.data)
+    ? clientsRes.data
+    : [];
+const technicians = Array.isArray(techniciansRes.data)
+    ? techniciansRes.data
+    : [];
+const phones = Array.isArray(phonesRes.data)
+    ? phonesRes.data
+    : [];
 
 const clientNameById = new Map<number, string>(
   clients.map((c: any) => [c.client_id, c.name ?? "—"])
@@ -43,7 +53,7 @@ const data = repairs.map((repair: any) => ({
 
 ---
 
-<Layout title="Reparaciones">
+<Layout title="Reparaciones" user={user}>
     <h1 class="w-full text-center text-4xl text-gray-700 font-bold my-5">Reparaciones</h1>
     
 

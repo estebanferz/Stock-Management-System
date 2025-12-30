@@ -11,9 +11,8 @@ export const expenseController = new Elysia({prefix: "/expense"})
     })
     .get(
     "/all",
-    async (ctx) => {
-        const userId = ctx.user.user_id
-        const { query } = ctx
+    async ({query, user}) => {
+        const userId = user!.user_id
 
         if (
         query.date ||
@@ -45,32 +44,32 @@ export const expenseController = new Elysia({prefix: "/expense"})
     },
     )
 
-    .get("/:id/receipt", async (ctx) => {
-        const userId = ctx.user.user_id;
-        const expenseId = Number(ctx.params.id);
+    .get("/:id/receipt", async ({params: {id}, user, set}) => {
+        const userId = user!.user_id;
+        const expenseId = Number(id);
 
         const receipt = await getExpenseReceiptFile(userId, expenseId);
 
         if (!receipt) {
-            ctx.set.status = 404;
+            set.status = 404;
             return;
         }
 
         const filename = safeFilename(receipt.originalName);
 
-        ctx.set.headers["Content-Type"] = receipt.mime;
+        set.headers["Content-Type"] = receipt.mime;
 
         // ✅ filename ASCII-safe
-        ctx.set.headers["Content-Disposition"] =
+        set.headers["Content-Disposition"] =
             `inline; filename="${filename}"`;
 
         return receipt.file;
     })
     .post(
     "/",
-    async (ctx) => {
-        const userId = ctx.user.user_id;
-        const { body, set } = ctx;
+    async ({ body, set, user }) => {
+        const userId = user!.user_id;
+
         try {
         const result = await addExpenseWithReceipt(userId, body);
         set.status = 201;
@@ -112,10 +111,10 @@ export const expenseController = new Elysia({prefix: "/expense"})
     )
     .put(
     "/:id",
-    async (ctx) => {
-        const userId = ctx.user.user_id;
-        const expenseId = Number(ctx.params.id);
-        const { body, set } = ctx;
+    async ({ params: {id}, body, set, user }) => {
+        const userId = user!.user_id;
+        const expenseId = Number(id);
+
         try {
         const result = await updateExpenseWithReceipt(userId, expenseId, body);
         set.status = 200;
@@ -159,15 +158,15 @@ export const expenseController = new Elysia({prefix: "/expense"})
         },
     }
     )
-    .delete("/:id", async (ctx) => {
-        const userId = ctx.user.user_id;
-        const expenseId = Number(ctx.params.id);
+    .delete("/:id", async ({params: {id}, set, user}) => {
+        const userId = user!.user_id;
+        const expenseId = Number(id);
         const ok = await softDeleteExpense(userId, expenseId);
-        ctx.set.status = ok ? 200 : 404;
+        set.status = ok ? 200 : 404;
         return ok;
     })
-    .get("/expenses", async (ctx) => {
-            const userId = ctx.user.user_id
+    .get("/expenses", async ({ user }) => {
+            const userId = user!.user_id
             const expenses = await getTotalExpenses(userId);
             return expenses;
         },

@@ -12,6 +12,7 @@ import {
 import { clientInsertDTO, clientUpdateDTO } from "@server/db/types";
 import { requireAuth } from "../middlewares/requireAuth";
 
+
 export const clientController = new Elysia({ prefix: "/client" })
   .use(requireAuth)
 
@@ -21,9 +22,8 @@ export const clientController = new Elysia({ prefix: "/client" })
 
   .get(
     "/all",
-    async (ctx) => {
-      const userId = ctx.user.user_id;
-      const { query } = ctx;
+    async ({ query, user}) => {
+      const userId = user!.user_id;
 
       if (
         query.name ||
@@ -59,9 +59,8 @@ export const clientController = new Elysia({ prefix: "/client" })
 
   .get(
     "/:id",
-    async (ctx) => {
-      const userId = ctx.user.user_id;
-      const { id } = ctx.params;
+    async ({params: {id}, user}) => {
+      const userId = user!.user_id;
 
       return await getClientById(userId, Number(id));
     },
@@ -76,7 +75,7 @@ export const clientController = new Elysia({ prefix: "/client" })
   .post(
     "/",
     async ({ body, set, user }) => {
-      const userId = user.user_id;
+      const userId = user!.user_id;
 
       const newClient = {
         user_id: userId,
@@ -88,7 +87,7 @@ export const clientController = new Elysia({ prefix: "/client" })
         ...(body.debt && { debt: body.debt }),
       };
 
-      console.log("[client.post] ctx.user:", ctx.user);
+      console.log("[client.post] ctx.user:", user);
       console.log("[client.post] userId:", userId, typeof userId);
       console.log("[client.post] newClient:", newClient);
 
@@ -110,9 +109,8 @@ export const clientController = new Elysia({ prefix: "/client" })
 
   .put(
     "/:id",
-    async (ctx) => {
-      const userId = ctx.user.user_id;
-      const { body, params: { id }, set } = ctx;
+    async ({ body, params: { id }, set, user }) => {
+      const userId = user!.user_id;
 
       const updClient = {
         user_id: userId,
@@ -141,20 +139,19 @@ export const clientController = new Elysia({ prefix: "/client" })
     }
   )
 
-  .delete("/:id", async (ctx) => {
-    const userId = ctx.user.user_id;
-    const { id } = ctx.params;
+  .delete("/:id", async ({params: {id}, user, set}) => {
+    const userId = user!.user_id;
 
     const ok = await softDeleteClient(userId, Number(id));
 
-    ctx.set.status = ok ? 200 : 404;
+    set.status = ok ? 200 : 404;
     return ok;
   })
 
   .get(
     "/debts",
-    async (ctx) => {
-      const userId = ctx.user.user_id;
+    async ({ user }) => {
+      const userId = user!.user_id;
       return await getDebts(userId);
     },
     {
@@ -167,8 +164,8 @@ export const clientController = new Elysia({ prefix: "/client" })
 
   .get(
     "/total-debt",
-    async (ctx) => {
-      const userId = ctx.user.user_id;
+    async ({ user }) => {
+      const userId = user!.user_id;
       return await getTotalDebt(userId);
     },
     {

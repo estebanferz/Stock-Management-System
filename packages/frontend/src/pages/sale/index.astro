@@ -6,7 +6,10 @@ import { serverApp } from "@/lib/serverAPI";
 import { saleColumns } from "@/config/SaleColumnConfig.client";
 import ActionPanel from "@/components/ActionPanel";
 import { SalesPageManager } from "@/components/PageManager/SalePageManager";
+import { requireAuth } from "@/lib/requireAuth";
 
+const user = await requireAuth(Astro);
+if (!user) return Astro.redirect("/login");
 
 // 1) Traer todo en paralelo
 const [salesRes, clientsRes, sellersRes, phonesRes] = await Promise.all([
@@ -16,10 +19,18 @@ const [salesRes, clientsRes, sellersRes, phonesRes] = await Promise.all([
   serverApp.phone.all.get(),
 ]);
 
-const sales = salesRes.data ?? [];
-const clients = clientsRes.data ?? [];
-const sellers = sellersRes.data ?? [];
-const phones = phonesRes.data ?? [];
+const sales = Array.isArray(salesRes.data)
+    ? salesRes.data
+    : [];
+const clients = Array.isArray(clientsRes.data)
+    ? clientsRes.data
+    : [];
+const sellers = Array.isArray(sellersRes.data)
+    ? sellersRes.data
+    : [];
+const phones = Array.isArray(phonesRes.data)
+    ? phonesRes.data
+    : [];
 
 // 2) Mapas id -> nombre/label
 const clientNameById = new Map<number, string>(
@@ -50,7 +61,7 @@ console.log("Ventas:", data);
 
 ---
 
-<Layout title="Ventas">
+<Layout title="Ventas" user={user}>
     <h1 class="w-full text-center text-4xl text-gray-700 font-bold my-5">Ventas</h1>
     
     <SalesPageManager

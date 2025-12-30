@@ -19,9 +19,8 @@ export const technicianController = new Elysia({ prefix: "/technician" })
 
   .get(
     "/all",
-    async (ctx) => {
-      const userId = ctx.user.user_id;
-      const { query } = ctx;
+    async ({query, user}) => {
+      const userId = user!.user_id;
 
       const hasFilters =
         query.name ||
@@ -54,9 +53,9 @@ export const technicianController = new Elysia({ prefix: "/technician" })
 
   .get(
     "/:id",
-    async (ctx) => {
-      const userId = ctx.user.user_id;
-      const techId = Number(ctx.params.id);
+    async ({params: {id}, user}) => {
+      const userId = user!.user_id;
+      const techId = Number(id);
       return await getTechnicianById(userId, techId);
     },
     {
@@ -69,12 +68,11 @@ export const technicianController = new Elysia({ prefix: "/technician" })
 
   .post(
     "/",
-    async (ctx) => {
-      const userId = ctx.user.user_id;
-      const { body, set } = ctx;
+    async ({ body, set, user }) => {
+      const userId = user!.user_id;
 
       const newTechnician = {
-        user_id: userId, // ✅ backend-only
+        user_id: userId,
         name: body.name,
         ...(body.email && { email: body.email }),
         ...(body.phone_number && { phone_number: body.phone_number }),
@@ -99,10 +97,9 @@ export const technicianController = new Elysia({ prefix: "/technician" })
 
   .put(
     "/:id",
-    async (ctx) => {
-      const userId = ctx.user.user_id;
-      const techId = Number(ctx.params.id);
-      const { body, set } = ctx;
+    async ({params: {id}, body, set, user}) => {
+      const userId = user!.user_id;
+      const techId = Number(id);
 
       const updTechnician = {
         name: body.name,
@@ -127,11 +124,11 @@ export const technicianController = new Elysia({ prefix: "/technician" })
     }
   )
 
-  .delete("/:id", async (ctx) => {
-    const userId = ctx.user.user_id;
-    const techId = Number(ctx.params.id);
+  .delete("/:id", async ({params: {id}, set, user}) => {
+    const userId = user!.user_id;
+    const techId = Number(id);
 
     const ok = await softDeleteTechnician(userId, techId);
-    ctx.set.status = ok ? 200 : 404;
+    set.status = ok ? 200 : 404;
     return ok;
   });
