@@ -88,7 +88,7 @@ export default function LoginForm() {
         const data = response.data;
 
         if (data?.ok) {
-          window.location.assign(PUBLIC_FRONTEND_URL + "/");
+          window.location.assign(import.meta.env.PUBLIC_FRONTEND_URL + "/");
           return undefined;
         }
 
