@@ -7,19 +7,16 @@ import {
   softDeleteRepair,
 } from "../services/repairService";
 import { repairInsertDTO, repairUpdateDTO } from "@server/db/types";
-import { requireAuth } from "../middlewares/requireAuth";
+import { protectedController } from "../util/protectedController";
 
 export const repairController = new Elysia({ prefix: "/repair" })
-  .use(requireAuth)
-
-  .get("/", () => {
-    return { message: "Repair endpoint" };
-  })
+  .get("/", () => ({ message: "Repair endpoint" }))
 
   .get(
     "/all",
-    async ({query, user}) => {
-      const userId = user!.user_id;
+    protectedController(async (ctx) => {
+      const userId = ctx.user.id;
+      const query = ctx.query;
 
       if (
         query.date ||
@@ -41,12 +38,15 @@ export const repairController = new Elysia({ prefix: "/repair" })
           device_id: query.device_id,
           cost_min: query.cost_min,
           cost_max: query.cost_max,
-          is_deleted: query.is_deleted === undefined ? undefined : query.is_deleted === "true",
+          is_deleted:
+            query.is_deleted === undefined
+              ? undefined
+              : query.is_deleted === "true",
         });
       }
 
       return await getAllRepairs(userId);
-    },
+    }),
     {
       detail: {
         summary: "Get all repairs in DB (scoped by user)",
@@ -57,11 +57,12 @@ export const repairController = new Elysia({ prefix: "/repair" })
 
   .post(
     "/",
-    async ({body, set, user}) => {
-      const userId = user!.user_id;
+    protectedController(async (ctx) => {
+      const userId = ctx.user.id;
+      const body = ctx.body;
 
       const newRepair = {
-        user_id: userId, 
+        user_id: userId,
         datetime: body.datetime ? new Date(body.datetime) : undefined,
         repair_state: body.repair_state,
         priority: body.priority,
@@ -74,10 +75,10 @@ export const repairController = new Elysia({ prefix: "/repair" })
         device_id: body.device_id,
       };
 
-      const result = await addRepair(userId, newRepair); // 👈 userId explícito también para validaciones
-      set.status = 201;
+      const result = await addRepair(userId, newRepair);
+      ctx.set.status = 201;
       return result;
-    },
+    }),
     {
       body: t.Object({
         ...repairInsertDTO.properties,
@@ -92,9 +93,10 @@ export const repairController = new Elysia({ prefix: "/repair" })
 
   .put(
     "/:id",
-    async ({ params: {id}, body, set, user }) => {
-      const userId = user!.user_id;
-      const repairId = Number(id);
+    protectedController(async (ctx) => {
+      const userId = ctx.user.id;
+      const repairId = Number(ctx.params.id);
+      const body = ctx.body;
 
       const updRepair = {
         datetime: body.datetime ? new Date(body.datetime) : undefined,
@@ -110,9 +112,9 @@ export const repairController = new Elysia({ prefix: "/repair" })
       };
 
       const result = await updateRepair(userId, repairId, updRepair);
-      set.status = 200;
+      ctx.set.status = 200;
       return result;
-    },
+    }),
     {
       body: t.Object({
         ...repairUpdateDTO.properties,
@@ -125,11 +127,14 @@ export const repairController = new Elysia({ prefix: "/repair" })
     }
   )
 
-  .delete("/:id", async ({params: {id}, set, user}) => {
-    const userId = user!.user_id;
-    const repairId = Number(id);
+  .delete(
+    "/:id",
+    protectedController(async (ctx) => {
+      const userId = ctx.user.id;
+      const repairId = Number(ctx.params.id);
 
-    const ok = await softDeleteRepair(userId, repairId);
-    set.status = ok ? 200 : 404;
-    return ok;
-  });
+      const ok = await softDeleteRepair(userId, repairId);
+      ctx.set.status = ok ? 200 : 404;
+      return ok;
+    })
+  );

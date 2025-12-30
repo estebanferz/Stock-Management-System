@@ -6,9 +6,7 @@ import {
   register,
 } from "../services/authService";
 import { buildSessionCookie, clearSessionCookie } from "../auth/cookies";
-
-const SESSION_COOKIE = "session";
-const SESSION_DAYS = 7;
+import { SESSION_COOKIE, SESSION_DAYS } from "@server/db/types"
 
 export const authController = new Elysia({ prefix: "/auth" })
     .get("/", () => ({ message: "Auth endpoint" }))
@@ -68,15 +66,26 @@ export const authController = new Elysia({ prefix: "/auth" })
         tags: ["auth"],
         },
     })
-    .post("/logout", async ({ set }) => {
+    .post(
+    "/logout",
+    async ({ set, cookie }) => {
+        const raw = cookie[SESSION_COOKIE]?.value;
+        const sessionId = typeof raw === "string" ? raw : undefined;
+
+        if (sessionId) {
+        try {
+            await logout(sessionId);
+        } catch {
+            //doesnt matter 
+        }
+        }
+
         set.headers["Set-Cookie"] = clearSessionCookie(SESSION_COOKIE);
+
         return { ok: true };
     },
     {
-        detail: {
-            summary: "Logout user",
-            tags: ["auth"],
-        },
+        detail: { summary: "Logout user", tags: ["auth"] },
     })
     .get(
     "/me",

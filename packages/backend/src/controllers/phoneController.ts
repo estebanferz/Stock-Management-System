@@ -8,18 +8,16 @@ import {
   softDeletePhone,
 } from "../services/phoneService";
 import { phoneInsertDTO, phoneUpdateDTO } from "@server/db/types";
-import { requireAuth } from "../middlewares/requireAuth";
+import { protectedController } from "../util/protectedController";
 
 export const phoneController = new Elysia({ prefix: "/phone" })
-  .use(requireAuth)
-  .get("/", () => {
-    return { message: "Phone endpoint" };
-  })
+  .get("/", () => ({ message: "Phone endpoint" }))
+
   .get(
     "/all",
-    async ({query, user}) => {
-      const userId = user!.user_id;
-
+    protectedController(async (ctx) => {
+      const userId = ctx.user.id;
+      const query = ctx.query;
 
       if (
         query.device ||
@@ -49,7 +47,7 @@ export const phoneController = new Elysia({ prefix: "/phone" })
       }
 
       return await getAllPhones(userId);
-    },
+    }),
     {
       detail: {
         summary: "Get all phones in DB (scoped by user)",
@@ -57,14 +55,15 @@ export const phoneController = new Elysia({ prefix: "/phone" })
       },
     }
   )
+
   .get(
     "/:id",
-    async ({params: {id}, user}) => {
-      const userId = user!.user_id;
-      const phoneId = Number(id);
+    protectedController(async (ctx) => {
+      const userId = ctx.user.id;
+      const phoneId = Number(ctx.params.id);
 
       return await getPhoneById(userId, phoneId);
-    },
+    }),
     {
       detail: {
         summary: "Get phone details by ID (scoped by user)",
@@ -72,10 +71,12 @@ export const phoneController = new Elysia({ prefix: "/phone" })
       },
     }
   )
+
   .post(
     "/",
-    async ({body, set, user}) => {
-      const userId = user!.user_id;
+    protectedController(async (ctx) => {
+      const userId = ctx.user.id;
+      const body = ctx.body;
 
       const newPhone = {
         user_id: userId,
@@ -96,9 +97,9 @@ export const phoneController = new Elysia({ prefix: "/phone" })
       };
 
       const result = await addPhone(newPhone);
-      set.status = 201;
+      ctx.set.status = 201;
       return result;
-    },
+    }),
     {
       body: t.Object({
         ...phoneInsertDTO.properties,
@@ -110,14 +111,16 @@ export const phoneController = new Elysia({ prefix: "/phone" })
       },
     }
   )
+
   .put(
     "/:id",
-    async ({ params: {id}, body, set, user }) => {
-      const userId = user!.user_id;
-      const phoneId = Number(id);
+    protectedController(async (ctx) => {
+      const userId = ctx.user.id;
+      const phoneId = Number(ctx.params.id);
+      const body = ctx.body;
 
       const updPhone = {
-        userId,
+        user_id: userId, // ✅ consistente con POST (evita bugs)
         datetime: new Date(body.datetime),
         name: body.name,
         brand: body.brand,
@@ -136,9 +139,9 @@ export const phoneController = new Elysia({ prefix: "/phone" })
 
       const result = await updatePhone(userId, phoneId, updPhone);
 
-      set.status = 200;
+      ctx.set.status = 200;
       return result;
-    },
+    }),
     {
       body: t.Object({
         ...phoneUpdateDTO.properties,
@@ -150,11 +153,15 @@ export const phoneController = new Elysia({ prefix: "/phone" })
       },
     }
   )
-  .delete("/:id", async ({params: {id}, set, user}) => {
-    const userId = user!.user_id;
-    const phoneId = Number(id);
 
-    const ok = await softDeletePhone(userId, phoneId);
-    set.status = ok ? 200 : 404;
-    return ok;
-  });
+  .delete(
+    "/:id",
+    protectedController(async (ctx) => {
+      const userId = ctx.user.id;
+      const phoneId = Number(ctx.params.id);
+
+      const ok = await softDeletePhone(userId, phoneId);
+      ctx.set.status = ok ? 200 : 404;
+      return ok;
+    })
+  );

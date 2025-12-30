@@ -14,32 +14,36 @@ import {
   getTotalDebt,
 } from "../services/saleService";
 import { saleInsertDTO, saleUpdateDTO } from "@server/db/types";
-import { requireAuth } from "../middlewares/requireAuth";
+import { protectedController } from "../util/protectedController";
 
 export const saleController = new Elysia({ prefix: "/sale" })
-  .use(requireAuth)
-
-  .get("/", () => {
-    return { message: "Sale endpoint" };
-  })
+  .get("/", () => ({ message: "Sale endpoint" }))
 
   .get(
     "/all",
-    async ({query, user}) => {
-      const userId = user!.user_id;
+    protectedController(async (ctx) => {
+      const userId = ctx.user.id;
+      const query = ctx.query;
 
-      if (query.date || query.client_id || query.seller_id || query.device_id || query.is_deleted) {
+      if (
+        query.date ||
+        query.client_id ||
+        query.seller_id ||
+        query.device_id ||
+        query.is_deleted
+      ) {
         return await getSaleByFilter(userId, {
           date: query.date,
           client_id: query.client_id,
           seller_id: query.seller_id,
           device_id: query.device_id,
-          is_deleted: query.is_deleted === undefined ? undefined : query.is_deleted === "true",
+          is_deleted:
+            query.is_deleted === undefined ? undefined : query.is_deleted === "true",
         });
       }
 
       return await getAllSales(userId);
-    },
+    }),
     {
       detail: {
         summary: "Get all sales in DB (scoped by user)",
@@ -50,11 +54,11 @@ export const saleController = new Elysia({ prefix: "/sale" })
 
   .get(
     "/:id",
-    async ({params: {id}, user}) => {
-      const userId = user!.user_id;
-      const saleId = Number(id);
+    protectedController(async (ctx) => {
+      const userId = ctx.user.id;
+      const saleId = Number(ctx.params.id);
       return await getSaleById(userId, saleId);
-    },
+    }),
     {
       detail: {
         summary: "Get sale details by ID (scoped by user)",
@@ -65,8 +69,9 @@ export const saleController = new Elysia({ prefix: "/sale" })
 
   .post(
     "/",
-    async ({ body, set, user }) => {
-      const userId = user!.user_id;
+    protectedController(async (ctx) => {
+      const userId = ctx.user.id;
+      const body = ctx.body;
 
       const newSale = {
         user_id: userId,
@@ -82,9 +87,9 @@ export const saleController = new Elysia({ prefix: "/sale" })
       };
 
       const result = await addSale(userId, newSale);
-      set.status = 201;
+      ctx.set.status = 201;
       return result;
-    },
+    }),
     {
       body: t.Object({
         ...saleInsertDTO.properties,
@@ -99,9 +104,10 @@ export const saleController = new Elysia({ prefix: "/sale" })
 
   .put(
     "/:id",
-    async ({ params: {id}, body, set, user }) => {
-      const userId = user!.user_id;
-      const saleId = Number(id);
+    protectedController(async (ctx) => {
+      const userId = ctx.user.id;
+      const saleId = Number(ctx.params.id);
+      const body = ctx.body;
 
       const updSale = {
         datetime: body.datetime ? new Date(body.datetime) : undefined,
@@ -116,9 +122,9 @@ export const saleController = new Elysia({ prefix: "/sale" })
       };
 
       const result = await updateSale(userId, saleId, updSale);
-      set.status = 200;
+      ctx.set.status = 200;
       return result;
-    },
+    }),
     {
       body: t.Object({
         ...saleUpdateDTO.properties,
@@ -131,21 +137,23 @@ export const saleController = new Elysia({ prefix: "/sale" })
     }
   )
 
-  .delete("/:id", async ({params: {id}, set, user}) => {
-    const userId = user!.user_id;
-    const saleId = Number(id);
+  .delete(
+    "/:id",
+    protectedController(async (ctx) => {
+      const userId = ctx.user.id;
+      const saleId = Number(ctx.params.id);
 
-    const ok = await softDeleteSale(userId, saleId);
-    set.status = ok ? 200 : 404;
-    return ok;
-  })
+      const ok = await softDeleteSale(userId, saleId);
+      ctx.set.status = ok ? 200 : 404;
+      return ok;
+    })
+  )
 
   .get(
     "/gross-income",
-    async ({user}) => {
-      const userId = user!.user_id;
-      return await getGrossIncome(userId);
-    },
+    protectedController(async (ctx) => {
+      return await getGrossIncome(ctx.user.id);
+    }),
     {
       detail: { summary: "Get gross income (scoped by user)", tags: ["sales"] },
     }
@@ -153,10 +161,9 @@ export const saleController = new Elysia({ prefix: "/sale" })
 
   .get(
     "/net-income",
-    async ({user}) => {
-      const userId = user!.user_id;
-      return await getNetIncome(userId);
-    },
+    protectedController(async (ctx) => {
+      return await getNetIncome(ctx.user.id);
+    }),
     {
       detail: { summary: "Get net income (scoped by user)", tags: ["sales"] },
     }
@@ -164,17 +171,17 @@ export const saleController = new Elysia({ prefix: "/sale" })
 
   .get(
     "/sales-by-month",
-    async ({query, user, set}) => {
-      const userId = user!.user_id;
-      const year = Number(query.year);
+    protectedController(async (ctx) => {
+      const userId = ctx.user.id;
+      const year = Number(ctx.query.year);
 
-      if (!year || isNaN(year)) {
-        set.status = 400;
+      if (!year || Number.isNaN(year)) {
+        ctx.set.status = 400;
         return { ok: false, message: "Invalid year" };
       }
 
       return await getSalesByMonth(userId, year);
-    },
+    }),
     {
       query: t.Object({ year: t.String() }),
       detail: {
@@ -186,21 +193,22 @@ export const saleController = new Elysia({ prefix: "/sale" })
 
   .get(
     "/products-sold-count",
-    async ({user}) => {
-      const userId = user!.user_id;
-      return await getProductSoldCount(userId);
-    },
+    protectedController(async (ctx) => {
+      return await getProductSoldCount(ctx.user.id);
+    }),
     {
-      detail: { summary: "Get products sold count (scoped by user)", tags: ["sales"] },
+      detail: {
+        summary: "Get products sold count (scoped by user)",
+        tags: ["sales"],
+      },
     }
   )
 
   .get(
     "/debts",
-    async ({user}) => {
-      const userId = user!.user_id;
-      return await getDebts(userId);
-    },
+    protectedController(async (ctx) => {
+      return await getDebts(ctx.user.id);
+    }),
     {
       detail: { summary: "Get all debts (scoped by user)", tags: ["sales"] },
     }
@@ -208,11 +216,13 @@ export const saleController = new Elysia({ prefix: "/sale" })
 
   .get(
     "/total-debt",
-    async ({user}) => {
-      const userId = user!.user_id;
-      return await getTotalDebt(userId);
-    },
+    protectedController(async (ctx) => {
+      return await getTotalDebt(ctx.user.id);
+    }),
     {
-      detail: { summary: "Get total debt amount (scoped by user)", tags: ["sales"] },
+      detail: {
+        summary: "Get total debt amount (scoped by user)",
+        tags: ["sales"],
+      },
     }
   );
