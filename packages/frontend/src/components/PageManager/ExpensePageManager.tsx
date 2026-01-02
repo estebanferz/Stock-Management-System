@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { clientApp } from "@/lib/clientAPI";
 import { ExpenseTableManager } from "@/components/TableManager/ExpenseTableManager";
 import { paymentMethods } from "@/components/Structures/paymentMethods";
+import ActionPanel from "../ActionPanel";
 
 type Expense = any;
 
@@ -99,7 +100,7 @@ export function ExpensesPageManager({
       <div className="w-full">
         <div className="mx-auto max-w-6xl rounded-2xl border bg-white p-4 shadow-lg">
             <div className="flex flex-col gap-3">
-            <div className="grid grid-cols-1 gap-3 md:grid-cols-3 lg:grid-cols-4">
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">
             <input
                 type="date"
                 value={filters.date}
@@ -181,6 +182,10 @@ export function ExpensesPageManager({
             <div className="flex items-center gap-3 text-sm text-gray-600">
             {loading ? "Buscando..." : `${expenses.length} resultado(s)`}
             {error ? <span className="text-red-600">{error}</span> : null}
+            </div>
+
+            <div className="md:hidden">
+              <ActionPanel/>
             </div>
 
             <button

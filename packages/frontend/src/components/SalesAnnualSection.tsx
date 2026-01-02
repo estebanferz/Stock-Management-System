@@ -43,7 +43,7 @@ export function SalesAnnualSection({ initialYear, initialData }: Props) {
   }, [year]);
 
   return (
-    <div className="flex flex-row w-full bg-white p-3 pr-5 rounded-2xl shadow-lg">
+    <div className="flex flex-col md:flex-row w-full bg-white p-3 pr-5 rounded-2xl shadow-lg">
       {/* LEFT: título + descripción + selector */}
       <div className="w-3/5 m-3 space-y-2">
         <h2 className="text-gray-700 font-bold text-2xl">Ventas Anuales</h2>
@@ -79,7 +79,7 @@ export function SalesAnnualSection({ initialYear, initialData }: Props) {
       </div>
 
       {/* RIGHT: solo el chart */}
-      <div className="w-2/5 bg-white hover:bg-gray-50 rounded-2xl">
+      <div className="w-full md:w-2/5 bg-white hover:bg-gray-50 rounded-2xl">
         <SalesChart data={data} />
       </div>
     </div>

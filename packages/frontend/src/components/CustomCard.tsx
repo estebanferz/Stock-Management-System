@@ -12,7 +12,7 @@ export default function StatCard({ title, amount, icon, secondaryData }: Props) 
     <div className=" w-full h-32 rounded-2xl border-black bg-white p-4 shadow-lg">
       <div className="flex flex-row h-full w-full items-center">
         {/* Icon block (top-left) */}
-        <div className="flex md:h-1/2 lg:h-3/4 aspect-square rounded-2xl bg-gray-300 opacity-85 shadow-lg items-center justify-center">
+        <div className="flex h-1/2 lg:h-3/4 aspect-square rounded-2xl bg-gray-300 opacity-85 shadow-lg items-center justify-center">
           {iconSrc && <img src={iconSrc} className="h-1/2 w-1/2 fill-current" alt="" />}
         </div>
 

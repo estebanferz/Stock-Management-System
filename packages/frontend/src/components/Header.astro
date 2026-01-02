@@ -20,16 +20,16 @@ const fecha = dolarBlue?.fechaActualizacion
   id="header"
   class="fixed left-0 right-0 top-0 z-30 flex h-[var(--header-height)] bg-white shadow-lg transition-transform duration-300"
 >
-<div class="relative flex w-full items-center justify-around p-5">
+<div class="relative flex w-full items-center justify-between md:justify-around p-5">
 
   <button
     id="menu-toggle"
-    class="absolute left-4 lg:left-10 z-30 h-10 w-10 flex justify-center items-center text-2xl pb-1 rounded-md bg-gray-100 text-gray-700 hover:bg-gray-200 focus:outline-none"
+    class="absolute left-2 md:left-4 lg:left-10 z-30 h-10 w-10 flex justify-center items-center text-2xl pb-1 rounded-md text-gray-700 hover:bg-gray-50 focus:outline-none"
   >
     ☰
   </button>
   <div class="flex items-center space-x-4">
-    <a href="/" class="translate-y-4 md:translate-x-6 h-20 w-20 text-xl z-20 font-bold text-gray-800 border-[5px] border-white rounded-full shadow-md">
+    <a href="/" class="translate-y-4 translate-x-10 md:translate-x-6 h-20 w-20 text-xl z-20 font-bold text-gray-800 border-[5px] border-white rounded-full shadow-md">
       <img
         src="../../logo-apple-mdp.jpg"
         alt="Logo empresa"
@@ -38,7 +38,7 @@ const fecha = dolarBlue?.fechaActualizacion
     </a>
   </div>
 
-  <div class="text-xs border rounded-lg px-4 py-1 flex gap-3">
+  <div class="text-xs border rounded-lg px-4 py-1 flex gap-3 hidden md:block">
     <div class="flex flex-row items-center justify-center gap-1 md:gap-2 lg:gap-10">
       <div class="flex flex-row items-center justify-center gap-4">
         <svg class="opacity-70" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24" width="24" height="24"><path d="M19.5,0H4.5C2.019,0,0,2.019,0,4.5v15c0,2.481,2.019,4.5,4.5,4.5h15c2.481,0,4.5-2.019,4.5-4.5V4.5c0-2.481-2.019-4.5-4.5-4.5Zm3.5,19.5c0,1.93-1.57,3.5-3.5,3.5H4.5c-1.93,0-3.5-1.57-3.5-3.5V4.5c0-1.93,1.57-3.5,3.5-3.5h15c1.93,0,3.5,1.57,3.5,3.5v15Zm-7-5.126c0,1.448-1.178,2.626-2.626,2.626h-.874v1.5c0,.276-.224,.5-.5,.5s-.5-.224-.5-.5v-1.5h-.926c-.979,0-1.893-.526-2.382-1.375-.139-.239-.057-.545,.183-.683,.238-.14,.544-.057,.683,.183,.312,.54,.894,.875,1.517,.875h2.8c.896,0,1.626-.729,1.626-1.626,0-.803-.575-1.478-1.368-1.605l-3.422-.55c-1.28-.206-2.21-1.296-2.21-2.593,0-1.448,1.178-2.626,2.626-2.626h.874v-1.5c0-.276,.224-.5,.5-.5s.5,.224,.5,.5v1.5h.926c.979,0,1.892,.527,2.382,1.375,.139,.239,.057,.545-.183,.683-.236,.136-.545,.057-.683-.183-.312-.54-.894-.875-1.517-.875h-2.8c-.896,0-1.626,.729-1.626,1.626,0,.803,.575,1.478,1.368,1.605l3.422,.55c1.28,.206,2.21,1.297,2.21,2.593Z"/></svg>
@@ -63,11 +63,28 @@ const fecha = dolarBlue?.fechaActualizacion
 <!-- Slide-out panel -->
 <aside
   id="slider"
-  class="fixed left-0 pt-16 z-20 h-full w-56 transform bg-white shadow-lg transition-transform duration-200"
+  class="fixed left-0 pt-16 z-20 h-screen overflow-y-auto w-56 transform bg-white shadow-lg transition-transform duration-200 translate-x-0"
 >
 
   <div class="flex items-center justify-between p-4 pt-8">
     <h2 class="text-lg font-semibold text-gray-700">Menu</h2>
+  </div>
+
+  <div class="text-xs border rounded-lg p-1 gap-3 block md:hidden mx-2">
+    <div class="flex flex-col justify-center gap-1">
+      <div class="flex flex-row items-center gap-2 py-1 px-3">
+        <svg class="opacity-70" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24" width="24" height="24"><path d="M19.5,0H4.5C2.019,0,0,2.019,0,4.5v15c0,2.481,2.019,4.5,4.5,4.5h15c2.481,0,4.5-2.019,4.5-4.5V4.5c0-2.481-2.019-4.5-4.5-4.5Zm3.5,19.5c0,1.93-1.57,3.5-3.5,3.5H4.5c-1.93,0-3.5-1.57-3.5-3.5V4.5c0-1.93,1.57-3.5,3.5-3.5h15c1.93,0,3.5,1.57,3.5,3.5v15Zm-7-5.126c0,1.448-1.178,2.626-2.626,2.626h-.874v1.5c0,.276-.224,.5-.5,.5s-.5-.224-.5-.5v-1.5h-.926c-.979,0-1.893-.526-2.382-1.375-.139-.239-.057-.545,.183-.683,.238-.14,.544-.057,.683,.183,.312,.54,.894,.875,1.517,.875h2.8c.896,0,1.626-.729,1.626-1.626,0-.803-.575-1.478-1.368-1.605l-3.422-.55c-1.28-.206-2.21-1.296-2.21-2.593,0-1.448,1.178-2.626,2.626-2.626h.874v-1.5c0-.276,.224-.5,.5-.5s.5,.224,.5,.5v1.5h.926c.979,0,1.892,.527,2.382,1.375,.139,.239,.057,.545-.183,.683-.236,.136-.545,.057-.683-.183-.312-.54-.894-.875-1.517-.875h-2.8c-.896,0-1.626,.729-1.626,1.626,0,.803,.575,1.478,1.368,1.605l3.422,.55c1.28,.206,2.21,1.297,2.21,2.593Z"/></svg>
+        <div class="flex flex-col text-left">  
+          <span class="font-medium">Dolar Blue</span>
+          <span class="text-gray-500">{fecha}</span>
+        </div>
+      </div>
+      <div class="flex flex-row justify-around pb-1">
+        <p class="text-center font-light w-12 text-xs">COMPRA <strong class="font-bold">$ {compra}</strong></p>
+        <div class="border"></div>
+        <p class="text-center font-light w-12 text-xs">VENTA <strong class="font-bold">$ {venta}</strong></p>
+      </div>
+    </div>
   </div>
 
   <nav class="flex flex-col space-y-4 p-4 text-gray-500">
@@ -167,35 +184,68 @@ const fecha = dolarBlue?.fechaActualizacion
   </nav>
 </aside>
 
+
+</script>
+
 <script>
   let lastScrollTop = 0;
   const header = document.getElementById("header");
+  const slider = document.getElementById("slider");
 
   window.addEventListener("scroll", () => {
     const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
 
-    if (scrollTop > lastScrollTop && scrollTop > 100) {
-      // Scrolling down and past the top
+    const scrollingDown = scrollTop > lastScrollTop;
+    const pastTop = scrollTop > 100;
+
+    if (scrollingDown && pastTop) {
+      // esconder header hacia arriba
       header?.classList.add("-translate-y-full");
+
+      // esconder slider hacia la izquierda
+      slider?.classList.add("-translate-x-full");
+      slider?.classList.remove("translate-x-0");
     } else {
-      // Scrolling up or at the top
+      // mostrar header
       header?.classList.remove("-translate-y-full");
+
     }
 
     lastScrollTop = scrollTop;
   });
 </script>
 
+
 <script>
   const slider = document.getElementById("slider");
   const toggleButton = document.getElementById("menu-toggle");
   const closeButton = document.getElementById("close-slider");
 
+  const mdUp = () => window.matchMedia("(min-width: 768px)").matches;
+
+  function open() {
+    slider?.classList.remove("-translate-x-full");
+    slider?.classList.add("translate-x-0");
+  }
+
+  function close() {
+    slider?.classList.add("-translate-x-full");
+    slider?.classList.remove("translate-x-0");
+  }
+
+  if (mdUp()) open();
+  else close();
+
   toggleButton?.addEventListener("click", () => {
     slider?.classList.toggle("-translate-x-full");
+    slider?.classList.toggle("translate-x-0");
   });
 
-  closeButton?.addEventListener("click", () => {
-    slider?.classList.add("-translate-x-full");
+  closeButton?.addEventListener("click", close);
+
+  // Si cambia el tamaño, lo dejamos consistente
+  window.addEventListener("resize", () => {
+    if (mdUp()) open();
+    else close();
   });
 </script>
