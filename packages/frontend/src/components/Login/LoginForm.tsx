@@ -109,7 +109,7 @@ export default function LoginForm() {
         </p>
       </div>
 
-      <div className="space-y-3">
+      {/* <div className="space-y-3">
         <GoogleSignInButton />
         <div className="relative">
           <div className="absolute inset-0 flex items-center">
@@ -121,7 +121,7 @@ export default function LoginForm() {
             </span>
           </div>
         </div>
-      </div>
+      </div> */}
 
       {/* Login Form */}
       <form
