@@ -96,11 +96,10 @@ export function ExpensesPageManager({
 
 
   return (
-        <div className="w-full">
-        {/* Filtros */}
+      <div className="w-full">
         <div className="mx-auto max-w-6xl rounded-2xl border bg-white p-4 shadow-lg">
             <div className="flex flex-col gap-3">
-            <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-4">
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-3 lg:grid-cols-4">
             <input
                 type="date"
                 value={filters.date}
@@ -122,7 +121,7 @@ export function ExpensesPageManager({
             }
             className="rounded-lg border px-3 py-2 text-sm"
             >
-            <option value="">Todos los métodos de pago</option>
+            <option value="">Métodos de pago</option>
 
             {paymentMethods.map((pm) => (
                 <option key={pm.value} value={pm.value}>
@@ -136,7 +135,7 @@ export function ExpensesPageManager({
                 onChange={(e) => setFilters(f => ({ ...f, provider_id: e.target.value }))}
                 className="rounded-lg border px-3 py-2 text-sm"
             >
-                <option value="">Todos los proveedores</option>
+                <option value="">Proveedores</option>
                 {providers.map(p => (
                 <option key={p.provider_id} value={p.provider_id}>
                     {p.name}
@@ -144,17 +143,6 @@ export function ExpensesPageManager({
                 ))}
             </select>
 
-            <select
-                value={filters.deleted}
-                onChange={(e) =>
-                    setFilters((f) => ({ ...f, deleted: e.target.value as DeletedFilter }))
-                }
-                className="rounded-lg border px-3 py-2 text-sm"
-                >
-                <option value="active">Activos</option>
-                <option value="deleted">Eliminados</option>
-                <option value="all">Todos</option>
-            </select>
 
             <input
                 type="number"
@@ -172,14 +160,23 @@ export function ExpensesPageManager({
                 className="rounded-lg border px-3 py-2 text-sm"
             />
 
+            <select
+                value={filters.deleted}
+                onChange={(e) =>
+                    setFilters((f) => ({ ...f, deleted: e.target.value as DeletedFilter }))
+                }
+                className="rounded-lg border px-3 py-2 text-sm"
+                >
+                <option value="active">Activos</option>
+                <option value="deleted">Eliminados</option>
+                <option value="all">Todos</option>
+            </select>
 
         </div>
-        {/* Tabla */}
         <div className="my-4">
             <ExpenseTableManager data={enrichedExpenses} columns={columns} />
         </div>
 
-        {/* Footer */}
         <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-3 text-sm text-gray-600">
             {loading ? "Buscando..." : `${expenses.length} resultado(s)`}

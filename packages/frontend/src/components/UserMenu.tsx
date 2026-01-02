@@ -54,7 +54,7 @@ export function UserMenu({ email, settingsHref = "/profile" }: Props) {
         aria-haspopup="menu"
         aria-expanded={open}
       >
-        <span className="max-w-[220px] truncate text-sm font-light text-gray-600">
+        <span className="max-w-[220px] truncate text-xs lg:text-sm font-light text-gray-600">
           {email}
         </span>
         <svg fill="currentColor" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24" width="20" height="20">
@@ -80,12 +80,12 @@ export function UserMenu({ email, settingsHref = "/profile" }: Props) {
       {open && (
         <div
           role="menu"
-          className="absolute right-0 z-50 mt-2 w-56 overflow-hidden rounded-lg border border-black/10 bg-white shadow-lg"
+          className="absolute right-0 z-50 mt-2 w-48 overflow-hidden rounded-lg border border-black/10 bg-white shadow-lg"
         >
           <a
             role="menuitem"
             href={settingsHref}
-            className="block px-4 py-3 text-sm text-gray-800 hover:bg-gray-50"
+            className="block px-4 py-3 text-xs text-gray-800 hover:bg-gray-50"
             onClick={() => setOpen(false)}
           >
             Configuración
@@ -97,7 +97,7 @@ export function UserMenu({ email, settingsHref = "/profile" }: Props) {
             role="menuitem"
             type="button"
             onClick={handleLogout}
-            className="w-full px-4 py-3 text-left text-sm text-red-600 hover:bg-red-50"
+            className="w-full px-4 py-3 text-left text-xs text-red-600 hover:bg-red-50"
           >
             Cerrar sesión
           </button>

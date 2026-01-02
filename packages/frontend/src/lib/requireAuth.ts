@@ -7,7 +7,6 @@ export async function requireAuth(Astro: any) {
     headers: { cookie: cookieHeader },
   });
 
-  // según tu endpoint, res.data = { ok, user? }
   if (!res.data?.ok) {
     return null;
   }

@@ -15,13 +15,13 @@ type SoldFilter = "all" | "sold" | "available";
 type TradeInFilter = "all" | "true" | "false";
 
 function buildQuery(filters: {
-  device: string; // marca / modelo combinado
+  device: string;
   imei: string;
-  storage_capacity: string; // number as string
-  battery_health: string; // number as string (mínimo)
+  storage_capacity: string;
+  battery_health: string; 
   color: string;
-  category: string; // select
-  device_type: string; // select
+  category: string; 
+  device_type: string; 
   trade_in: TradeInFilter;
   sold: SoldFilter;
   deleted: DeletedFilter;
@@ -75,8 +75,8 @@ export function PhonesPageManager({ initialData, columns }: Props) {
     storage_capacity: "",
     battery_health: "",
     color: "",
-    category: "", // ✅ "todas" por defecto
-    device_type: "", // ✅ "todos" por defecto
+    category: "",
+    device_type: "",
     trade_in: "all" as TradeInFilter,
     sold: "all" as SoldFilter,
     deleted: "active" as DeletedFilter,
@@ -123,7 +123,7 @@ export function PhonesPageManager({ initialData, columns }: Props) {
         <div className="rounded-2xl border bg-white p-4 shadow-lg">
           <div className="flex flex-col gap-3">
             {/* Filtros */}
-            <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-5">
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-3 lg:grid-cols-5">
               {/* Marca / Modelo */}
               <input
                 className="w-full rounded-lg border px-3 py-2 text-sm outline-none focus:ring-2"

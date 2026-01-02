@@ -80,12 +80,9 @@ export function CustomTable<T>({
   return (
     <div className="w-full text-center">
 
-      {/* ❌ Se quita el DropdownMenu de columnas (ahora está en ActionPanel) */}
-
-      {/* Tabla */}
+      {/*DropdownMenu now in ActionPanel*/}
 
       <div className="h-80 bg-white overflow-auto  border rounded-lg relative">
-        {/* tabla: ocupa TODO el ancho del contenedor */}
         <table className="w-full table-auto">
           <thead>
             <tr>
