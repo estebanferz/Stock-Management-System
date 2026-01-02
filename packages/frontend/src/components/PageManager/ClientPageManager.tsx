@@ -77,11 +77,10 @@ export function ClientsPageManager({ initialData, columns }: Props) {
 
   return (
     <div className="w-full">
-      {/* Buscador */}
       <div className="mx-auto max-w-6xl">
         <div className="rounded-2xl border bg-white p-4 shadow-lg">
           <div className="flex flex-col gap-3">
-            <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-5">
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-3 lg:grid-cols-5">
               <input
                 className="w-full rounded-lg border px-3 py-2 text-sm outline-none focus:ring-2"
                 placeholder="Nombre"
@@ -97,7 +96,7 @@ export function ClientsPageManager({ initialData, columns }: Props) {
                 onChange={(e) =>
                   setFilters((f) => ({
                     ...f,
-                    id_number: e.target.value.replace(/\D/g, ""), // 🔥 clave
+                    id_number: e.target.value.replace(/\D/g, ""),
                   }))
                 }
               />

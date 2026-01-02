@@ -132,8 +132,7 @@ return (
     <div className="mx-auto max-w-6xl">
         <div className="rounded-2xl border bg-white p-4 shadow-lg">
         <div className="flex flex-col gap-3">
-            {/* Filtros */}
-            <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-5">
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-3 lg:grid-cols-5">
             <input
                 type="date"
                 className="w-full rounded-lg border px-3 py-2 text-sm outline-none focus:ring-2"
@@ -178,7 +177,7 @@ return (
                 value={filters.client_id}
                 onChange={(e) => setFilters(f => ({ ...f, client_id: e.target.value }))}
             >
-                <option value="">Todos los clientes</option>
+                <option value="">Clientes</option>
                 {clients.map((c) => (
                 <option key={c.client_id} value={c.client_id}>{c.name}</option>
                 ))}
@@ -189,7 +188,7 @@ return (
                 value={filters.technician_id}
                 onChange={(e) => setFilters(f => ({ ...f, technician_id: e.target.value }))}
             >
-                <option value="">Todos los técnicos</option>
+                <option value="">Técnicos</option>
                 {technicians.map((t) => (
                 <option key={t.technician_id} value={t.technician_id}>{t.name}</option>
                 ))}
@@ -200,7 +199,7 @@ return (
                 value={filters.device_id}
                 onChange={(e) => setFilters(f => ({ ...f, device_id: e.target.value }))}
             >
-                <option value="">Todos los dispositivos</option>
+                <option value="">Dispositivos</option>
                 {phones.map((p) => (
                 <option key={p.device_id} value={p.device_id}>{p.name}</option>
                 ))}
@@ -235,12 +234,10 @@ return (
             </select>
             </div>
 
-            {/* Tabla */}
             <div className="my-4">
-            <RepairTableManager data={data} columns={columns} />
+                <RepairTableManager data={data} columns={columns} />
             </div>
 
-            {/* Footer */}
             <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-3 text-sm text-gray-600">
                 {loading ? "Buscando..." : `${data.length} resultado(s)`}

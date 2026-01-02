@@ -30,21 +30,21 @@ const dolarBlue = await dolarRes.json();
         class="flex min-h-[calc(100vh-var(--header-height))] flex-col md:flex-row"
       >
         <!-- First column -->
-        <div class="w-full p-2 md:w-1/5 md:p-4">
+        <div class="w-full p-2 md:w-1/12 lg:w-1/5 lg:p-4">
           <slot name="primer-columna">
             <!-- Contenido de la primera columna -->
           </slot>
         </div>
 
         <!-- Main content column -->
-        <div class="relative w-full p-2 md:w-3/5 md:p-4">
+        <div class="relative w-full p-2 md:w-9/12 lg:3/5 md:p-4">
           <slot>
             <!-- Contenido principal -->
           </slot>
         </div>
 
         <!-- Third column -->
-        <div class="w-full p-2 md:w-1/5 md:p-4">
+        <div class="w-full p-2 md:w-2/12 lg:w-1/5 lg:p-4">
           <slot name="tercer-columna">
             <!-- Contenido de la tercera columna -->
           </slot>

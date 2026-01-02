@@ -104,10 +104,9 @@ export function SalesPageManager({
 
   return (
     <div className="w-full">
-      {/* Filtros */}
       <div className="mx-auto max-w-6xl rounded-2xl border bg-white p-4 shadow-lg">
         <div className="flex flex-col gap-3">
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-5">
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-3 lg:grid-cols-5">
           <input
             type="date"
             value={filters.date}
@@ -120,7 +119,7 @@ export function SalesPageManager({
             onChange={(e) => setFilters(f => ({ ...f, client_id: e.target.value }))}
             className="rounded-lg border px-3 py-2 text-sm"
           >
-            <option value="">Todos los clientes</option>
+            <option value="">Clientes</option>
             {clients.map(c => (
               <option key={c.client_id} value={c.client_id}>
                 {c.name}
@@ -133,7 +132,7 @@ export function SalesPageManager({
             onChange={(e) => setFilters(f => ({ ...f, seller_id: e.target.value }))}
             className="rounded-lg border px-3 py-2 text-sm"
           >
-            <option value="">Todos los vendedores</option>
+            <option value="">Vendedores</option>
             {sellers.map(s => (
               <option key={s.seller_id} value={s.seller_id}>
                 {s.name}
@@ -146,7 +145,7 @@ export function SalesPageManager({
             onChange={(e) => setFilters(f => ({ ...f, device_id: e.target.value }))}
             className="rounded-lg border px-3 py-2 text-sm"
           >
-            <option value="">Todos los dispositivos</option>
+            <option value="">Dispositivos</option>
             {phones.map(p => (
               <option key={p.device_id} value={p.device_id}>
                 {p.name}
