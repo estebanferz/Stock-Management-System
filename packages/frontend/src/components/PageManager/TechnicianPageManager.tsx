@@ -3,6 +3,7 @@ import { clientApp } from "@/lib/clientAPI";
 import { TechnicianTableManager } from "@/components/TableManager/TechnicianTableManager";
 import { type Technician } from "@server/db/schema"
 import { technicianStates } from "@/components/Structures/technicianStates";
+import ActionPanel from "../ActionPanel";
 
 type Props = {
 initialData: Technician[];
@@ -82,7 +83,7 @@ return (
     <div className="mx-auto max-w-6xl">
         <div className="rounded-2xl border bg-white p-4 shadow-lg">
         <div className="flex flex-col gap-3">
-            <div className="grid grid-cols-1 gap-3 md:grid-cols-3 lg:grid-cols-5">
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-5">
             <input
                 className="w-full rounded-lg border px-3 py-2 text-sm outline-none focus:ring-2"
                 placeholder="Nombre"
@@ -156,6 +157,10 @@ return (
             <div className="flex items-center gap-3 text-sm text-gray-600">
                 {loading ? "Buscando..." : `${data.length} resultado(s)`}
                 {error ? <span className="text-red-600">{error}</span> : null}
+            </div>
+
+            <div className="md:hidden">
+                <ActionPanel/>
             </div>
 
             <button

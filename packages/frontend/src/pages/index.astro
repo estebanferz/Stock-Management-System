@@ -62,7 +62,7 @@ const secondaryData = `
 <LayoutDashboard title="StockManagement" user={user}>
 	<h1 class="px-3 w-full text-left text-4xl text-gray-700 font-bold mt-5 mb-2">Dashboard</h1>
 	<p class="px-3 mb-8 text-sm text-gray-600 font-medium">Resumen completo de tu negocio con métricas clave</p>
-	<div class="px-3 grid grid-cols-4 gap-3 mb-4">
+	<div class="px-3 grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
 		<CustomCard title="Unidades Vendidas" amount={String(units_sold_count)} icon={devicesIcon}/>
 		<CustomCard title="Ingresos Netos" amount=`$${net_income}` icon={moneyIcon}/>
 		<CustomCard title="Ingresos Brutos" amount=`$${gross_income}` icon={grossincome}/>
@@ -76,8 +76,8 @@ const secondaryData = `
 		/>
 	</div>
 	</div>
-	<div class="flex flex-row gap-3 mt-4 px-3 mb-10">
-		<div class="flex justify-center w-1/2 p-3 bg-white hover:bg-gray-50 rounded-2xl shadow-lg">
+	<div class="flex flex-col md:flex-row gap-3 mt-4 px-3 mb-10">
+		<div class="flex justify-center md:w-1/2 p-3 bg-white hover:bg-gray-50 rounded-2xl shadow-lg">
 			<PieChart data={pieChartData} className="flex justify-center" client:load/>
 		</div>
 		<div class="w-1/2">

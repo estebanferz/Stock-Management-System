@@ -26,7 +26,7 @@ const data: any[] = Array.isArray(response.data) ? response.data : [];
         columns={phoneColumns}
     />
 
-    <div class="m-4 mt-20" slot="tercer-columna">
+    <div class="justify-center mt-24 lg:mt-20 hidden md:block" slot="tercer-columna">
         <ActionPanel client:load />
     </div>
 
@@ -43,7 +43,7 @@ const data: any[] = Array.isArray(response.data) ? response.data : [];
         <SheetFormPhone zIndex={60} client:load/>
     </div>
     
-    <div class="group absolute bottom-10 right-10 hidden lg:block">
+    <div class="group absolute translate-y-4 md:translate-y-0 md:bottom-10 right-10 block md:hidden lg:block">
         <span 
         class="absolute bottom-full right-0 mb-2 whitespace-nowrap rounded-md border bg-white px-4 py-2 
            text-sm font-medium text-black shadow-lg

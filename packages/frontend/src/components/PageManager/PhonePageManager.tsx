@@ -4,6 +4,7 @@ import { productTypes } from "@/components/Structures/productTypes";
 import { PhoneTableManager } from "@/components/TableManager/PhoneTableManager";
 import { type Phone } from "@server/db/schema"
 import { phoneCategories } from "@/components/Structures/phoneCategories";
+import ActionPanel from "../ActionPanel";
 
 type Props = {
   initialData: Phone[];
@@ -123,7 +124,7 @@ export function PhonesPageManager({ initialData, columns }: Props) {
         <div className="rounded-2xl border bg-white p-4 shadow-lg">
           <div className="flex flex-col gap-3">
             {/* Filtros */}
-            <div className="grid grid-cols-1 gap-3 md:grid-cols-3 lg:grid-cols-5">
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-5">
               {/* Marca / Modelo */}
               <input
                 className="w-full rounded-lg border px-3 py-2 text-sm outline-none focus:ring-2"
@@ -275,6 +276,10 @@ export function PhonesPageManager({ initialData, columns }: Props) {
               <div className="flex items-center gap-3 text-sm text-gray-600">
                 {loading ? "Buscando..." : `${data.length} resultado(s)`}
                 {error ? <span className="text-red-600">{error}</span> : null}
+              </div>
+              
+              <div className="md:hidden">
+                <ActionPanel/>
               </div>
 
               <button

@@ -17,12 +17,12 @@ export const ActionPanel: React.FC<ActionPanelProps> = () => {
   }, [mode]);
 
   return (
-    <div className="md:w-20 lg:w-full p-4 rounded-xl shadow-lg bg-white border flex flex-col gap-4 sticky top-[var(--header-height)]">
-      <h2 className="text-lg font-semibold text-center md:hidden lg:block">Acciones</h2>
+    <div className="md:w-20 lg:w-full p-4 rounded-xl md:shadow-lg bg-white md:border flex flex-row md:flex-col gap-4 sticky top-[var(--header-height)]">
+      <h2 className="text-lg font-semibold text-center hidden lg:block">Acciones</h2>
 
       <Button
         variant={mode === "edit" ? "default" : "outline"}
-        className="flex items-center gap-2 md:hidden lg:block"
+        className="flex items-center gap-2 hidden lg:block"
         onClick={() => setMode((m) => (m === "edit" ? null : "edit"))}
       >
         Editar
@@ -30,7 +30,7 @@ export const ActionPanel: React.FC<ActionPanelProps> = () => {
       
       <Button
         variant={mode === "edit" ? "default" : "outline"}
-        className="gap-2 hidden md:block lg:hidden w-12"
+        className="gap-2 block lg:hidden w-12"
         onClick={() => setMode((m) => (m === "edit" ? null : "edit"))}
       >
         <svg xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
@@ -40,7 +40,7 @@ export const ActionPanel: React.FC<ActionPanelProps> = () => {
 
       <Button
         variant={mode === "delete" ? "destructive" : "outline"}
-        className="flex items-center gap-2 md:hidden lg:block"
+        className="flex items-center gap-2 hidden lg:block"
         onClick={() => setMode((m) => (m === "delete" ? null : "delete"))}
       >
         Eliminar
@@ -48,7 +48,7 @@ export const ActionPanel: React.FC<ActionPanelProps> = () => {
 
       <Button
         variant={mode === "delete" ? "destructive" : "outline"}
-        className="gap-2 hidden md:block lg:hidden w-12"
+        className="gap-2 block lg:hidden w-12"
         onClick={() => setMode((m) => (m === "delete" ? null : "delete"))}
       >
         <svg xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
