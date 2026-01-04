@@ -126,12 +126,19 @@ return (
       >
         <div className="grid gap-3">
           <Label>Nombre</Label>
-          <Input value={form.name} onChange={(e) => setForm({...form, name: e.target.value})} required />
+          <Input 
+            id="name"
+            form="form-seller"
+            value={form.name} 
+            onChange={(e) => setForm({...form, name: e.target.value})} 
+            required />
         </div>
         
         <div className="grid gap-3">
           <Label>Edad</Label>
           <Input
+            id="name"
+            form="form-seller"
             type="number"
             value={form.age}
             onChange={(e) => setForm({...form, age: e.target.value})}
@@ -140,12 +147,21 @@ return (
 
         <div className="grid gap-3">
           <Label>Email</Label>
-          <Input type="email" value={form.email} onChange={(e) => setForm({...form, email: e.target.value})} required />
+          <Input 
+            id="email"
+            form="form-seller"
+            type="email" 
+            value={form.email} 
+            onChange={(e) => setForm({...form, email: e.target.value})} 
+            placeholder="example@gmail.com"
+            required />
         </div>
 
         <div className="grid gap-3">
           <Label>Telefono</Label>
           <Input
+            id="phone"
+            form="form-seller"
             value={form.phone_number}
             onChange={(e) => {
               setForm({...form, phone_number: e.target.value.replace(/[^\d+]/g, "")})
@@ -162,7 +178,9 @@ return (
 
         <div className="grid gap-3">
           <Label>Comisión</Label>
-          <Input 
+          <Input
+            id="commission"
+            form="form-seller" 
             value={form.commission} 
             onChange={(e) => setForm({...form, commission: e.target.value})} 
             type="number"
@@ -174,6 +192,8 @@ return (
         <div className="grid gap-3">
           <Label>Fecha de contratación</Label>
           <Input
+            id="hire_date"
+            form="form-seller"
             type="date"
             value={hireDate}
             onChange={(e) => setHireDate(e.target.value)}
@@ -183,6 +203,8 @@ return (
         <div className="grid gap-3">
           <Label>Fecha de pago</Label>
           <Input
+            id="pay_date"
+            form="form-seller"
             type="date"
             value={payDate}
             onChange={(e) => setPayDate(e.target.value)}

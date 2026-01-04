@@ -33,7 +33,7 @@ export function SheetFormRepair() {
   const [form, setForm] = useState({
     datetime: "",
     repair_state: "Estado",
-    priority: "",
+    priority: "Prioridad",
     description: "",
     diagnostic: "",
     client_cost: "",
@@ -117,7 +117,7 @@ export function SheetFormRepair() {
   const baseZ = 100
 
 return (
-    <form id="form-sale" onSubmit={handleSubmit}>
+    <form id="form-repair" onSubmit={handleSubmit}>
       <CustomSheet
         title="Agregar Reparación"
         zIndex={60}
@@ -127,7 +127,7 @@ return (
         isModal={true}
         footer={
           <>
-            <Button type="submit" form="form-sale">Agregar</Button>
+            <Button type="submit" form="form-repair">Agregar</Button>
             <SheetClose asChild>
               <Button variant="outline">Cancelar</Button>
             </SheetClose>
@@ -144,17 +144,29 @@ return (
 
         <div className="grid gap-3">
           <Label>Dispositivo</Label>
-          <SheetSelector parentZIndex={baseZ} type="device" currentId={form.device_id} onSelect={(id) => setForm({...form, device_id: id})} />
+          <SheetSelector 
+            parentZIndex={baseZ}
+            type="device" 
+            currentId={form.device_id} 
+            onSelect={(id) => setForm({...form, device_id: id})} />
         </div>
 
         <div className="grid gap-3">
           <Label>Cliente</Label>
-          <SheetSelector   parentZIndex={baseZ} type="client" currentId={form.client_id} onSelect={(id) => setForm({...form, client_id: id})} />
+          <SheetSelector   
+            parentZIndex={baseZ} 
+            type="client" 
+            currentId={form.client_id} 
+            onSelect={(id) => setForm({...form, client_id: id})} />
         </div>
 
         <div className="grid gap-3">
           <Label>Tecnico</Label>
-          <SheetSelector   parentZIndex={baseZ} type="technician" currentId={form.technician_id} onSelect={(id) => setForm({...form, technician_id: id})} />
+          <SheetSelector   
+            parentZIndex={baseZ} 
+            type="technician" 
+            currentId={form.technician_id} 
+            onSelect={(id) => setForm({...form, technician_id: id})} />
         </div>
 
         <div className="grid gap-3">
@@ -195,22 +207,42 @@ return (
 
         <div className="grid gap-3">
           <Label>Descripción</Label>
-          <Input value={form.description} onChange={(e) => setForm({...form, description: e.target.value})} required />
+          <Input 
+            id="description"
+            form="form-repair"
+            value={form.description} 
+            onChange={(e) => setForm({...form, description: e.target.value})} 
+            required />
         </div>
 
         <div className="grid gap-3">
           <Label>Diagnóstico técnico</Label>
-          <Input value={form.diagnostic} onChange={(e) => setForm({...form, diagnostic: e.target.value})} required />
+          <Input 
+            value={form.diagnostic} 
+            onChange={(e) => setForm({...form, diagnostic: e.target.value})} 
+            />
         </div>
 
         <div className="grid gap-3">
             <Label>Costo al cliente</Label>
-            <Input type="number" placeholder="0.00" value={form.client_cost} onChange={(e) => setForm({...form, client_cost: e.target.value})} />
+            <Input
+              id="client_cost"
+              form="form-repair" 
+              type="number" 
+              placeholder="0.00" 
+              value={form.client_cost} 
+              onChange={(e) => setForm({...form, client_cost: e.target.value})} />
         </div>
 
         <div className="grid gap-3">
             <Label>Costo interno</Label>
-            <Input type="number" placeholder="0.00" value={form.internal_cost} onChange={(e) => setForm({...form, internal_cost: e.target.value})} />
+            <Input
+              id="internal_cost"
+              form="form-repair" 
+              type="number" 
+              placeholder="0.00" 
+              value={form.internal_cost} 
+              onChange={(e) => setForm({...form, internal_cost: e.target.value})} />
         </div>
       </CustomSheet>
     </form>

@@ -308,14 +308,22 @@ return (
 
         <div className="grid gap-3">
           <Label>Vendedor</Label>
-          <SheetSelector   parentZIndex={baseZ} type="seller" currentId={form.seller_id} onSelect={(id) => setForm({ ...form, seller_id: id })} />
+          <SheetSelector
+            parentZIndex={baseZ} 
+            type="seller" 
+            currentId={form.seller_id} 
+            onSelect={(id) => setForm({ ...form, seller_id: id })} />
         </div>
 
         <div className="grid gap-3">
             <Label>Cliente</Label>
             <div className="grid grid-cols-3 gap-3">
                 <div className="col-span-2">
-                  <SheetSelector type="client" parentZIndex={baseZ} currentId={form.client_id} onSelect={(id) => setForm({ ...form, client_id: id })} />
+                  <SheetSelector 
+                    type="client" 
+                    parentZIndex={baseZ} 
+                    currentId={form.client_id} 
+                    onSelect={(id) => setForm({ ...form, client_id: id })} />
                 </div>
                 <Button 
                     className="col-span-1" 
@@ -338,17 +346,23 @@ return (
 
         <div className="grid gap-3">
           <Label>Dispositivo</Label>
-          <SheetSelector   parentZIndex={baseZ} type="device" currentId={form.device_id} onSelect={handleDeviceSelect} />
+          <SheetSelector 
+            parentZIndex={baseZ} 
+            type="device" 
+            currentId={form.device_id} 
+            onSelect={handleDeviceSelect} />
         </div>
 
         <div className="grid gap-3">
           <Label>Valor</Label>
-          <Input 
+          <Input
+            id="price"
+            form="form-sale"
             value={form.total_amount} 
             onChange={(e) => setForm({...form, total_amount: e.target.value})} 
             type="number"
             placeholder="0.00" 
-            step="0.01" 
+            step="1.00" 
             required 
           />
         </div>
@@ -389,13 +403,17 @@ return (
 
         <div className="flex items-center justify-between gap-3">
           <Label>Debe</Label>
-          <Checkbox checked={form.debt} onCheckedChange={(checked) => setForm({...form, debt: !!checked})} />
+          <Checkbox 
+            checked={form.debt} 
+            onCheckedChange={(checked) => setForm({...form, debt: !!checked})}/>
         </div>
 
         {form.debt && (
           <div className="grid gap-3">
             <Label>Cuánto debe</Label>
             <Input
+              id="total_debt"
+              form="form-sale"
               type="number"
               value={form.debt_amount}
               onChange={(e) => setForm({...form, debt_amount: e.target.value})}
