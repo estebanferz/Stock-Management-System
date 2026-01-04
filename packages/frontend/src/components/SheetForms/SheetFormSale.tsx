@@ -276,11 +276,12 @@ export function SheetFormSale({zIndex}:SheetFormSaleProps) {
       }
   };
 
+  const baseZ = zIndex ?? 100;
 
 return (
     <form id="form-sale" onSubmit={handleSubmitSale}>
       <CustomSheet
-        className="w-[400px] duration-300 flex flex-col"
+        className="md:w-[400px] duration-300 flex flex-col"
         title="Agregar Venta"
         zIndex={zIndex}
         isOpen={internalOpen}
@@ -307,14 +308,14 @@ return (
 
         <div className="grid gap-3">
           <Label>Vendedor</Label>
-          <SheetSelector type="seller" currentId={form.seller_id} onSelect={(id) => setForm({ ...form, seller_id: id })} />
+          <SheetSelector   parentZIndex={baseZ} type="seller" currentId={form.seller_id} onSelect={(id) => setForm({ ...form, seller_id: id })} />
         </div>
 
         <div className="grid gap-3">
             <Label>Cliente</Label>
             <div className="grid grid-cols-3 gap-3">
                 <div className="col-span-2">
-                  <SheetSelector type="client" currentId={form.client_id} onSelect={(id) => setForm({ ...form, client_id: id })} />
+                  <SheetSelector type="client" parentZIndex={baseZ} currentId={form.client_id} onSelect={(id) => setForm({ ...form, client_id: id })} />
                 </div>
                 <Button 
                     className="col-span-1" 
@@ -332,12 +333,12 @@ return (
         <SheetFormClient
             isOpen={isClientSheetOpen}
             onClose={handleClientFormClose} 
-            zIndex={60}
+            zIndex={baseZ + 2}
             />
 
         <div className="grid gap-3">
           <Label>Dispositivo</Label>
-          <SheetSelector type="device" currentId={form.device_id} onSelect={handleDeviceSelect} />
+          <SheetSelector   parentZIndex={baseZ} type="device" currentId={form.device_id} onSelect={handleDeviceSelect} />
         </div>
 
         <div className="grid gap-3">
@@ -363,7 +364,7 @@ return (
           <SheetFormPhone
             isOpen={isPhoneSheetOpen}
             onClose={handlePhoneFormClose}
-            zIndex={60}
+            zIndex={baseZ + 2}
             depth={1}
           />
         )}

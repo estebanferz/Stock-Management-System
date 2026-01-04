@@ -1,21 +1,19 @@
-import { CustomSheet } from "@/components/CustomSheet"
-import { Button } from "@/components/ui/button"
-import { Label } from "@/components/ui/label"
-import { Input } from "@/components/ui/input"
-import { SheetClose } from "@/components/ui/sheet"
-import { useState, useEffect } from "react"
-import { SheetSelector } from "@/components/SheetForms/SheetSelector"
+import { CustomSheet } from "@/components/CustomSheet";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { useState, useEffect } from "react";
+import { SheetSelector } from "@/components/SheetForms/SheetSelector";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { paymentMethods } from "../Structures/paymentMethods"
-import { ChevronDown} from "lucide-react"
+} from "@/components/ui/dropdown-menu";
+import { paymentMethods } from "../Structures/paymentMethods";
+import { ChevronDown } from "lucide-react";
 import { clientApp } from "@/lib/clientAPI";
-import type { Expense } from "@server/db/schema"
-
+import type { Expense } from "@server/db/schema";
 
 const getLocalTime = () => {
   const today = new Date();
@@ -23,23 +21,30 @@ const getLocalTime = () => {
 };
 
 interface SheetFormExpenseProps {
-    isOpen?: boolean; //optional, nested mode
-    onClose?: () => void; // optional, nested mode
-    zIndex?: number; // optional, nested mode
-    injectedAmount?: string;
-    injectedDescription?: string;
-    depth?: number;
+  isOpen?: boolean; // optional, nested mode
+  onClose?: () => void; // optional, nested mode
+  zIndex?: number; // optional, nested mode
+  injectedAmount?: string;
+  injectedDescription?: string;
+  depth?: number;
 }
 
-export function SheetFormExpense({ isOpen, onClose, zIndex, injectedAmount, injectedDescription, depth=0 }: SheetFormExpenseProps) {
-  const initialLocalTime = getLocalTime()
-  const [date, setDate] = useState(initialLocalTime.toISOString().split("T")[0])
-  const [time, setTime] = useState(initialLocalTime.toISOString().slice(11, 16))
+export function SheetFormExpense({
+  isOpen,
+  onClose,
+  zIndex,
+  injectedAmount,
+  injectedDescription,
+  depth = 0,
+}: SheetFormExpenseProps) {
+  const initialLocalTime = getLocalTime();
+  const [date, setDate] = useState(initialLocalTime.toISOString().split("T")[0]);
+  const [time, setTime] = useState(initialLocalTime.toISOString().slice(11, 16));
   const [receiptFile, setReceiptFile] = useState<File | undefined>(undefined);
 
-  const [internalOpen, setInternalOpen] = useState(false) //Only used when not nested
-  const isNested = onClose !== undefined
-  const controlledOpen = isOpen !== undefined ? isOpen : internalOpen
+  const [internalOpen, setInternalOpen] = useState(false); // Only used when not nested
+  const isNested = onClose !== undefined;
+  const controlledOpen = isOpen !== undefined ? isOpen : internalOpen;
 
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
   const [form, setForm] = useState({
@@ -56,15 +61,12 @@ export function SheetFormExpense({ isOpen, onClose, zIndex, injectedAmount, inje
 
       setEditingExpense(row);
 
-      // Convert Date → String ISO
-      const iso = row.datetime instanceof Date
-        ? row.datetime.toISOString()
-        : String(row.datetime);
+      const iso =
+        row.datetime instanceof Date ? row.datetime.toISOString() : String(row.datetime);
 
       const [d, t] = iso.split("T");
-
-      setDate(d);                   // YYYY-MM-DD
-      setTime(t.slice(0, 5));       // HH:MM
+      setDate(d);
+      setTime(t.slice(0, 5));
 
       setForm({
         category: row.category ?? "",
@@ -82,38 +84,40 @@ export function SheetFormExpense({ isOpen, onClose, zIndex, injectedAmount, inje
   }, []);
 
   useEffect(() => {
-    if (injectedAmount) {
-      setForm({...form, amount: injectedAmount});    }
+    if (injectedAmount !== undefined) {
+      setForm((prev) => ({ ...prev, amount: injectedAmount }));
+    }
   }, [injectedAmount]);
 
   useEffect(() => {
-    if (injectedDescription) {
-      setForm({...form, description: injectedDescription});
+    if (injectedDescription !== undefined) {
+      setForm((prev) => ({ ...prev, description: injectedDescription }));
     }
   }, [injectedDescription]);
 
   const handleOpenChange = (open: boolean) => {
-      if (onClose) {
-          if (!open) onClose()
-          return;
-      } else {
-          setInternalOpen(open)
-      }
-      if (!open && !isNested) {
-        setEditingExpense(null);
-        setReceiptFile(undefined); // Limpiar archivo al cerrar
-        setForm({
-          category: isNested ? "Producto" : "",
-          description: "",
-          amount: "",
-          payment_method: "Pago",
-          provider_id: "",
-        });
-        const newLocalTime = getLocalTime();
-        setDate(newLocalTime.toISOString().split("T")[0]);
-        setTime(newLocalTime.toISOString().slice(11, 16));
-      }
-  }
+    if (onClose) {
+      if (!open) onClose();
+      return;
+    } else {
+      setInternalOpen(open);
+    }
+
+    if (!open && !isNested) {
+      setEditingExpense(null);
+      setReceiptFile(undefined);
+      setForm({
+        category: isNested ? "Producto" : "",
+        description: "",
+        amount: "",
+        payment_method: "Pago",
+        provider_id: "",
+      });
+      const newLocalTime = getLocalTime();
+      setDate(newLocalTime.toISOString().split("T")[0]);
+      setTime(newLocalTime.toISOString().slice(11, 16));
+    }
+  };
 
   const handleSubmitExpense = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -122,19 +126,18 @@ export function SheetFormExpense({ isOpen, onClose, zIndex, injectedAmount, inje
     const datetime = `${date}T${time}:00Z`;
     const expenseData = {
       ...form,
-      datetime: datetime,
-      provider_id: form.provider_id
-        ? Number(form.provider_id)
-        : null,
+      datetime,
+      provider_id: form.provider_id ? Number(form.provider_id) : null,
       receipt: receiptFile,
-    }
-    
+    };
 
     try {
       let response;
 
       if (editingExpense) {
-        response = await clientApp.expense({ id: editingExpense.expense_id }).put(expenseData as any);
+        response = await clientApp.expense({ id: editingExpense.expense_id }).put(
+          expenseData as any
+        );
       } else {
         response = await clientApp.expense.post(expenseData as any);
       }
@@ -154,31 +157,30 @@ export function SheetFormExpense({ isOpen, onClose, zIndex, injectedAmount, inje
     }
   };
 
-  
-  const offset = depth * 380;
   const handlePropagationStop = (e: React.MouseEvent) => {
     e.stopPropagation();
   };
 
-
-return (
+  return (
     <form id="form-expense" onSubmit={handleSubmitExpense}>
       <CustomSheet
         title="Agregar Gasto"
         description="Agregar gasto de dispositivo al sistema"
-        onInteractOutside={(e) => {
-          e.preventDefault(); 
-        }}
-        //Props if nested
-        style={isNested ? { right: `${offset}px` } : {}}
-        side={"right"}
+        onInteractOutside={(e) => e.preventDefault()}
+        side="right"
         isOpen={controlledOpen}
-        onOpenChange={handleOpenChange} 
-        zIndex={zIndex || 10} // Z-index
-        
+        onOpenChange={handleOpenChange}
+        // ✅ clave: nested => NO overlay, y layout responsive lo maneja CustomSheet
+        isModal={!isNested}
+        isNested={isNested}
+        depth={depth}
+        // ✅ no fuerces un zIndex bajo: si viene, usalo; si no, lo calcula CustomSheet
+        zIndex={zIndex}
         footer={
           <>
-            <Button type="submit" form="form-expense" onClick={handlePropagationStop}>{editingExpense ? "Guardar" : "Agregar"}</Button>
+            <Button type="submit" form="form-expense" onClick={handlePropagationStop}>
+              {editingExpense ? "Guardar" : "Agregar"}
+            </Button>
             <Button variant="outline" onClick={() => handleOpenChange(false)}>
               Cancelar
             </Button>
@@ -195,22 +197,30 @@ return (
 
         <div className="grid gap-3">
           <Label>Categoría</Label>
-          <Input value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} required />
+          <Input
+            value={form.category}
+            onChange={(e) => setForm({ ...form, category: e.target.value })}
+            required
+          />
         </div>
 
         <div className="grid gap-3">
           <Label>Descripción</Label>
-          <Input value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} required />
+          <Input
+            value={form.description}
+            onChange={(e) => setForm({ ...form, description: e.target.value })}
+            required
+          />
         </div>
 
         <div className="grid gap-3">
-            <Label>Monto</Label>
-            <Input
-                type="number"
-                value={form.amount}
-                onChange={(e) => setForm({ ...form, amount: e.target.value })}
-                placeholder="0.00"
-            />
+          <Label>Monto</Label>
+          <Input
+            type="number"
+            value={form.amount}
+            onChange={(e) => setForm({ ...form, amount: e.target.value })}
+            placeholder="0.00"
+          />
         </div>
 
         <div className="grid gap-3">
@@ -223,7 +233,10 @@ return (
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               {paymentMethods.map((method) => (
-                <DropdownMenuItem key={method.value} onClick={() => setForm({ ...form, payment_method: method.value })}>
+                <DropdownMenuItem
+                  key={method.value}
+                  onClick={() => setForm({ ...form, payment_method: method.value })}
+                >
                   {method.label}
                 </DropdownMenuItem>
               ))}
@@ -245,12 +258,14 @@ return (
 
         <div className="grid gap-3">
           <Label>Proveedor</Label>
-          <SheetSelector depth={isNested ? depth : 1} type="provider" currentId={form.provider_id} onSelect={(id) => setForm({ ...form, provider_id: id ?? ""  })} />
+          <SheetSelector
+            depth={isNested ? depth : 1}
+            type="provider"
+            currentId={form.provider_id}
+            onSelect={(id) => setForm({ ...form, provider_id: id ?? "" })}
+          />
         </div>
       </CustomSheet>
     </form>
-  )
+  );
 }
-
-
-

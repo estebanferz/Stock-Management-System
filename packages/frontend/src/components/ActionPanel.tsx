@@ -4,25 +4,25 @@ import { Button } from "@/components/ui/button";
 export type ActionMode = "edit" | "delete" | null;
 
 export interface ActionPanelProps {
-  // ya no necesitamos props; es autónomo (emite eventos)
+  enabled?: boolean;
 }
 
-export const ActionPanel: React.FC<ActionPanelProps> = () => {
+export const ActionPanel: React.FC<ActionPanelProps> = ({ enabled = true }) => {
   const [mode, setMode] = useState<ActionMode>(null);
 
-  // Emitir evento al cambiar modo
   useEffect(() => {
+    if (!enabled) return;
     const ev = new CustomEvent("action-mode-change", { detail: mode });
     window.dispatchEvent(ev);
   }, [mode]);
 
   return (
-    <div className="md:w-20 lg:w-full p-4 rounded-xl md:shadow-lg bg-white md:border flex flex-row md:flex-col gap-4 sticky top-[var(--header-height)]">
+    <div className="w-36 md:w-20 lg:w-full p-4 rounded-xl md:shadow-lg bg-white md:border flex flex-row md:flex-col gap-4 sticky top-[var(--header-height)]">
       <h2 className="text-lg font-semibold text-center hidden lg:block">Acciones</h2>
 
       <Button
         variant={mode === "edit" ? "default" : "outline"}
-        className="flex items-center gap-2 hidden lg:block"
+        className="items-center gap-2 hidden lg:block"
         onClick={() => setMode((m) => (m === "edit" ? null : "edit"))}
       >
         Editar
@@ -40,7 +40,7 @@ export const ActionPanel: React.FC<ActionPanelProps> = () => {
 
       <Button
         variant={mode === "delete" ? "destructive" : "outline"}
-        className="flex items-center gap-2 hidden lg:block"
+        className="items-center gap-2 hidden lg:block"
         onClick={() => setMode((m) => (m === "delete" ? null : "delete"))}
       >
         Eliminar
