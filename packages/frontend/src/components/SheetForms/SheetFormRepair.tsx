@@ -114,6 +114,7 @@ export function SheetFormRepair() {
     }
   }
 
+  const baseZ = 100
 
 return (
     <form id="form-sale" onSubmit={handleSubmit}>
@@ -143,17 +144,17 @@ return (
 
         <div className="grid gap-3">
           <Label>Dispositivo</Label>
-          <SheetSelector type="device" currentId={form.device_id} onSelect={(id) => setForm({...form, device_id: id})} />
+          <SheetSelector parentZIndex={baseZ} type="device" currentId={form.device_id} onSelect={(id) => setForm({...form, device_id: id})} />
         </div>
 
         <div className="grid gap-3">
           <Label>Cliente</Label>
-          <SheetSelector type="client" currentId={form.client_id} onSelect={(id) => setForm({...form, client_id: id})} />
+          <SheetSelector   parentZIndex={baseZ} type="client" currentId={form.client_id} onSelect={(id) => setForm({...form, client_id: id})} />
         </div>
 
         <div className="grid gap-3">
           <Label>Tecnico</Label>
-          <SheetSelector type="technician" currentId={form.technician_id} onSelect={(id) => setForm({...form, technician_id: id})} />
+          <SheetSelector   parentZIndex={baseZ} type="technician" currentId={form.technician_id} onSelect={(id) => setForm({...form, technician_id: id})} />
         </div>
 
         <div className="grid gap-3">

@@ -4,6 +4,7 @@ import { ClientsTableManager } from "@/components/TableManager/ClientsTableManag
 import { type Client } from "@server/db/schema"
 import ActionPanel from "../ActionPanel";
 
+
 type Props = {
   initialData: Client[];
   columns: any;

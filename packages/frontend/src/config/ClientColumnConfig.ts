@@ -6,6 +6,7 @@ export const clientColumns: Column<Client>[] = [
   {
     accessorKey: "name",
     header: "Nombre",
+    renderKey: "general",
   },
   
   { 

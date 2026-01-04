@@ -192,12 +192,12 @@ return (
         onInteractOutside={(e) => {
           e.preventDefault(); 
         }}
-        //if nested, add offset for cards ilusion
-        style={isNested ? { right: `${offset}px` } : {}}
         side="right"
         isOpen={controlledOpen}
         onOpenChange={handleOpenChange}
-        zIndex={zIndex || (onClose ? 50 : 10)}
+        isNested={isNested}
+        depth={depth}
+        zIndex={zIndex}
         footer={
           <>
             <Button type="submit" form="form-phone">Agregar</Button>
@@ -324,7 +324,7 @@ return (
       <SheetFormExpense
           isOpen={isExpenseSheetOpen}
           onClose={handleExpenseFormClose} 
-          zIndex={50}
+          zIndex={(zIndex ?? 100) + 2}
           injectedAmount={form.buy_cost}
           injectedDescription={expenseDescription} 
           depth={nextDepth}
