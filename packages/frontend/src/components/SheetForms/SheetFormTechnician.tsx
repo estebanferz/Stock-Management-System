@@ -94,7 +94,7 @@ export function SheetFormTechnician({zIndex}:SheetFormTechnicianProps) {
 
 
 return (
-    <form id="form-sale" onSubmit={handleSubmit}>
+    <form id="form-technician" onSubmit={handleSubmit}>
       <CustomSheet
         title="Agregar Técnico"
         zIndex={zIndex}
@@ -103,7 +103,7 @@ return (
         description="Agregar técnico al sistema"
         footer={
           <>
-            <Button type="submit" form="form-sale">Agregar</Button>
+            <Button type="submit" form="form-technician">Agregar</Button>
             <SheetClose asChild>
               <Button variant="outline">Cancelar</Button>
             </SheetClose>
@@ -112,17 +112,31 @@ return (
       >
         <div className="grid gap-3">
           <Label>Nombre</Label>
-          <Input value={form.name} onChange={(e) => setForm({...form, name: e.target.value})} required />
+          <Input 
+            id="name"
+            form="form-technician"
+            value={form.name} 
+            onChange={(e) => setForm({...form, name: e.target.value})} 
+            required />
         </div>
 
         <div className="grid gap-3">
           <Label>Email</Label>
-          <Input type="email" value={form.email} onChange={(e) => setForm({...form, email: e.target.value})} required />
+          <Input
+            id="email"
+            form="form-technician"
+            type="email" 
+            value={form.email}
+            onChange={(e) => setForm({...form, email: e.target.value})} 
+            placeholder="example@gmail.com"
+            />
         </div>
 
         <div className="grid gap-3">
           <Label>Telefono</Label>
           <Input
+            id="phone"
+            form="form-technician"
             value={form.phone_number}
             onChange={(e) => {
               setForm({...form, phone_number: e.target.value.replace(/[^\d+]/g, "")})
@@ -139,12 +153,19 @@ return (
 
         <div className="grid gap-3">
           <Label>Especialidad</Label>
-          <Input value={form.speciality} onChange={(e) => setForm({...form, speciality: e.target.value})} required />
+          <Input 
+            id="speciality"
+            form="form-technician"
+            value={form.speciality} 
+            onChange={(e) => setForm({...form, speciality: e.target.value})} 
+            required />
         </div>
 
         <div className="flex items-center justify-between gap-3">
           <Label>Activo</Label>
-          <Checkbox checked={form.state} onCheckedChange={(checked) => setForm({...form, state: !!checked})} />
+          <Checkbox 
+            checked={form.state} 
+            onCheckedChange={(checked) => setForm({...form, state: !!checked})} />
         </div>
 
       </CustomSheet>

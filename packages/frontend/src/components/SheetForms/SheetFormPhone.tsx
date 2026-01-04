@@ -217,17 +217,33 @@ return (
 
         <div className="grid gap-3">
           <Label>Marca</Label>
-          <Input value={form.brand} onChange={(e) => setForm({...form, brand: e.target.value})} required />
+          <Input 
+            id="brand"
+            form="form-phone"
+            value={form.brand} 
+            onChange={(e) => setForm({...form, brand: e.target.value})} 
+            required />
         </div>
 
         <div className="grid gap-3">
           <Label>Modelo</Label>
-          <Input value={form.name} onChange={(e) => setForm({...form, name: e.target.value})} required />
+          <Input
+            id="model"
+            form="form-phone"
+            value={form.name} 
+            onChange={(e) => setForm({...form, name: e.target.value})} 
+            required />
         </div>
 
         <div className="grid gap-3">
           <Label>IMEI</Label>
-          <Input value={form.imei} onChange={(e) => setForm({...form, imei: e.target.value})} required />
+          <Input 
+            id="imei"
+            form="form-phone"
+            type="number"
+            value={form.imei} 
+            onChange={(e) => setForm({...form, imei: e.target.value})} 
+            required />
         </div>
         
         <div className="grid gap-3">
@@ -250,7 +266,12 @@ return (
 
         <div className="grid gap-3">
           <Label>Condición Batería</Label>
-          <Input type="number" value={form.battery_health} onChange={(e) => setForm({...form, battery_health: e.target.value})} required />
+          <Input 
+            id="battery"
+            form="form-phone"
+            type="number" 
+            value={form.battery_health} onChange={(e) => setForm({...form, battery_health: e.target.value})} 
+            />
         </div>
 
         <div className="grid gap-3">
@@ -273,7 +294,12 @@ return (
 
         <div className="grid gap-3">
           <Label>Color</Label>
-          <Input value={form.color} onChange={(e) => setForm({...form, color: e.target.value})} required />
+          <Input
+            id="color"
+            form="form-phone" 
+            value={form.color} 
+            onChange={(e) => setForm({...form, color: e.target.value})} 
+            />
         </div>
 
         <div className="grid gap-3">
@@ -296,27 +322,45 @@ return (
 
         <div className="grid gap-3">
           <Label>Precio de venta</Label>
-          <Input type="number" value={form.price} onChange={(e) => setForm({...form, price: e.target.value})} required />
+          <Input
+            id="price"
+            form="form-phone" 
+            type="number" 
+            value={form.price} 
+            onChange={(e) => setForm({...form, price: e.target.value})} 
+            required />
         </div>
 
         <div className="grid gap-3">
             <Label>Costo de compra</Label>
-            <Input 
-                type="number" 
-                value={form.buy_cost} 
-                onChange={(e) => setForm({...form, buy_cost: e.target.value})}
-                required 
+            <Input
+              id="cost"
+              form="form-phone"
+              type="number" 
+              value={form.buy_cost} 
+              onChange={(e) => setForm({...form, buy_cost: e.target.value})}
+              required 
             />
         </div>
 
         <div className="grid gap-3">
           <Label>Deposito</Label>
-          <Input value={form.deposit} onChange={(e) => setForm({...form, deposit: e.target.value})} required />
+          <Input 
+            id="deposit"
+            form="form-phone"
+            value={form.deposit} 
+            onChange={(e) => setForm({...form, deposit: e.target.value})} 
+            required />
         </div>
 
         <div className="flex items-center justify-between gap-3">
           <Label>Vendido</Label>
-          <Checkbox checked={form.sold} onCheckedChange={(checked) => setForm({...form, sold: !!checked})} />
+          <Checkbox 
+            id="sold"
+            form="form-phone"
+            checked={form.sold}
+            onCheckedChange={(checked) => setForm({...form, sold: !!checked})} 
+            required/>
         </div>
       </CustomSheet>
     </form>

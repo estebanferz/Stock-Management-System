@@ -170,11 +170,9 @@ export function SheetFormExpense({
         side="right"
         isOpen={controlledOpen}
         onOpenChange={handleOpenChange}
-        // ✅ clave: nested => NO overlay, y layout responsive lo maneja CustomSheet
         isModal={!isNested}
         isNested={isNested}
         depth={depth}
-        // ✅ no fuerces un zIndex bajo: si viene, usalo; si no, lo calcula CustomSheet
         zIndex={zIndex}
         footer={
           <>
@@ -198,6 +196,8 @@ export function SheetFormExpense({
         <div className="grid gap-3">
           <Label>Categoría</Label>
           <Input
+            id="category"
+            form="form-expense"
             value={form.category}
             onChange={(e) => setForm({ ...form, category: e.target.value })}
             required
@@ -207,19 +207,23 @@ export function SheetFormExpense({
         <div className="grid gap-3">
           <Label>Descripción</Label>
           <Input
+            id="description"
+            form="form-expense"
             value={form.description}
             onChange={(e) => setForm({ ...form, description: e.target.value })}
-            required
           />
         </div>
 
         <div className="grid gap-3">
           <Label>Monto</Label>
           <Input
+            id="amount"
+            form="form-expense"
             type="number"
             value={form.amount}
             onChange={(e) => setForm({ ...form, amount: e.target.value })}
             placeholder="0.00"
+            required
           />
         </div>
 
@@ -247,6 +251,8 @@ export function SheetFormExpense({
         <div className="grid gap-3">
           <Label>Comprobante</Label>
           <Input
+            id="receipt"
+            form="form-expense"
             type="file"
             accept="image/*,application/pdf"
             onChange={(e) => {

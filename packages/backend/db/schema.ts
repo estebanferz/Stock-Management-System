@@ -121,12 +121,12 @@ export const phoneTable = pgTable("phone", {
         .notNull()
         .references(() => userTable.user_id, { onDelete: "cascade" })
 },
-(t) => ({
-    userDeletedIdx: index("phone_user_deleted_idx").on(t.user_id, t.is_deleted),
-    userSoldIdx: index("phone_user_sold_idx").on(t.user_id, t.sold),
-    userDatetimeIdx: index("phone_user_datetime_idx").on(t.user_id, t.datetime),
-    userImeiUnique: uniqueIndex("phone_user_imei_unique").on(t.user_id, t.imei),
-}));
+(t) => [
+    index("phone_user_deleted_idx").on(t.user_id, t.is_deleted),
+    index("phone_user_sold_idx").on(t.user_id, t.sold),
+    index("phone_user_datetime_idx").on(t.user_id, t.datetime),
+    uniqueIndex("phone_user_imei_unique").on(t.user_id, t.imei),
+]);
 export type Phone = InferSelectModel<typeof phoneTable>
 
 export const repairTable = pgTable("repair", {

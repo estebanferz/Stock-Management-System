@@ -118,12 +118,9 @@ export function SheetFormClient({
         side="right"
         isOpen={controlledOpen}
         onOpenChange={handleOpenChange}
-        // ✅ nested sin overlay
         isModal={!isNested}
-        // ✅ deck/stack responsive (lo maneja CustomSheet)
         isNested={isNested}
         depth={depth}
-        // ✅ no pises z-index acá
         zIndex={zIndex}
         footer={
           <>
@@ -141,6 +138,8 @@ export function SheetFormClient({
         <div className="grid gap-3">
           <Label>Nombre</Label>
           <Input
+            id="name"
+            form="form-client"
             value={form.name}
             onChange={(e) => setForm({ ...form, name: e.target.value })}
             required
@@ -150,16 +149,20 @@ export function SheetFormClient({
         <div className="grid gap-3">
           <Label>Email</Label>
           <Input
+            id="email"
+            form="form-client"
             type="email"
             value={form.email}
             onChange={(e) => setForm({ ...form, email: e.target.value })}
-            required
+            placeholder="example@gmail.com"
           />
         </div>
 
         <div className="grid gap-3">
           <Label>Teléfono</Label>
           <Input
+            id="phone"
+            form="form-client"
             value={form.phone_number}
             onChange={(e) =>
               setForm({
@@ -173,15 +176,19 @@ export function SheetFormClient({
             }}
             inputMode="tel"
             placeholder="+54 9 11 1234 5678"
-            required
           />
         </div>
 
         <div className="grid gap-3">
+          <Label>DNI</Label>
           <Input
+            id="dni"
+            form="form-client"
             type="number"
             value={form.id_number}
             onChange={(e) => setForm({ ...form, id_number: e.target.value })}
+            placeholder="41567234"
+            required
           />
         </div>
       </CustomSheet>

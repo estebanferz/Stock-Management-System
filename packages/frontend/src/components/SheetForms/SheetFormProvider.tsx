@@ -132,22 +132,31 @@ return (
       >
         <div className="grid gap-3">
           <Label>Nombre</Label>
-          <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
+          <Input 
+            id="name"
+            form="form-provider"
+            value={form.name} 
+            onChange={(e) => setForm({ ...form, name: e.target.value })} 
+            required />
         </div>
 
         <div className="grid gap-3">
           <Label>Email</Label>
           <Input
+            id="email"
+            form="form-provider"
             type="email"
             value={form.email}
             onChange={(e) => setForm({ ...form, email: e.target.value })}
-            required
+            placeholder="example@gmail.com"
           />
         </div>
 
         <div className="grid gap-3">
           <Label>Telefono</Label>
           <Input
+            id="phone"
+            form="form-provider"
             value={form.phone_number}
             onChange={(e) =>
               setForm({
@@ -167,16 +176,23 @@ return (
 
         <div className="grid grid-cols-2 gap-3">
             <div className="grid gap-3">
+                <Label>Calle</Label>
                 <Input
-                value={form.address_st}
-                onChange={(e) => setForm({ ...form, address_st: e.target.value })}
+                  id="address_st"
+                  form="form-provider"
+                  value={form.address_st}
+                  onChange={(e) => setForm({ ...form, address_st: e.target.value })}
+                  required
                 />
             </div>
             <div className="grid gap-3">
+                <Label>Nro</Label>
                 <Input
-                type="number"
-                value={form.address_number}
-                onChange={(e) => setForm({ ...form, address_number: e.target.value })}
+                  id="address_num"
+                  form="form-provider"
+                  type="number"
+                  value={form.address_number}
+                  onChange={(e) => setForm({ ...form, address_number: e.target.value })}
                 />
             </div>
         </div>
