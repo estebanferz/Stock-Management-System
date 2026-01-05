@@ -34,10 +34,34 @@ export const saleSchema = createInsertSchema(saleTable);
 export const saleInsertDTO = t.Omit(saleSchema, ["sale_id", "tenant_id"]);
 export const saleUpdateDTO = t.Omit(saleSchema, ["sale_id", "tenant_id"]);
 
+export type TenantRole = "owner" | "admin" | "staff";
+
 export type AuthUser = {
   id: number;
   email: string;
   role?: string | null;
+};
+
+export type AuthTenant = {
+  id: number;
+  name: string | null;
+};
+
+export type TenantSettings = {
+  business_name?: string | null;
+  logo_url?: string | null;
+  cuit?: string | null;
+  address?: string | null;
+  default_currency?: string | null;
+  timezone?: string | null;
+  low_stock_threshold_default?: number | null;
+};
+
+export type AuthMe = {
+  user: AuthUser;
+  tenant: AuthTenant;
+  roleInTenant: TenantRole;
+  tenantSettings?: TenantSettings | null; // opcional por ahora
 };
 
 export const SESSION_COOKIE = "session"
