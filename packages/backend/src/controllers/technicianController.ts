@@ -16,7 +16,7 @@ export const technicianController = new Elysia({ prefix: "/technician" })
   .get(
     "/all",
     protectedController(async (ctx) => {
-      const userId = ctx.user.id;
+      const tenantId = ctx.tenantId;
       const query = ctx.query;
 
       const hasFilters =
@@ -28,7 +28,7 @@ export const technicianController = new Elysia({ prefix: "/technician" })
         query.is_deleted;
 
       if (hasFilters) {
-        return await getTechniciansByFilter(userId, {
+        return await getTechniciansByFilter(tenantId, {
           name: query.name,
           speciality: query.speciality,
           state: query.state,
@@ -39,11 +39,11 @@ export const technicianController = new Elysia({ prefix: "/technician" })
         });
       }
 
-      return await getAllTechnicians(userId);
+      return await getAllTechnicians(tenantId);
     }),
     {
       detail: {
-        summary: "Get all technicians in DB (scoped by user)",
+        summary: "Get all technicians in DB (scoped by tenant)",
         tags: ["technicians"],
       },
     }
@@ -52,13 +52,13 @@ export const technicianController = new Elysia({ prefix: "/technician" })
   .get(
     "/:id",
     protectedController(async (ctx) => {
-      const userId = ctx.user.id;
+      const tenantId = ctx.tenantId;
       const techId = Number(ctx.params.id);
-      return await getTechnicianById(userId, techId);
+      return await getTechnicianById(tenantId, techId);
     }),
     {
       detail: {
-        summary: "Get technician details by ID (scoped by user)",
+        summary: "Get technician details by ID (scoped by tenant)",
         tags: ["technicians"],
       },
     }
@@ -67,19 +67,19 @@ export const technicianController = new Elysia({ prefix: "/technician" })
   .post(
     "/",
     protectedController(async (ctx) => {
-      const userId = ctx.user.id;
+      const tenantId = ctx.tenantId;
       const body = ctx.body;
 
       const newTechnician = {
-        user_id: userId,
+        tenant_id: tenantId,
         name: body.name,
-        ...(body.email && { email: body.email }),
-        ...(body.phone_number && { phone_number: body.phone_number }),
+        ...(body.email !== undefined && { email: body.email }),
+        ...(body.phone_number !== undefined && { phone_number: body.phone_number }),
         speciality: body.speciality,
         state: body.state,
       };
 
-      const result = await addTechnician(userId, newTechnician);
+      const result = await addTechnician(tenantId, newTechnician);
       ctx.set.status = 201;
       return result;
     }),
@@ -88,7 +88,7 @@ export const technicianController = new Elysia({ prefix: "/technician" })
         ...technicianInsertDTO.properties,
       }),
       detail: {
-        summary: "Insert a new technician (scoped by user)",
+        summary: "Insert a new technician (scoped by tenant)",
         tags: ["technicians"],
       },
     }
@@ -97,19 +97,19 @@ export const technicianController = new Elysia({ prefix: "/technician" })
   .put(
     "/:id",
     protectedController(async (ctx) => {
-      const userId = ctx.user.id;
+      const tenantId = ctx.tenantId;
       const techId = Number(ctx.params.id);
       const body = ctx.body;
 
       const updTechnician = {
         name: body.name,
-        ...(body.email && { email: body.email }),
-        ...(body.phone_number && { phone_number: body.phone_number }),
+        ...(body.email !== undefined && { email: body.email }),
+        ...(body.phone_number !== undefined && { phone_number: body.phone_number }),
         speciality: body.speciality,
         state: body.state,
       };
 
-      const result = await updateTechnician(userId, techId, updTechnician);
+      const result = await updateTechnician(tenantId, techId, updTechnician);
       ctx.set.status = 200;
       return result;
     }),
@@ -118,7 +118,7 @@ export const technicianController = new Elysia({ prefix: "/technician" })
         ...technicianUpdateDTO.properties,
       }),
       detail: {
-        summary: "Update a technician (scoped by user)",
+        summary: "Update a technician (scoped by tenant)",
         tags: ["technicians"],
       },
     }
@@ -127,10 +127,10 @@ export const technicianController = new Elysia({ prefix: "/technician" })
   .delete(
     "/:id",
     protectedController(async (ctx) => {
-      const userId = ctx.user.id;
+      const tenantId = ctx.tenantId;
       const techId = Number(ctx.params.id);
 
-      const ok = await softDeleteTechnician(userId, techId);
+      const ok = await softDeleteTechnician(tenantId, techId);
       ctx.set.status = ok ? 200 : 404;
       return ok;
     })

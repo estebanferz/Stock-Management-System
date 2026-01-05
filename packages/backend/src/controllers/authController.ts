@@ -27,7 +27,7 @@ export const authController = new Elysia({ prefix: "/auth" })
         );
 
         set.status = 201;
-        return { ok: true, user: result.user };
+        return { ok: true, user: result.user, tenant: result.tenant, roleInTenant: result.roleInTenant };
     },
     {
         body: t.Object({
@@ -54,7 +54,7 @@ export const authController = new Elysia({ prefix: "/auth" })
             60 * 60 * 24 * SESSION_DAYS
         );
 
-        return { ok: true, user: result.user };
+        return { ok: true, user: result.user, tenant: result.tenant, roleInTenant: result.roleInTenant };
     },
     {
         body: t.Object({
@@ -111,7 +111,7 @@ export const authController = new Elysia({ prefix: "/auth" })
             return { ok: false, error: "UNAUTHORIZED" };
         }
 
-        return { ok: true, user: result.user };
+        return { ok: true, user: result.user, tenant: result.tenant, roleInTenant: result.roleInTenant };
     },
     {
         detail: { summary: "Get current user from session", tags: ["auth"] },

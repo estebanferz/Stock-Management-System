@@ -5,7 +5,7 @@ import { clientUpdateDTO } from "@server/db/types";
 import { normalizeShortString } from "@server/src/util/formattersBackend";
 
 export async function getClientByFilter(
-  userId: number,
+  tenantId: number,
   name?: string,
   id_number?: string,
   email?: string,
@@ -17,7 +17,7 @@ export async function getClientByFilter(
     .from(clientTable)
     .where(
       and(
-        eq(clientTable.user_id, userId), // ✅ multi-tenant siempre
+        eq(clientTable.tenant_id, tenantId),
         name ? ilike(clientTable.name, `%${name}%`) : undefined,
         id_number ? eq(clientTable.id_number, Number(id_number)) : undefined,
         email ? ilike(clientTable.email, `%${email}%`) : undefined,
@@ -30,37 +30,37 @@ export async function getClientByFilter(
   return result;
 }
 
-export async function getAllClients(userId: number) {
+export async function getAllClients(tenantId: number) {
   return await db
     .select()
     .from(clientTable)
-    .where(eq(clientTable.user_id, userId))
+    .where(eq(clientTable.tenant_id, tenantId))
     .orderBy(clientTable.client_id);
 }
 
-export const getClientById = async (userId: number, id: number) => {
+export const getClientById = async (tenantId: number, id: number) => {
   const client = await db.query.clientTable.findFirst({
-    where: and(eq(clientTable.user_id, userId), eq(clientTable.client_id, id)), // ✅
+    where: and(eq(clientTable.tenant_id, tenantId), eq(clientTable.client_id, id)),
   });
   return client;
 };
 
 export async function updateClient(
-  userId: number,
+  tenantId: number,
   client_id: number,
   client_upd: typeof clientUpdateDTO.static
 ) {
   const result = await db
     .update(clientTable)
     .set(client_upd)
-    .where(and(eq(clientTable.user_id, userId), eq(clientTable.client_id, client_id))) // ✅
+    .where(and(eq(clientTable.tenant_id, tenantId), eq(clientTable.client_id, client_id)))
     .returning();
 
   return result;
 }
 
 export const addClient = async (newClient: {
-  user_id: number;
+  tenant_id: number;
   name: string;
   email?: string;
   phone_number?: string;
@@ -82,23 +82,23 @@ export const addClient = async (newClient: {
   return result;
 };
 
-export async function softDeleteClient(userId: number, id: number) {
+export async function softDeleteClient(tenantId: number, id: number) {
   const result = await db
     .update(clientTable)
     .set({ is_deleted: true })
-    .where(and(eq(clientTable.user_id, userId), eq(clientTable.client_id, id))) // ✅
+    .where(and(eq(clientTable.tenant_id, tenantId), eq(clientTable.client_id, id)))
     .returning();
 
   return result.length > 0;
 }
 
-export const getDebts = async (userId: number) => {
+export const getDebts = async (tenantId: number) => {
   const debts = await db
     .select()
     .from(clientTable)
     .where(
       and(
-        eq(clientTable.user_id, userId), // ✅
+        eq(clientTable.tenant_id, tenantId),
         gt(clientTable.debt, 0),
         eq(clientTable.is_deleted, false)
       )
@@ -107,7 +107,7 @@ export const getDebts = async (userId: number) => {
   return debts;
 };
 
-export const getTotalDebt = async (userId: number) => {
+export const getTotalDebt = async (tenantId: number) => {
   const debts = await db
     .select({
       total_debt: sql`SUM(${clientTable.debt})`,
@@ -115,7 +115,7 @@ export const getTotalDebt = async (userId: number) => {
     .from(clientTable)
     .where(
       and(
-        eq(clientTable.user_id, userId), // ✅
+        eq(clientTable.tenant_id, tenantId),
         eq(clientTable.is_deleted, false)
       )
     );

@@ -120,6 +120,13 @@
       "when": 1767111006757,
       "tag": "0016_heavy_mandrill",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1767572511455,
+      "tag": "0017_sad_fenris",
+      "breakpoints": true
     }
   ]
 }

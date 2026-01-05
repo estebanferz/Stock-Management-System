@@ -22,31 +22,24 @@ export const saleController = new Elysia({ prefix: "/sale" })
   .get(
     "/all",
     protectedController(async (ctx) => {
-      const userId = ctx.user.id;
+      const tenantId = ctx.tenantId;
       const query = ctx.query;
 
-      if (
-        query.date ||
-        query.client_id ||
-        query.seller_id ||
-        query.device_id ||
-        query.is_deleted
-      ) {
-        return await getSaleByFilter(userId, {
+      if (query.date || query.client_id || query.seller_id || query.device_id || query.is_deleted) {
+        return await getSaleByFilter(tenantId, {
           date: query.date,
           client_id: query.client_id,
           seller_id: query.seller_id,
           device_id: query.device_id,
-          is_deleted:
-            query.is_deleted === undefined ? undefined : query.is_deleted === "true",
+          is_deleted: query.is_deleted === undefined ? undefined : query.is_deleted === "true",
         });
       }
 
-      return await getAllSales(userId);
+      return await getAllSales(tenantId);
     }),
     {
       detail: {
-        summary: "Get all sales in DB (scoped by user)",
+        summary: "Get all sales in DB (scoped by tenant)",
         tags: ["sales"],
       },
     }
@@ -55,13 +48,13 @@ export const saleController = new Elysia({ prefix: "/sale" })
   .get(
     "/:id",
     protectedController(async (ctx) => {
-      const userId = ctx.user.id;
+      const tenantId = ctx.tenantId;
       const saleId = Number(ctx.params.id);
-      return await getSaleById(userId, saleId);
+      return await getSaleById(tenantId, saleId);
     }),
     {
       detail: {
-        summary: "Get sale details by ID (scoped by user)",
+        summary: "Get sale details by ID (scoped by tenant)",
         tags: ["sales"],
       },
     }
@@ -70,25 +63,42 @@ export const saleController = new Elysia({ prefix: "/sale" })
   .post(
     "/",
     protectedController(async (ctx) => {
-      const userId = ctx.user.id;
+      const tenantId = ctx.tenantId;
       const body = ctx.body;
 
       const newSale = {
-        user_id: userId,
         datetime: body.datetime ? new Date(body.datetime) : undefined,
         total_amount: body.total_amount,
         payment_method: body.payment_method,
         debt: body.debt,
-        ...(body.debt_amount && { debt_amount: body.debt_amount }),
+        ...(body.debt_amount !== undefined && { debt_amount: body.debt_amount }),
         client_id: body.client_id,
         seller_id: body.seller_id,
         device_id: body.device_id,
-        ...(body.trade_in_device && { trade_in_device: body.trade_in_device }),
+        ...(body.trade_in_device !== undefined && { trade_in_device: body.trade_in_device }),
       };
 
-      const result = await addSale(userId, newSale);
-      ctx.set.status = 201;
-      return result;
+      try {
+        const result = await addSale(tenantId, newSale);
+        ctx.set.status = 201;
+        return result;
+      } catch (err: any) {
+        const msg = err?.message;
+        if (
+          msg === "INVALID_CLIENT" ||
+          msg === "INVALID_SELLER" ||
+          msg === "INVALID_DEVICE" ||
+          msg === "INVALID_TRADE_IN"
+        ) {
+          ctx.set.status = 400;
+          return { error: msg };
+        }
+        if (msg === "SALE_NOT_FOUND") {
+          ctx.set.status = 404;
+          return { error: msg };
+        }
+        throw err;
+      }
     }),
     {
       body: t.Object({
@@ -96,7 +106,7 @@ export const saleController = new Elysia({ prefix: "/sale" })
         datetime: t.Optional(t.String({ format: "date-time" })),
       }),
       detail: {
-        summary: "Insert a new sale (scoped by user)",
+        summary: "Insert a new sale (scoped by tenant)",
         tags: ["sales"],
       },
     }
@@ -105,7 +115,7 @@ export const saleController = new Elysia({ prefix: "/sale" })
   .put(
     "/:id",
     protectedController(async (ctx) => {
-      const userId = ctx.user.id;
+      const tenantId = ctx.tenantId;
       const saleId = Number(ctx.params.id);
       const body = ctx.body;
 
@@ -114,16 +124,34 @@ export const saleController = new Elysia({ prefix: "/sale" })
         total_amount: body.total_amount,
         payment_method: body.payment_method,
         debt: body.debt,
-        ...(body.debt_amount && { debt_amount: body.debt_amount }),
+        ...(body.debt_amount !== undefined && { debt_amount: body.debt_amount }),
         client_id: body.client_id,
         seller_id: body.seller_id,
         device_id: body.device_id,
-        ...(body.trade_in_device && { trade_in_device: body.trade_in_device }),
+        ...(body.trade_in_device !== undefined && { trade_in_device: body.trade_in_device }),
       };
 
-      const result = await updateSale(userId, saleId, updSale);
-      ctx.set.status = 200;
-      return result;
+      try {
+        const result = await updateSale(tenantId, saleId, updSale);
+        ctx.set.status = 200;
+        return result;
+      } catch (err: any) {
+        const msg = err?.message;
+        if (
+          msg === "INVALID_CLIENT" ||
+          msg === "INVALID_SELLER" ||
+          msg === "INVALID_DEVICE" ||
+          msg === "INVALID_TRADE_IN"
+        ) {
+          ctx.set.status = 400;
+          return { error: msg };
+        }
+        if (msg === "SALE_NOT_FOUND") {
+          ctx.set.status = 404;
+          return { error: msg };
+        }
+        throw err;
+      }
     }),
     {
       body: t.Object({
@@ -131,7 +159,7 @@ export const saleController = new Elysia({ prefix: "/sale" })
         datetime: t.Optional(t.String({ format: "date-time" })),
       }),
       detail: {
-        summary: "Update a sale (scoped by user)",
+        summary: "Update a sale (scoped by tenant)",
         tags: ["sales"],
       },
     }
@@ -140,10 +168,10 @@ export const saleController = new Elysia({ prefix: "/sale" })
   .delete(
     "/:id",
     protectedController(async (ctx) => {
-      const userId = ctx.user.id;
+      const tenantId = ctx.tenantId;
       const saleId = Number(ctx.params.id);
 
-      const ok = await softDeleteSale(userId, saleId);
+      const ok = await softDeleteSale(tenantId, saleId);
       ctx.set.status = ok ? 200 : 404;
       return ok;
     })
@@ -152,27 +180,27 @@ export const saleController = new Elysia({ prefix: "/sale" })
   .get(
     "/gross-income",
     protectedController(async (ctx) => {
-      return await getGrossIncome(ctx.user.id);
+      return await getGrossIncome(ctx.tenantId);
     }),
     {
-      detail: { summary: "Get gross income (scoped by user)", tags: ["sales"] },
+      detail: { summary: "Get gross income (scoped by tenant)", tags: ["sales"] },
     }
   )
 
   .get(
     "/net-income",
     protectedController(async (ctx) => {
-      return await getNetIncome(ctx.user.id);
+      return await getNetIncome(ctx.tenantId);
     }),
     {
-      detail: { summary: "Get net income (scoped by user)", tags: ["sales"] },
+      detail: { summary: "Get net income (scoped by tenant)", tags: ["sales"] },
     }
   )
 
   .get(
     "/sales-by-month",
     protectedController(async (ctx) => {
-      const userId = ctx.user.id;
+      const tenantId = ctx.tenantId;
       const year = Number(ctx.query.year);
 
       if (!year || Number.isNaN(year)) {
@@ -180,12 +208,12 @@ export const saleController = new Elysia({ prefix: "/sale" })
         return { ok: false, message: "Invalid year" };
       }
 
-      return await getSalesByMonth(userId, year);
+      return await getSalesByMonth(tenantId, year);
     }),
     {
       query: t.Object({ year: t.String() }),
       detail: {
-        summary: "Get sales grouped by month for a given year (scoped by user)",
+        summary: "Get sales grouped by month for a given year (scoped by tenant)",
         tags: ["sales"],
       },
     }
@@ -194,11 +222,11 @@ export const saleController = new Elysia({ prefix: "/sale" })
   .get(
     "/products-sold-count",
     protectedController(async (ctx) => {
-      return await getProductSoldCount(ctx.user.id);
+      return await getProductSoldCount(ctx.tenantId);
     }),
     {
       detail: {
-        summary: "Get products sold count (scoped by user)",
+        summary: "Get products sold count (scoped by tenant)",
         tags: ["sales"],
       },
     }
@@ -207,21 +235,21 @@ export const saleController = new Elysia({ prefix: "/sale" })
   .get(
     "/debts",
     protectedController(async (ctx) => {
-      return await getDebts(ctx.user.id);
+      return await getDebts(ctx.tenantId);
     }),
     {
-      detail: { summary: "Get all debts (scoped by user)", tags: ["sales"] },
+      detail: { summary: "Get all debts (scoped by tenant)", tags: ["sales"] },
     }
   )
 
   .get(
     "/total-debt",
     protectedController(async (ctx) => {
-      return await getTotalDebt(ctx.user.id);
+      return await getTotalDebt(ctx.tenantId);
     }),
     {
       detail: {
-        summary: "Get total debt amount (scoped by user)",
+        summary: "Get total debt amount (scoped by tenant)",
         tags: ["sales"],
       },
     }
