@@ -4,7 +4,7 @@ import { ilike, and, eq, or, gte } from "drizzle-orm";
 import { normalizeShortString } from "../util/formattersBackend";
 
 export async function getPhonesByFilter(
-  userId: number,
+  tenantId: number,
   filters: {
     device?: string;
     imei?: string;
@@ -23,7 +23,7 @@ export async function getPhonesByFilter(
     .from(phoneTable)
     .where(
       and(
-        eq(phoneTable.user_id, userId), // ✅ multi-tenant
+        eq(phoneTable.tenant_id, tenantId),
 
         filters.device
           ? or(
@@ -60,24 +60,24 @@ export async function getPhonesByFilter(
     .orderBy(phoneTable.device_id);
 }
 
-export const getAllPhones = async (userId: number) => {
+export const getAllPhones = async (tenantId: number) => {
   return await db
     .select()
     .from(phoneTable)
-    .where(eq(phoneTable.user_id, userId)) // ✅
+    .where(eq(phoneTable.tenant_id, tenantId))
     .orderBy(phoneTable.device_id);
 };
 
-export const getPhoneById = async (userId: number, id: number) => {
+export const getPhoneById = async (tenantId: number, id: number) => {
   const phone = await db.query.phoneTable.findFirst({
-    where: and(eq(phoneTable.user_id, userId), eq(phoneTable.device_id, id)), // ✅
+    where: and(eq(phoneTable.tenant_id, tenantId), eq(phoneTable.device_id, id)),
   });
 
   return phone;
 };
 
 export const addPhone = async (newPhone: {
-  user_id: number; // ✅ requerido
+  tenant_id: number;
   datetime: Date;
   name: string;
   brand: string;
@@ -106,12 +106,11 @@ export const addPhone = async (newPhone: {
     deposit: newPhone.deposit,
   };
 
-  const result = await db.insert(phoneTable).values(normalizedPhone).returning();
-  return result;
+  return await db.insert(phoneTable).values(normalizedPhone).returning();
 };
 
 export async function updatePhone(
-  userId: number,
+  tenantId: number,
   device_id: number,
   phone_upd: {
     name: string;
@@ -146,17 +145,17 @@ export async function updatePhone(
   const result = await db
     .update(phoneTable)
     .set(normalizedPhone)
-    .where(and(eq(phoneTable.user_id, userId), eq(phoneTable.device_id, device_id))) // ✅
+    .where(and(eq(phoneTable.tenant_id, tenantId), eq(phoneTable.device_id, device_id)))
     .returning();
 
   return result;
 }
 
-export async function softDeletePhone(userId: number, id: number) {
+export async function softDeletePhone(tenantId: number, id: number) {
   const result = await db
     .update(phoneTable)
     .set({ is_deleted: true })
-    .where(and(eq(phoneTable.user_id, userId), eq(phoneTable.device_id, id))) // ✅
+    .where(and(eq(phoneTable.tenant_id, tenantId), eq(phoneTable.device_id, id)))
     .returning();
 
   return result.length > 0;

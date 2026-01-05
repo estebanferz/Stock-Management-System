@@ -18,8 +18,7 @@ export const expenseController = new Elysia({ prefix: "/expense" })
   .get(
     "/all",
     protectedController(async (ctx) => {
-      const { query, user } = ctx;
-      const userId = user.id;
+      const { query, tenantId } = ctx;
 
       if (
         query.date ||
@@ -30,7 +29,7 @@ export const expenseController = new Elysia({ prefix: "/expense" })
         query.amount_max ||
         query.is_deleted
       ) {
-        return await getExpensesByFilter(userId, {
+        return await getExpensesByFilter(tenantId, {
           date: query.date,
           category: query.category,
           payment_method: query.payment_method,
@@ -44,11 +43,11 @@ export const expenseController = new Elysia({ prefix: "/expense" })
         });
       }
 
-      return await getAllExpenses(userId);
+      return await getAllExpenses(tenantId);
     }),
     {
       detail: {
-        summary: "Get all expenses in DB",
+        summary: "Get all expenses in DB (scoped by tenant)",
         tags: ["expenses"],
       },
     }
@@ -57,10 +56,9 @@ export const expenseController = new Elysia({ prefix: "/expense" })
   .get(
     "/:id/receipt",
     protectedController(async (ctx) => {
-      const userId = ctx.user.id;
       const expenseId = Number(ctx.params.id);
 
-      const receipt = await getExpenseReceiptFile(userId, expenseId);
+      const receipt = await getExpenseReceiptFile(ctx.tenantId, expenseId);
 
       if (!receipt) {
         ctx.set.status = 404;
@@ -70,8 +68,7 @@ export const expenseController = new Elysia({ prefix: "/expense" })
       const filename = safeFilename(receipt.originalName);
 
       ctx.set.headers["Content-Type"] = receipt.mime;
-      ctx.set.headers["Content-Disposition"] =
-        `inline; filename="${filename}"`;
+      ctx.set.headers["Content-Disposition"] = `inline; filename="${filename}"`;
 
       return receipt.file;
     })
@@ -80,11 +77,14 @@ export const expenseController = new Elysia({ prefix: "/expense" })
   .post(
     "/",
     protectedController(async (ctx) => {
-      const { body, set, user } = ctx;
-      const userId = user.id;
+      const { body, set } = ctx;
 
       try {
-        const result = await addExpenseWithReceipt(userId, body);
+        const result = await addExpenseWithReceipt(
+          ctx.tenantId,
+          ctx.user.id,
+          body
+        );
         set.status = 201;
         return result;
       } catch (err: any) {
@@ -97,6 +97,10 @@ export const expenseController = new Elysia({ prefix: "/expense" })
             set.status = 400;
             return { error: "El archivo supera los 5MB" };
 
+          case "PROVIDER_NOT_FOUND":
+            set.status = 400;
+            return { error: "Proveedor inválido" };
+
           default:
             throw err;
         }
@@ -107,12 +111,10 @@ export const expenseController = new Elysia({ prefix: "/expense" })
         ...expenseInsertDTO.properties,
         datetime: t.Optional(t.String({ format: "date-time" })),
         receipt: t.Optional(t.File()),
-        provider_id: t.Optional(
-          t.Union([t.Integer(), t.Null(), t.String()])
-        ),
+        provider_id: t.Optional(t.Union([t.Integer(), t.Null(), t.String()])),
       }),
       detail: {
-        summary: "Insert a new expense (with optional receipt)",
+        summary: "Insert a new expense (with optional receipt) (scoped by tenant)",
         tags: ["expenses"],
       },
     }
@@ -121,13 +123,13 @@ export const expenseController = new Elysia({ prefix: "/expense" })
   .put(
     "/:id",
     protectedController(async (ctx) => {
-      const { body, set, user } = ctx;
-      const userId = user.id;
+      const { body, set } = ctx;
       const expenseId = Number(ctx.params.id);
 
       try {
         const result = await updateExpenseWithReceipt(
-          userId,
+          ctx.tenantId,
+          ctx.user.id,
           expenseId,
           body
         );
@@ -147,6 +149,10 @@ export const expenseController = new Elysia({ prefix: "/expense" })
             set.status = 404;
             return { error: "Gasto no encontrado" };
 
+          case "PROVIDER_NOT_FOUND":
+            set.status = 400;
+            return { error: "Proveedor inválido" };
+
           default:
             throw err;
         }
@@ -157,12 +163,10 @@ export const expenseController = new Elysia({ prefix: "/expense" })
         ...expenseUpdateDTO.properties,
         datetime: t.Optional(t.String({ format: "date-time" })),
         receipt: t.Optional(t.File()),
-        provider_id: t.Optional(
-          t.Union([t.Integer(), t.Null(), t.String()])
-        ),
+        provider_id: t.Optional(t.Union([t.Integer(), t.Null(), t.String()])),
       }),
       detail: {
-        summary: "Update an expense (with optional receipt)",
+        summary: "Update an expense (with optional receipt) (scoped by tenant)",
         tags: ["expenses"],
       },
     }
@@ -171,10 +175,9 @@ export const expenseController = new Elysia({ prefix: "/expense" })
   .delete(
     "/:id",
     protectedController(async (ctx) => {
-      const userId = ctx.user.id;
       const expenseId = Number(ctx.params.id);
 
-      const ok = await softDeleteExpense(userId, expenseId);
+      const ok = await softDeleteExpense(ctx.tenantId, expenseId);
       ctx.set.status = ok ? 200 : 404;
       return ok;
     })
@@ -183,11 +186,11 @@ export const expenseController = new Elysia({ prefix: "/expense" })
   .get(
     "/expenses",
     protectedController(async (ctx) => {
-      return await getTotalExpenses(ctx.user.id);
+      return await getTotalExpenses(ctx.tenantId);
     }),
     {
       detail: {
-        summary: "Get expenses",
+        summary: "Get expenses (scoped by tenant)",
         tags: ["sales"],
       },
     }

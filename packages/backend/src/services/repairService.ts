@@ -3,32 +3,32 @@ import { repairTable, clientTable, technicianTable, phoneTable } from "@server/d
 import { and, eq, sql, gte, lte } from "drizzle-orm";
 import { normalizeShortString } from "../util/formattersBackend";
 
-// ---- ownership checks (multi-tenant hard rule) ----
-async function assertOwnedClient(userId: number, clientId: number) {
+// ---- tenant checks (multi-tenant hard rule) ----
+async function assertTenantClient(tenantId: number, clientId: number) {
   const rows = await db
     .select({ id: clientTable.client_id })
     .from(clientTable)
-    .where(and(eq(clientTable.user_id, userId), eq(clientTable.client_id, clientId)))
+    .where(and(eq(clientTable.tenant_id, tenantId), eq(clientTable.client_id, clientId)))
     .limit(1);
 
   if (!rows[0]) throw new Error("INVALID_CLIENT");
 }
 
-async function assertOwnedTechnician(userId: number, technicianId: number) {
+async function assertTenantTechnician(tenantId: number, technicianId: number) {
   const rows = await db
     .select({ id: technicianTable.technician_id })
     .from(technicianTable)
-    .where(and(eq(technicianTable.user_id, userId), eq(technicianTable.technician_id, technicianId)))
+    .where(and(eq(technicianTable.tenant_id, tenantId), eq(technicianTable.technician_id, technicianId)))
     .limit(1);
 
   if (!rows[0]) throw new Error("INVALID_TECHNICIAN");
 }
 
-async function assertOwnedDevice(userId: number, deviceId: number) {
+async function assertTenantDevice(tenantId: number, deviceId: number) {
   const rows = await db
     .select({ id: phoneTable.device_id })
     .from(phoneTable)
-    .where(and(eq(phoneTable.user_id, userId), eq(phoneTable.device_id, deviceId)))
+    .where(and(eq(phoneTable.tenant_id, tenantId), eq(phoneTable.device_id, deviceId)))
     .limit(1);
 
   if (!rows[0]) throw new Error("INVALID_DEVICE");
@@ -37,7 +37,7 @@ async function assertOwnedDevice(userId: number, deviceId: number) {
 // ------------------ queries ------------------
 
 export const getRepairsByFilter = async (
-  userId: number,
+  tenantId: number,
   filters: {
     date?: string;
     repair_state?: string;
@@ -55,16 +55,14 @@ export const getRepairsByFilter = async (
     .from(repairTable)
     .where(
       and(
-        eq(repairTable.user_id, userId), // ✅ multi-tenant always
+        eq(repairTable.tenant_id, tenantId),
 
         filters.date ? eq(sql`date(${repairTable.datetime})`, filters.date) : undefined,
         filters.repair_state ? eq(repairTable.repair_state, filters.repair_state) : undefined,
         filters.priority ? eq(repairTable.priority, filters.priority) : undefined,
 
         filters.client_id ? eq(repairTable.client_id, Number(filters.client_id)) : undefined,
-        filters.technician_id
-          ? eq(repairTable.technician_id, Number(filters.technician_id))
-          : undefined,
+        filters.technician_id ? eq(repairTable.technician_id, Number(filters.technician_id)) : undefined,
         filters.device_id ? eq(repairTable.device_id, Number(filters.device_id)) : undefined,
 
         filters.cost_min ? gte(repairTable.client_cost, filters.cost_min) : undefined,
@@ -76,20 +74,19 @@ export const getRepairsByFilter = async (
     .orderBy(repairTable.datetime);
 };
 
-export const getAllRepairs = async (userId: number) => {
+export const getAllRepairs = async (tenantId: number) => {
   return await db
     .select()
     .from(repairTable)
-    .where(eq(repairTable.user_id, userId)) // ✅
+    .where(eq(repairTable.tenant_id, tenantId))
     .orderBy(repairTable.repair_id);
 };
 
 // ------------------ mutations ------------------
 
 export const addRepair = async (
-  userId: number,
+  tenantId: number,
   newRepair: {
-    user_id: number; // viene desde controller
     datetime?: Date;
     repair_state: string;
     priority: string;
@@ -102,14 +99,14 @@ export const addRepair = async (
     device_id: number;
   }
 ) => {
-  // ✅ validate ownership before insert
-  await assertOwnedClient(userId, newRepair.client_id);
-  await assertOwnedTechnician(userId, newRepair.technician_id);
-  await assertOwnedDevice(userId, newRepair.device_id);
+  // ✅ validate tenant ownership before insert
+  await assertTenantClient(tenantId, newRepair.client_id);
+  await assertTenantTechnician(tenantId, newRepair.technician_id);
+  await assertTenantDevice(tenantId, newRepair.device_id);
 
   const normalizedRepair = {
     ...newRepair,
-    user_id: userId, // ✅ fuerza server-side (no confíes en body)
+    tenant_id: tenantId, // ✅ fuerza server-side
     repair_state: normalizeShortString(newRepair.repair_state),
     priority: normalizeShortString(newRepair.priority),
     description: newRepair.description.trim(),
@@ -118,12 +115,11 @@ export const addRepair = async (
     internal_cost: newRepair.internal_cost,
   };
 
-  const result = await db.insert(repairTable).values(normalizedRepair).returning();
-  return result;
+  return await db.insert(repairTable).values(normalizedRepair).returning();
 };
 
 export const updateRepair = async (
-  userId: number,
+  tenantId: number,
   repair_id: number,
   repair_upd: {
     repair_state?: string;
@@ -139,13 +135,13 @@ export const updateRepair = async (
   }
 ) => {
   if (repair_upd.client_id !== undefined) {
-    await assertOwnedClient(userId, repair_upd.client_id);
+    await assertTenantClient(tenantId, repair_upd.client_id);
   }
   if (repair_upd.technician_id !== undefined) {
-    await assertOwnedTechnician(userId, repair_upd.technician_id);
+    await assertTenantTechnician(tenantId, repair_upd.technician_id);
   }
   if (repair_upd.device_id !== undefined) {
-    await assertOwnedDevice(userId, repair_upd.device_id);
+    await assertTenantDevice(tenantId, repair_upd.device_id);
   }
 
   const normalizedUpd = {
@@ -156,20 +152,18 @@ export const updateRepair = async (
     diagnostic: repair_upd.diagnostic ? repair_upd.diagnostic.trim() : undefined,
   };
 
-  const result = await db
+  return await db
     .update(repairTable)
     .set(normalizedUpd)
-    .where(and(eq(repairTable.user_id, userId), eq(repairTable.repair_id, repair_id))) // ✅
+    .where(and(eq(repairTable.tenant_id, tenantId), eq(repairTable.repair_id, repair_id)))
     .returning();
-
-  return result;
 };
 
-export async function softDeleteRepair(userId: number, id: number) {
+export async function softDeleteRepair(tenantId: number, id: number) {
   const result = await db
     .update(repairTable)
     .set({ is_deleted: true })
-    .where(and(eq(repairTable.user_id, userId), eq(repairTable.repair_id, id))) // ✅
+    .where(and(eq(repairTable.tenant_id, tenantId), eq(repairTable.repair_id, id)))
     .returning();
 
   return result.length > 0;

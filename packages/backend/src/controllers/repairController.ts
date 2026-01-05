@@ -15,7 +15,7 @@ export const repairController = new Elysia({ prefix: "/repair" })
   .get(
     "/all",
     protectedController(async (ctx) => {
-      const userId = ctx.user.id;
+      const tenantId = ctx.tenantId;
       const query = ctx.query;
 
       if (
@@ -29,7 +29,7 @@ export const repairController = new Elysia({ prefix: "/repair" })
         query.cost_max ||
         query.is_deleted
       ) {
-        return await getRepairsByFilter(userId, {
+        return await getRepairsByFilter(tenantId, {
           date: query.date,
           repair_state: query.repair_state,
           priority: query.priority,
@@ -38,18 +38,15 @@ export const repairController = new Elysia({ prefix: "/repair" })
           device_id: query.device_id,
           cost_min: query.cost_min,
           cost_max: query.cost_max,
-          is_deleted:
-            query.is_deleted === undefined
-              ? undefined
-              : query.is_deleted === "true",
+          is_deleted: query.is_deleted === undefined ? undefined : query.is_deleted === "true",
         });
       }
 
-      return await getAllRepairs(userId);
+      return await getAllRepairs(tenantId);
     }),
     {
       detail: {
-        summary: "Get all repairs in DB (scoped by user)",
+        summary: "Get all repairs in DB (scoped by tenant)",
         tags: ["repairs"],
       },
     }
@@ -58,11 +55,10 @@ export const repairController = new Elysia({ prefix: "/repair" })
   .post(
     "/",
     protectedController(async (ctx) => {
-      const userId = ctx.user.id;
+      const tenantId = ctx.tenantId;
       const body = ctx.body;
 
       const newRepair = {
-        user_id: userId,
         datetime: body.datetime ? new Date(body.datetime) : undefined,
         repair_state: body.repair_state,
         priority: body.priority,
@@ -75,9 +71,21 @@ export const repairController = new Elysia({ prefix: "/repair" })
         device_id: body.device_id,
       };
 
-      const result = await addRepair(userId, newRepair);
-      ctx.set.status = 201;
-      return result;
+      try {
+        const result = await addRepair(tenantId, newRepair);
+        ctx.set.status = 201;
+        return result;
+      } catch (err: any) {
+        if (
+          err?.message === "INVALID_CLIENT" ||
+          err?.message === "INVALID_TECHNICIAN" ||
+          err?.message === "INVALID_DEVICE"
+        ) {
+          ctx.set.status = 400;
+          return { error: err.message };
+        }
+        throw err;
+      }
     }),
     {
       body: t.Object({
@@ -85,7 +93,7 @@ export const repairController = new Elysia({ prefix: "/repair" })
         datetime: t.String({ format: "date-time" }),
       }),
       detail: {
-        summary: "Insert a new repair (scoped by user)",
+        summary: "Insert a new repair (scoped by tenant)",
         tags: ["repairs"],
       },
     }
@@ -94,7 +102,7 @@ export const repairController = new Elysia({ prefix: "/repair" })
   .put(
     "/:id",
     protectedController(async (ctx) => {
-      const userId = ctx.user.id;
+      const tenantId = ctx.tenantId;
       const repairId = Number(ctx.params.id);
       const body = ctx.body;
 
@@ -111,9 +119,21 @@ export const repairController = new Elysia({ prefix: "/repair" })
         device_id: body.device_id,
       };
 
-      const result = await updateRepair(userId, repairId, updRepair);
-      ctx.set.status = 200;
-      return result;
+      try {
+        const result = await updateRepair(tenantId, repairId, updRepair);
+        ctx.set.status = 200;
+        return result;
+      } catch (err: any) {
+        if (
+          err?.message === "INVALID_CLIENT" ||
+          err?.message === "INVALID_TECHNICIAN" ||
+          err?.message === "INVALID_DEVICE"
+        ) {
+          ctx.set.status = 400;
+          return { error: err.message };
+        }
+        throw err;
+      }
     }),
     {
       body: t.Object({
@@ -121,7 +141,7 @@ export const repairController = new Elysia({ prefix: "/repair" })
         datetime: t.String({ format: "date-time" }),
       }),
       detail: {
-        summary: "Update a repair (scoped by user)",
+        summary: "Update a repair (scoped by tenant)",
         tags: ["repairs"],
       },
     }
@@ -130,10 +150,9 @@ export const repairController = new Elysia({ prefix: "/repair" })
   .delete(
     "/:id",
     protectedController(async (ctx) => {
-      const userId = ctx.user.id;
       const repairId = Number(ctx.params.id);
 
-      const ok = await softDeleteRepair(userId, repairId);
+      const ok = await softDeleteRepair(ctx.tenantId, repairId);
       ctx.set.status = ok ? 200 : 404;
       return ok;
     })

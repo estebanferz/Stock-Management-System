@@ -18,8 +18,7 @@ export const clientController = new Elysia({ prefix: "/client" })
   .get(
     "/all",
     protectedController(async (ctx) => {
-      const { query, user } = ctx;
-      const userId = user.id;
+      const { query, tenantId } = ctx;
 
       if (
         query.name ||
@@ -34,7 +33,7 @@ export const clientController = new Elysia({ prefix: "/client" })
         }
 
         return await getClientByFilter(
-          userId,
+          tenantId,
           query.name,
           query.id_number,
           query.email,
@@ -43,11 +42,11 @@ export const clientController = new Elysia({ prefix: "/client" })
         );
       }
 
-      return await getAllClients(userId);
+      return await getAllClients(tenantId);
     }),
     {
       detail: {
-        summary: "Get all clients in DB (scoped by user)",
+        summary: "Get all clients in DB (scoped by tenant)",
         tags: ["clients"],
       },
     }
@@ -56,12 +55,11 @@ export const clientController = new Elysia({ prefix: "/client" })
   .get(
     "/:id",
     protectedController(async (ctx) => {
-      const userId = ctx.user.id;
-      return await getClientById(userId, Number(ctx.params.id));
+      return await getClientById(ctx.tenantId, Number(ctx.params.id));
     }),
     {
       detail: {
-        summary: "Get client details by ID (scoped by user)",
+        summary: "Get client details by ID (scoped by tenant)",
         tags: ["clients"],
       },
     }
@@ -70,11 +68,10 @@ export const clientController = new Elysia({ prefix: "/client" })
   .post(
     "/",
     protectedController(async (ctx) => {
-      const { body, set, user } = ctx;
-      const userId = user.id;
+      const { body, set } = ctx;
 
       const newClient = {
-        user_id: userId,
+        tenant_id: ctx.tenantId,
         name: body.name,
         id_number: Number(body.id_number),
         ...(body.email && { email: body.email }),
@@ -90,10 +87,10 @@ export const clientController = new Elysia({ prefix: "/client" })
     {
       body: t.Object({
         ...clientInsertDTO.properties,
-        id_number: t.String(),
+        id_number: t.String(), // vos lo estás mandando como string
       }),
       detail: {
-        summary: "Insert a new client (scoped by user)",
+        summary: "Insert a new client (scoped by tenant)",
         tags: ["clients"],
       },
     }
@@ -102,11 +99,9 @@ export const clientController = new Elysia({ prefix: "/client" })
   .put(
     "/:id",
     protectedController(async (ctx) => {
-      const { body, set, user } = ctx;
-      const userId = user.id;
+      const { body, set } = ctx;
 
       const updClient = {
-        user_id: userId,
         name: body.name,
         id_number: Number(body.id_number),
         ...(body.email && { email: body.email }),
@@ -115,7 +110,7 @@ export const clientController = new Elysia({ prefix: "/client" })
         ...(body.debt && { debt: body.debt }),
       };
 
-      const result = await updateClient(userId, Number(ctx.params.id), updClient);
+      const result = await updateClient(ctx.tenantId, Number(ctx.params.id), updClient);
       set.status = 200;
       return result;
     }),
@@ -125,7 +120,7 @@ export const clientController = new Elysia({ prefix: "/client" })
         id_number: t.String(),
       }),
       detail: {
-        summary: "Update a client (scoped by user)",
+        summary: "Update a client (scoped by tenant)",
         tags: ["clients"],
       },
     }
@@ -134,8 +129,7 @@ export const clientController = new Elysia({ prefix: "/client" })
   .delete(
     "/:id",
     protectedController(async (ctx) => {
-      const userId = ctx.user.id;
-      const ok = await softDeleteClient(userId, Number(ctx.params.id));
+      const ok = await softDeleteClient(ctx.tenantId, Number(ctx.params.id));
       ctx.set.status = ok ? 200 : 404;
       return ok;
     })
@@ -144,11 +138,11 @@ export const clientController = new Elysia({ prefix: "/client" })
   .get(
     "/debts",
     protectedController(async (ctx) => {
-      return await getDebts(ctx.user.id);
+      return await getDebts(ctx.tenantId);
     }),
     {
       detail: {
-        summary: "Get all debts (scoped by user)",
+        summary: "Get all debts (scoped by tenant)",
         tags: ["sales"],
       },
     }
@@ -157,11 +151,11 @@ export const clientController = new Elysia({ prefix: "/client" })
   .get(
     "/total-debt",
     protectedController(async (ctx) => {
-      return await getTotalDebt(ctx.user.id);
+      return await getTotalDebt(ctx.tenantId);
     }),
     {
       detail: {
-        summary: "Get total debt amount (scoped by user)",
+        summary: "Get total debt amount (scoped by tenant)",
         tags: ["sales"],
       },
     }

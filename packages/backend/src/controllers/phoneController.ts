@@ -16,7 +16,7 @@ export const phoneController = new Elysia({ prefix: "/phone" })
   .get(
     "/all",
     protectedController(async (ctx) => {
-      const userId = ctx.user.id;
+      const tenantId = ctx.tenantId;
       const query = ctx.query;
 
       if (
@@ -31,7 +31,7 @@ export const phoneController = new Elysia({ prefix: "/phone" })
         query.sold ||
         query.is_deleted
       ) {
-        return await getPhonesByFilter(userId, {
+        return await getPhonesByFilter(tenantId, {
           device: query.device,
           imei: query.imei,
           color: query.color,
@@ -41,16 +41,15 @@ export const phoneController = new Elysia({ prefix: "/phone" })
           device_type: query.device_type,
           trade_in: query.trade_in,
           sold: query.sold,
-          is_deleted:
-            query.is_deleted === undefined ? undefined : query.is_deleted === "true",
+          is_deleted: query.is_deleted === undefined ? undefined : query.is_deleted === "true",
         });
       }
 
-      return await getAllPhones(userId);
+      return await getAllPhones(tenantId);
     }),
     {
       detail: {
-        summary: "Get all phones in DB (scoped by user)",
+        summary: "Get all phones in DB (scoped by tenant)",
         tags: ["phones"],
       },
     }
@@ -59,14 +58,12 @@ export const phoneController = new Elysia({ prefix: "/phone" })
   .get(
     "/:id",
     protectedController(async (ctx) => {
-      const userId = ctx.user.id;
       const phoneId = Number(ctx.params.id);
-
-      return await getPhoneById(userId, phoneId);
+      return await getPhoneById(ctx.tenantId, phoneId);
     }),
     {
       detail: {
-        summary: "Get phone details by ID (scoped by user)",
+        summary: "Get phone details by ID (scoped by tenant)",
         tags: ["phones"],
       },
     }
@@ -75,25 +72,25 @@ export const phoneController = new Elysia({ prefix: "/phone" })
   .post(
     "/",
     protectedController(async (ctx) => {
-      const userId = ctx.user.id;
+      const tenantId = ctx.tenantId;
       const body = ctx.body;
 
       const newPhone = {
-        user_id: userId,
+        tenant_id: tenantId,
         datetime: new Date(body.datetime),
         name: body.name,
         brand: body.brand,
         imei: body.imei,
         device_type: body.device_type,
-        ...(body.battery_health && { battery_health: body.battery_health }),
-        ...(body.storage_capacity && { storage_capacity: body.storage_capacity }),
+        ...(body.battery_health !== undefined && { battery_health: body.battery_health }),
+        ...(body.storage_capacity !== undefined && { storage_capacity: body.storage_capacity }),
         ...(body.color && { color: body.color }),
         category: body.category,
         price: body.price,
         buy_cost: body.buy_cost,
         deposit: body.deposit,
-        ...(body.sold && { sold: body.sold }),
-        ...(body.trade_in && { trade_in: body.trade_in }),
+        ...(body.sold !== undefined && { sold: body.sold }),
+        ...(body.trade_in !== undefined && { trade_in: body.trade_in }),
       };
 
       const result = await addPhone(newPhone);
@@ -106,7 +103,7 @@ export const phoneController = new Elysia({ prefix: "/phone" })
         datetime: t.String({ format: "date-time" }),
       }),
       detail: {
-        summary: "Insert a new phone (scoped by user)",
+        summary: "Insert a new phone (scoped by tenant)",
         tags: ["phones"],
       },
     }
@@ -115,29 +112,29 @@ export const phoneController = new Elysia({ prefix: "/phone" })
   .put(
     "/:id",
     protectedController(async (ctx) => {
-      const userId = ctx.user.id;
+      const tenantId = ctx.tenantId;
       const phoneId = Number(ctx.params.id);
       const body = ctx.body;
 
       const updPhone = {
-        user_id: userId, // ✅ consistente con POST (evita bugs)
+        // ✅ no tenant_id acá, se decide por ctx.tenantId
         datetime: new Date(body.datetime),
         name: body.name,
         brand: body.brand,
         imei: body.imei,
         device_type: body.device_type,
-        ...(body.battery_health && { battery_health: body.battery_health }),
-        ...(body.storage_capacity && { storage_capacity: body.storage_capacity }),
+        ...(body.battery_health !== undefined && { battery_health: body.battery_health }),
+        ...(body.storage_capacity !== undefined && { storage_capacity: body.storage_capacity }),
         ...(body.color && { color: body.color }),
         category: body.category,
         price: body.price,
         buy_cost: body.buy_cost,
         deposit: body.deposit,
-        ...(body.sold && { sold: body.sold }),
-        ...(body.trade_in && { trade_in: body.trade_in }),
+        ...(body.sold !== undefined && { sold: body.sold }),
+        ...(body.trade_in !== undefined && { trade_in: body.trade_in }),
       };
 
-      const result = await updatePhone(userId, phoneId, updPhone);
+      const result = await updatePhone(tenantId, phoneId, updPhone);
 
       ctx.set.status = 200;
       return result;
@@ -148,7 +145,7 @@ export const phoneController = new Elysia({ prefix: "/phone" })
         datetime: t.String({ format: "date-time" }),
       }),
       detail: {
-        summary: "Update a phone (scoped by user)",
+        summary: "Update a phone (scoped by tenant)",
         tags: ["phones"],
       },
     }
@@ -157,10 +154,9 @@ export const phoneController = new Elysia({ prefix: "/phone" })
   .delete(
     "/:id",
     protectedController(async (ctx) => {
-      const userId = ctx.user.id;
       const phoneId = Number(ctx.params.id);
 
-      const ok = await softDeletePhone(userId, phoneId);
+      const ok = await softDeletePhone(ctx.tenantId, phoneId);
       ctx.set.status = ok ? 200 : 404;
       return ok;
     })

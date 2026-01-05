@@ -1,0 +1,74 @@
+---
+import "@/styles/tailwind.css";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import LayoutProfile from "@/layouts/LayoutProfile.astro";
+import { requireAuth } from "@/lib/requireAuth";
+
+const user = await requireAuth(Astro);
+if (!user) return Astro.redirect("/login");
+const initials = (email: string) => {
+  const name = email.split("@")[0] || "";
+  const parts = name.replace(/[._-]+/g, " ").trim().split(" ").filter(Boolean);
+  const a = (parts[0]?.[0] ?? email[0] ?? "?").toUpperCase();
+  const b = (parts[1]?.[0] ?? parts[0]?.[1] ?? "").toUpperCase();
+  return `${a}${b}`.trim();
+};
+---
+
+<LayoutProfile>
+  <Fragment slot="content">
+    <div class="grid gap-6">
+      <div class="flex flex-col content-center items-end">
+        <div
+          class="relative flex h-36 w-36 items-center justify-center rounded-full bg-slate-200 font-sans text-6xl text-black"
+        >
+          <span>{initials(user.email)}</span>
+        </div>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Información general</CardTitle>
+          <CardDescription>Tu cuenta y preferencias</CardDescription>
+        </CardHeader>
+
+        <CardContent>
+          <div class="flex flex-col gap-3">
+            <div class="flex flex-row items-center gap-4">
+              <Badge variant="outline" className="text-lg font-sans bg-slate-100">
+                {user.email}
+              </Badge>
+              <Button variant="outline" disabled>Editar</Button>
+            </div>
+
+            <div class="flex flex-row items-center gap-4">
+              <Badge variant="outline" className="text-lg font-sans bg-slate-100">
+                Rol: {user.role}
+              </Badge>
+              <Button variant="outline" disabled>Editar</Button>
+            </div>
+
+            <div class="flex flex-row items-center gap-4">
+              <Badge variant="outline" className="text-lg font-sans bg-slate-100">
+                User ID: {user.id}
+              </Badge>
+            </div>
+          </div>
+        </CardContent>
+
+        <CardFooter className="border-t px-6 py-4">
+          <Button disabled>Save</Button>
+        </CardFooter>
+      </Card>
+    </div>
+  </Fragment>
+</LayoutProfile>

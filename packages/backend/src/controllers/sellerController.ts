@@ -16,7 +16,7 @@ export const sellerController = new Elysia({ prefix: "/seller" })
   .get(
     "/all",
     protectedController(async (ctx) => {
-      const userId = ctx.user.id;
+      const tenantId = ctx.tenantId;
       const query = ctx.query;
 
       if (
@@ -29,7 +29,7 @@ export const sellerController = new Elysia({ prefix: "/seller" })
         query.commission_max ||
         query.is_deleted
       ) {
-        return await getSellersByFilter(userId, {
+        return await getSellersByFilter(tenantId, {
           name: query.name,
           hire_date: query.hire_date,
           pay_date: query.pay_date,
@@ -38,17 +38,15 @@ export const sellerController = new Elysia({ prefix: "/seller" })
           commission_min: query.commission_min,
           commission_max: query.commission_max,
           is_deleted:
-            query.is_deleted === undefined
-              ? undefined
-              : query.is_deleted === "true",
+            query.is_deleted === undefined ? undefined : query.is_deleted === "true",
         });
       }
 
-      return await getAllSellers(userId);
+      return await getAllSellers(tenantId);
     }),
     {
       detail: {
-        summary: "Get all sellers in DB (scoped by user)",
+        summary: "Get all sellers in DB (scoped by tenant)",
         tags: ["sellers"],
       },
     }
@@ -57,21 +55,21 @@ export const sellerController = new Elysia({ prefix: "/seller" })
   .post(
     "/",
     protectedController(async (ctx) => {
-      const userId = ctx.user.id;
+      const tenantId = ctx.tenantId;
       const body = ctx.body;
 
       const newSeller = {
-        user_id: userId,
+        tenant_id: tenantId,
         name: body.name,
         age: body.age,
-        ...(body.email && { email: body.email }),
-        ...(body.phone_number && { phone_number: body.phone_number }),
-        ...(body.hire_date && { hire_date: body.hire_date }),
-        ...(body.pay_date && { pay_date: body.pay_date }),
-        ...(body.commission && { commission: body.commission }),
+        ...(body.email !== undefined && { email: body.email }),
+        ...(body.phone_number !== undefined && { phone_number: body.phone_number }),
+        ...(body.hire_date !== undefined && { hire_date: body.hire_date }),
+        ...(body.pay_date !== undefined && { pay_date: body.pay_date }),
+        ...(body.commission !== undefined && { commission: body.commission }),
       };
 
-      const result = await addSeller(userId, newSeller);
+      const result = await addSeller(tenantId, newSeller);
       ctx.set.status = 201;
       return result;
     }),
@@ -80,7 +78,7 @@ export const sellerController = new Elysia({ prefix: "/seller" })
         ...sellerInsertDTO.properties,
       }),
       detail: {
-        summary: "Insert a new seller (scoped by user)",
+        summary: "Insert a new seller (scoped by tenant)",
         tags: ["sellers"],
       },
     }
@@ -89,14 +87,14 @@ export const sellerController = new Elysia({ prefix: "/seller" })
   .get(
     "/:id",
     protectedController(async (ctx) => {
-      const userId = ctx.user.id;
+      const tenantId = ctx.tenantId;
       const sellerId = Number(ctx.params.id);
 
-      return await getSellerById(userId, sellerId);
+      return await getSellerById(tenantId, sellerId);
     }),
     {
       detail: {
-        summary: "Get seller details by ID (scoped by user)",
+        summary: "Get seller details by ID (scoped by tenant)",
         tags: ["sellers"],
       },
     }
@@ -105,21 +103,21 @@ export const sellerController = new Elysia({ prefix: "/seller" })
   .put(
     "/:id",
     protectedController(async (ctx) => {
-      const userId = ctx.user.id;
+      const tenantId = ctx.tenantId;
       const sellerId = Number(ctx.params.id);
       const body = ctx.body;
 
       const updSeller = {
         name: body.name,
         age: body.age,
-        ...(body.email && { email: body.email }),
-        ...(body.phone_number && { phone_number: body.phone_number }),
-        ...(body.pay_date && { pay_date: body.pay_date }),
-        ...(body.hire_date && { hire_date: body.hire_date }),
-        ...(body.commission && { commission: body.commission }),
+        ...(body.email !== undefined && { email: body.email }),
+        ...(body.phone_number !== undefined && { phone_number: body.phone_number }),
+        ...(body.pay_date !== undefined && { pay_date: body.pay_date }),
+        ...(body.hire_date !== undefined && { hire_date: body.hire_date }),
+        ...(body.commission !== undefined && { commission: body.commission }),
       };
 
-      const result = await updateSeller(userId, sellerId, updSeller);
+      const result = await updateSeller(tenantId, sellerId, updSeller);
       ctx.set.status = 200;
       return result;
     }),
@@ -128,7 +126,7 @@ export const sellerController = new Elysia({ prefix: "/seller" })
         ...sellerUpdateDTO.properties,
       }),
       detail: {
-        summary: "Update a seller (scoped by user)",
+        summary: "Update a seller (scoped by tenant)",
         tags: ["sellers"],
       },
     }
@@ -137,10 +135,10 @@ export const sellerController = new Elysia({ prefix: "/seller" })
   .delete(
     "/:id",
     protectedController(async (ctx) => {
-      const userId = ctx.user.id;
+      const tenantId = ctx.tenantId;
       const sellerId = Number(ctx.params.id);
 
-      const ok = await softDeleteSeller(userId, sellerId);
+      const ok = await softDeleteSeller(tenantId, sellerId);
       ctx.set.status = ok ? 200 : 404;
       return ok;
     })

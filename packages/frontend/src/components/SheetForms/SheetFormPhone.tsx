@@ -140,7 +140,6 @@ useEffect(() => {
     e.stopPropagation()
 
     const datetime = `${date}T${time}:00Z`;
-    alert("Submitting phone with datetime:" + datetime);
     const phoneData = {
       ...form,
       datetime: datetime,
@@ -359,8 +358,7 @@ return (
             id="sold"
             form="form-phone"
             checked={form.sold}
-            onCheckedChange={(checked) => setForm({...form, sold: !!checked})} 
-            required/>
+            onCheckedChange={(checked) => setForm({...form, sold: !!checked})} />
         </div>
       </CustomSheet>
     </form>

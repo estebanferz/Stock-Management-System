@@ -16,7 +16,7 @@ export const providerController = new Elysia({ prefix: "/provider" })
   .get(
     "/all",
     protectedController(async (ctx) => {
-      const userId = ctx.user.id;
+      const tenantId = ctx.tenantId;
       const query = ctx.query;
 
       const hasFilters =
@@ -27,21 +27,20 @@ export const providerController = new Elysia({ prefix: "/provider" })
         query.is_deleted;
 
       if (hasFilters) {
-        return await getProviderByFilter(userId, {
+        return await getProviderByFilter(tenantId, {
           name: query.name,
           email: query.email,
           phone_number: query.phone_number,
           address: query.address,
-          is_deleted:
-            query.is_deleted === undefined ? undefined : query.is_deleted === "true",
+          is_deleted: query.is_deleted === undefined ? undefined : query.is_deleted === "true",
         });
       }
 
-      return await getAllProviders(userId);
+      return await getAllProviders(tenantId);
     }),
     {
       detail: {
-        summary: "Get all providers in DB (scoped by user)",
+        summary: "Get all providers in DB (scoped by tenant)",
         tags: ["providers"],
       },
     }
@@ -50,14 +49,12 @@ export const providerController = new Elysia({ prefix: "/provider" })
   .get(
     "/:id",
     protectedController(async (ctx) => {
-      const userId = ctx.user.id;
       const providerId = Number(ctx.params.id);
-
-      return await getProviderById(userId, providerId);
+      return await getProviderById(ctx.tenantId, providerId);
     }),
     {
       detail: {
-        summary: "Get provider details by ID (scoped by user)",
+        summary: "Get provider details by ID (scoped by tenant)",
         tags: ["providers"],
       },
     }
@@ -66,11 +63,11 @@ export const providerController = new Elysia({ prefix: "/provider" })
   .post(
     "/",
     protectedController(async (ctx) => {
-      const userId = ctx.user.id;
+      const tenantId = ctx.tenantId;
       const body = ctx.body;
 
       const newProvider = {
-        user_id: userId,
+        tenant_id: tenantId,
         name: body.name,
         phone_number: body.phone_number,
         ...(body.email && { email: body.email }),
@@ -86,7 +83,7 @@ export const providerController = new Elysia({ prefix: "/provider" })
         ...providerInsertDTO.properties,
       }),
       detail: {
-        summary: "Insert a new provider (scoped by user)",
+        summary: "Insert a new provider (scoped by tenant)",
         tags: ["providers"],
       },
     }
@@ -95,7 +92,6 @@ export const providerController = new Elysia({ prefix: "/provider" })
   .put(
     "/:id",
     protectedController(async (ctx) => {
-      const userId = ctx.user.id;
       const providerId = Number(ctx.params.id);
       const body = ctx.body;
 
@@ -106,7 +102,7 @@ export const providerController = new Elysia({ prefix: "/provider" })
         address: body.address,
       };
 
-      const result = await updateProvider(userId, providerId, updProvider);
+      const result = await updateProvider(ctx.tenantId, providerId, updProvider);
       ctx.set.status = 200;
       return result;
     }),
@@ -115,7 +111,7 @@ export const providerController = new Elysia({ prefix: "/provider" })
         ...providerUpdateDTO.properties,
       }),
       detail: {
-        summary: "Update a provider (scoped by user)",
+        summary: "Update a provider (scoped by tenant)",
         tags: ["providers"],
       },
     }
@@ -124,10 +120,9 @@ export const providerController = new Elysia({ prefix: "/provider" })
   .delete(
     "/:id",
     protectedController(async (ctx) => {
-      const userId = ctx.user.id;
       const providerId = Number(ctx.params.id);
 
-      const ok = await softDeleteProvider(userId, providerId);
+      const ok = await softDeleteProvider(ctx.tenantId, providerId);
       ctx.set.status = ok ? 200 : 404;
       return ok;
     })
