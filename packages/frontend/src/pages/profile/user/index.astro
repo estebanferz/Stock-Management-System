@@ -4,7 +4,6 @@ import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -13,78 +12,95 @@ import LayoutProfile from "@/layouts/LayoutProfile.astro";
 import { requireAuth } from "@/lib/requireAuth";
 
 import UserSettingsForm from "@/components/UserSettingsForm";
-import TenantSettingsForm from "@/components/TenantSettingsForm";
 
 const auth = await requireAuth(Astro);
 if (!auth) return Astro.redirect("/login");
 
-const { user, tenant, roleInTenant, tenantSettings } = auth.auth;
+const { user, roleInTenant } = auth.auth;
+
+const initials = (email: string) => {
+  const name = email.split("@")[0] || "";
+  const parts = name.replace(/[._-]+/g, " ").trim().split(" ").filter(Boolean);
+  const a = (parts[0]?.[0] ?? email[0] ?? "?").toUpperCase();
+  const b = (parts[1]?.[0] ?? parts[0]?.[1] ?? "").toUpperCase();
+  return `${a}${b}`.trim();
+};
+
+const fmtDate = (d: any) => {
+  try {
+    if (!d) return "—";
+    const dt = typeof d === "string" ? new Date(d) : d;
+    if (Number.isNaN(dt?.getTime?.())) return "—";
+    return dt.toLocaleString("es-AR", { dateStyle: "short", timeStyle: "short" });
+  } catch {
+    return "—";
+  }
+};
+
+const boolLabel = (b: any) => (b === true ? "Sí" : b === false ? "No" : "—");
 ---
 
 <LayoutProfile>
   <Fragment slot="content">
     <div class="grid gap-6">
-      <section class="space-y-6">
-        <Card id="usuario" className="rounded-2xl shadow-sm scroll-mt-24">
-          <CardHeader>
-            <CardTitle>Usuario</CardTitle>
-            <CardDescription>Información de tu cuenta</CardDescription>
-          </CardHeader>
-
-          <CardContent className="grid gap-4">
-            <div class="grid gap-4 sm:grid-cols-2">
-              <div class="rounded-xl border bg-white p-4">
-                <div class="text-xs uppercase tracking-wide text-slate-500">Email</div>
-                <div class="pt-1 text-base font-medium text-slate-900">{user.email}</div>
-              </div>
-
-              <div class="rounded-xl border bg-white p-4">
-                <div class="text-xs uppercase tracking-wide text-slate-500">User ID</div>
-                <div class="pt-1 font-mono text-sm text-slate-900">{user.id}</div>
-              </div>
-
-              <div class="rounded-xl border bg-white p-4">
-                <div class="text-xs uppercase tracking-wide text-slate-500">Rol app</div>
-                <div class="pt-2">
-                  <Badge variant="outline" className="bg-slate-50">{user.role ?? "user"}</Badge>
-                </div>
-              </div>
-
-              <div class="rounded-xl border bg-white p-4">
-                <div class="text-xs uppercase tracking-wide text-slate-500">Rol empresa</div>
-                <div class="pt-2">
-                  <Badge variant="outline" className="bg-slate-50">{roleInTenant ?? "staff"}</Badge>
-                </div>
-              </div>
+      <Card className="rounded-2xl shadow-sm">
+        <CardHeader>
+          <div class="flex items-start gap-4">
+            <div class="flex h-14 w-14 items-center justify-center rounded-full bg-slate-100 text-base font-semibold text-slate-800">
+              {initials(user.email)}
             </div>
 
-            <div class="rounded-2xl border bg-white p-4">
-              <div class="mb-3 text-sm font-medium text-slate-900">Preferencias</div>
-              <UserSettingsForm client:load user={user} roleInTenant={roleInTenant} />
+            <div class="min-w-0">
+              <CardTitle className="truncate">Perfil personal</CardTitle>
+              <CardDescription>Información de tu cuenta y preferencias</CardDescription>
+
+              <div class="pt-2 flex flex-wrap items-center gap-2">
+                <Badge variant="outline" className="bg-slate-50">
+                  User ID: {user.id}
+                </Badge>
+                <Badge variant="outline" className="bg-slate-50">
+                  Rol app: {user.role ?? "user"}
+                </Badge>
+                <Badge variant="outline" className="bg-slate-50">
+                  Rol empresa: {roleInTenant ?? "staff"}
+                </Badge>
+              </div>
             </div>
-          </CardContent>
+          </div>
+        </CardHeader>
 
-          <CardFooter className="flex justify-end border-t px-6 py-4">
-            <span class="text-xs text-slate-500">Los cambios se guardan con el botón “Guardar cambios”.</span>
-          </CardFooter>
-        </Card>
+        <CardContent className="grid gap-4 sm:grid-cols-2">
+          <div class="rounded-xl border bg-white p-4">
+            <div class="text-xs uppercase tracking-wide text-slate-500">Email</div>
+            <div class="pt-1 text-base font-medium text-slate-900">{user.email}</div>
+          </div>
 
-        <Card id="empresa" className="rounded-2xl shadow-sm scroll-mt-24">
-          <CardHeader>
-            <CardTitle>Empresa</CardTitle>
-            <CardDescription>Configuración del tenant</CardDescription>
-          </CardHeader>
+          <div class="rounded-xl border bg-white p-4">
+            <div class="text-xs uppercase tracking-wide text-slate-500">Activo</div>
+            <div class="pt-1 text-base font-medium text-slate-900">{boolLabel(user.is_active)}</div>
+          </div>
 
-          <CardContent className="rounded-2xl border bg-white p-4">
-            <TenantSettingsForm
-              client:load
-              tenant={tenant}
-              roleInTenant={roleInTenant}
-              tenantSettings={tenantSettings}
-            />
-          </CardContent>
-        </Card>
-      </section>
+          <div class="rounded-xl border bg-white p-4">
+            <div class="text-xs uppercase tracking-wide text-slate-500">Creado</div>
+            <div class="pt-1 text-sm text-slate-900">{fmtDate(user.created_at)}</div>
+          </div>
+
+          <div class="rounded-xl border bg-white p-4">
+            <div class="text-xs uppercase tracking-wide text-slate-500">Último login</div>
+            <div class="pt-1 text-sm text-slate-900">{fmtDate(user.last_login)}</div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className="rounded-2xl shadow-sm">
+        <CardHeader>
+          <CardTitle>Preferencias</CardTitle>
+        </CardHeader>
+
+        <CardContent className="rounded-2xl border bg-white p-4">
+          <UserSettingsForm client:load user={user} roleInTenant={roleInTenant} />
+        </CardContent>
+      </Card>
     </div>
   </Fragment>
 </LayoutProfile>

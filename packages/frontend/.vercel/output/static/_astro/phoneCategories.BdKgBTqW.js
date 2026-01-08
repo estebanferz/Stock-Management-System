@@ -1,1 +1,0 @@
-const a=[{value:"just-one",label:"Unitario"},{value:"with-stock",label:"Con stock"}],l=[{value:"as-is",label:"As is"},{value:"sellado",label:"Sellado"},{value:"usado",label:"Usado"}];export{a,l as p};

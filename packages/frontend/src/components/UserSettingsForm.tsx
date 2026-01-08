@@ -12,7 +12,6 @@ type Props = {
 type UserSettings = {
   display_name: string | null;
   phone: string | null;
-  locale: string;
   email_notifications: boolean;
 };
 
@@ -20,7 +19,7 @@ function safeData(res: any) {
   return res?.data ?? res;
 }
 
-export default function UserSettingsForm({ user, roleInTenant }: Props) {
+export default function UserSettingsForm({ roleInTenant }: Props) {
   const [loading, setLoading] = useState(false);
   const [initialLoaded, setInitialLoaded] = useState(false);
   const [status, setStatus] = useState<{ kind: "ok" | "err"; msg: string } | null>(null);
@@ -28,7 +27,6 @@ export default function UserSettingsForm({ user, roleInTenant }: Props) {
   const [form, setForm] = useState<UserSettings>({
     display_name: null,
     phone: null,
-    locale: "es-AR",
     email_notifications: true,
   });
 
@@ -39,20 +37,20 @@ export default function UserSettingsForm({ user, roleInTenant }: Props) {
         const res = await clientApp.user.me.get();
         const payload = safeData(res);
 
-        // Esperamos shape: { user, userSettings, roleInTenant, tenant_id }
         const s = payload?.userSettings;
 
         if (!alive) return;
+
         if (s) {
           setForm({
             display_name: s.display_name ?? null,
             phone: s.phone ?? null,
-            locale: s.locale ?? "es-AR",
             email_notifications: Boolean(s.email_notifications),
           });
         }
+
         setInitialLoaded(true);
-      } catch (e) {
+      } catch {
         if (!alive) return;
         setInitialLoaded(true);
         setStatus({ kind: "err", msg: "No se pudo cargar la configuración del usuario." });
@@ -64,9 +62,8 @@ export default function UserSettingsForm({ user, roleInTenant }: Props) {
   }, []);
 
   const dirty = useMemo(() => {
-    // Si todavía no cargó, evitamos que muestre “cambios”
-    if (!initialLoaded) return false;
-    return true; // (permitimos guardar igual; el backend hace upsert)
+    // Permitimos guardar igual; el backend hace upsert.
+    return initialLoaded;
   }, [initialLoaded]);
 
   async function onSave() {
@@ -76,15 +73,13 @@ export default function UserSettingsForm({ user, roleInTenant }: Props) {
       const body = {
         display_name: form.display_name,
         phone: form.phone,
-        locale: form.locale,
         email_notifications: form.email_notifications,
       };
 
-      // Eden Treaty suele ser .put({ body })
-      await clientApp.user.me.put({ body } as any);
+      await clientApp.user.me.put(body as any);
 
       setStatus({ kind: "ok", msg: "Guardado." });
-    } catch (e) {
+    } catch {
       setStatus({ kind: "err", msg: "Error al guardar cambios." });
     } finally {
       setLoading(false);
@@ -112,17 +107,7 @@ export default function UserSettingsForm({ user, roleInTenant }: Props) {
           />
         </div>
 
-        <div className="grid gap-2">
-          <Label>Idioma / Locale</Label>
-          <Input
-            value={form.locale}
-            placeholder="es-AR"
-            onChange={(e) => setForm((p) => ({ ...p, locale: e.target.value }))}
-          />
-          <p className="text-xs text-slate-500">Ej: es-AR, en-US</p>
-        </div>
-
-        <div className="grid gap-2">
+        <div className="grid gap-2 sm:col-span-2">
           <Label>Notificaciones por email</Label>
           <div className="flex items-center gap-2 rounded-md border p-3">
             <input
@@ -130,9 +115,7 @@ export default function UserSettingsForm({ user, roleInTenant }: Props) {
               checked={form.email_notifications}
               onChange={(e) => setForm((p) => ({ ...p, email_notifications: e.target.checked }))}
             />
-            <span className="text-sm text-slate-700">
-              Recibir notificaciones al correo
-            </span>
+            <span className="text-sm text-slate-700">Recibir notificaciones al correo</span>
           </div>
         </div>
       </div>
@@ -141,7 +124,9 @@ export default function UserSettingsForm({ user, roleInTenant }: Props) {
         <div
           className={[
             "rounded-lg border p-3 text-sm",
-            status.kind === "ok" ? "border-emerald-200 bg-emerald-50 text-emerald-900" : "border-red-200 bg-red-50 text-red-900",
+            status.kind === "ok"
+              ? "border-emerald-200 bg-emerald-50 text-emerald-900"
+              : "border-red-200 bg-red-50 text-red-900",
           ].join(" ")}
         >
           {status.msg}

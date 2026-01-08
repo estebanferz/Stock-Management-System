@@ -22,8 +22,8 @@ export const userSettingsTable = pgTable("user_settings", {
     .primaryKey()
     .references(() => userTable.user_id, { onDelete: "cascade" }),
 
-  display_name: varchar({ length: 120 }),      // nombre para UI (no legal)
-  phone: varchar({ length: 32 }),              // opcional
+  display_name: varchar({ length: 120 }),
+  phone: varchar({ length: 32 }),
   email_notifications: boolean().notNull().default(true),
   updated_at: timestamp({ withTimezone: true }).notNull().defaultNow(),
 });

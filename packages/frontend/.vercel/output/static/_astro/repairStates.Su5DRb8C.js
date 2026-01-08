@@ -1,1 +1,0 @@
-const e=[{value:"baja",label:"Baja"},{value:"media",label:"Media"},{value:"alta",label:"Alta"},{value:"urgente",label:"Urgente"}],a=[{value:"pendiente",label:"Pendiente"},{value:"en-reparacion",label:"En reparación"},{value:"listo",label:"Listo"},{value:"entregado",label:"Entregado"}];export{e as p,a as r};

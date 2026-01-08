@@ -10,7 +10,13 @@ import {
 import { eq, and, gt, isNull } from "drizzle-orm";
 import { randomBytes } from "crypto";
 import { hash, compare } from "bcryptjs";
-import { SESSION_DAYS, ROUNDS } from "@server/db/types";
+import {
+  SESSION_DAYS,
+  ROUNDS,
+  type AuthTenant,
+  type TenantSettings,
+  type AuthUser,
+} from "@server/db/types";
 
 function normalizeEmail(email: string) {
   return email.trim().toLowerCase();
@@ -26,9 +32,7 @@ function addDays(date: Date, days: number) {
 
 type TenantRole = "owner" | "admin" | "staff";
 
-function pickBestMembership(
-  memberships: Array<{ tenant_id: number; role: TenantRole }>
-) {
+function pickBestMembership(memberships: Array<{ tenant_id: number; role: TenantRole }>) {
   const rank: Record<TenantRole, number> = { owner: 3, admin: 2, staff: 1 };
   return memberships.sort((a, b) => (rank[b.role] ?? 0) - (rank[a.role] ?? 0))[0];
 }
@@ -40,21 +44,11 @@ async function getDefaultTenantForUser(userId: number) {
       role: tenantMembershipTable.role,
     })
     .from(tenantMembershipTable)
-    .where(
-      and(
-        eq(tenantMembershipTable.user_id, userId),
-        eq(tenantMembershipTable.is_active, true)
-      )
-    );
+    .where(and(eq(tenantMembershipTable.user_id, userId), eq(tenantMembershipTable.is_active, true)));
 
-  const best = memberships.length
-    ? pickBestMembership(memberships as any)
-    : null;
-
+  const best = memberships.length ? pickBestMembership(memberships as any) : null;
   return best; // { tenant_id, role } | null
 }
-
-type AuthUser = { id: number; email: string; role?: string | null };
 
 type ServiceResult =
   | {
@@ -62,7 +56,7 @@ type ServiceResult =
       status: 200 | 201;
       user: AuthUser;
       sessionId: string;
-      tenant: { id: number; name: string };
+      tenant: AuthTenant;
       roleInTenant: TenantRole;
     }
   | { ok: false; status: number; message: string };
@@ -93,6 +87,9 @@ export async function register(emailRaw: string, password: string): Promise<Serv
         user_id: userTable.user_id,
         email: userTable.email,
         role: userTable.role,
+        is_active: userTable.is_active,
+        created_at: userTable.created_at,
+        last_login: userTable.last_login,
       });
 
     const userRow = insertedUser[0];
@@ -104,6 +101,9 @@ export async function register(emailRaw: string, password: string): Promise<Serv
       .returning({
         tenant_id: tenantTable.tenant_id,
         name: tenantTable.name,
+        is_active: tenantTable.is_active,
+        created_at: tenantTable.created_at,
+        updated_at: tenantTable.updated_at,
       });
 
     const tenantRow = insertedTenant[0];
@@ -119,7 +119,6 @@ export async function register(emailRaw: string, password: string): Promise<Serv
     // Settings default (opcional pero prolijo)
     await tx.insert(tenantSettingsTable).values({
       tenant_id: tenantRow.tenant_id,
-      // defaults ya están en schema, esto queda explícito
       default_currency: "ARS",
       timezone: "America/Argentina/Buenos_Aires",
       low_stock_threshold_default: 3,
@@ -139,9 +138,22 @@ export async function register(emailRaw: string, password: string): Promise<Serv
   return {
     ok: true,
     status: 201,
-    user: { id: result.userRow.user_id, email: result.userRow.email, role: result.userRow.role ?? "user" },
+    user: {
+      id: result.userRow.user_id,
+      email: result.userRow.email,
+      role: result.userRow.role ?? "user",
+      is_active: result.userRow.is_active ?? true,
+      created_at: result.userRow.created_at ?? null,
+      last_login: result.userRow.last_login ?? null,
+    },
     sessionId,
-    tenant: { id: result.tenantRow.tenant_id, name: result.tenantRow.name },
+    tenant: {
+      id: result.tenantRow.tenant_id,
+      name: result.tenantRow.name ?? null,
+      is_active: result.tenantRow.is_active ?? true,
+      created_at: result.tenantRow.created_at ?? null,
+      updated_at: result.tenantRow.updated_at ?? null,
+    },
     roleInTenant: "owner",
   };
 }
@@ -156,6 +168,8 @@ export async function login(emailRaw: string, password: string): Promise<Service
       password_hash: userTable.password_hash,
       role: userTable.role,
       is_active: userTable.is_active,
+      created_at: userTable.created_at,
+      last_login: userTable.last_login,
     })
     .from(userTable)
     .where(eq(userTable.email, email))
@@ -177,13 +191,19 @@ export async function login(emailRaw: string, password: string): Promise<Service
   }
 
   const tenantRows = await db
-    .select({ tenant_id: tenantTable.tenant_id, name: tenantTable.name })
+    .select({
+      tenant_id: tenantTable.tenant_id,
+      name: tenantTable.name,
+      is_active: tenantTable.is_active,
+      created_at: tenantTable.created_at,
+      updated_at: tenantTable.updated_at,
+    })
     .from(tenantTable)
     .where(eq(tenantTable.tenant_id, membership.tenant_id))
     .limit(1);
 
   const tenant = tenantRows[0];
-  if (!tenant) {
+  if (!tenant || tenant.is_active === false) {
     return { ok: false, status: 403, message: "Tenant not found" };
   }
 
@@ -206,26 +226,38 @@ export async function login(emailRaw: string, password: string): Promise<Service
   return {
     ok: true,
     status: 200,
-    user: { id: user.user_id, email: user.email, role: user.role },
+    user: {
+      id: user.user_id,
+      email: user.email,
+      role: user.role ?? "user",
+      is_active: user.is_active ?? true,
+      created_at: user.created_at ?? null,
+      // ojo: acabamos de actualizar last_login en DB; acá devolvemos "now"
+      last_login: now,
+    },
     sessionId,
-    tenant: { id: tenant.tenant_id, name: tenant.name },
+    tenant: {
+      id: tenant.tenant_id,
+      name: tenant.name ?? null,
+      is_active: tenant.is_active ?? true,
+      created_at: tenant.created_at ?? null,
+      updated_at: tenant.updated_at ?? null,
+    },
     roleInTenant: membership.role as TenantRole,
   };
 }
 
 export async function logout(sessionId: string) {
-  await db
-    .update(sessionTable)
-    .set({ revoked_at: new Date() })
-    .where(eq(sessionTable.session_id, sessionId));
+  await db.update(sessionTable).set({ revoked_at: new Date() }).where(eq(sessionTable.session_id, sessionId));
 }
 
-type MeOk = {
+export type MeOk = {
   ok: true;
   status: 200;
   user: AuthUser;
-  tenant: { id: number; name: string | null };
+  tenant: AuthTenant;
   roleInTenant: "owner" | "admin" | "staff";
+  tenantSettings: TenantSettings | null;
 };
 
 type MeFail = { ok: false; status: 401 };
@@ -237,39 +269,44 @@ export async function me(sessionId?: string | null): Promise<MeOk | MeFail> {
 
   const rows = await db
     .select({
-      session_id: sessionTable.session_id,
-      expires_at: sessionTable.expires_at,
-      revoked_at: sessionTable.revoked_at,
-
+      // session/user base
       user_id: userTable.user_id,
       email: userTable.email,
       user_role: userTable.role,
       user_active: userTable.is_active,
+      user_created_at: userTable.created_at,
+      user_last_login: userTable.last_login,
 
+      // tenant base
       tenant_id: tenantTable.tenant_id,
       tenant_name: tenantTable.name,
       tenant_active: tenantTable.is_active,
+      tenant_created_at: tenantTable.created_at,
+      tenant_updated_at: tenantTable.updated_at,
 
+      // membership
       membership_role: tenantMembershipTable.role,
       membership_active: tenantMembershipTable.is_active,
+
+      // tenant_settings (LEFT JOIN)
+      ts_business_name: tenantSettingsTable.business_name,
+      ts_logo_url: tenantSettingsTable.logo_url,
+      ts_cuit: tenantSettingsTable.cuit,
+      ts_address: tenantSettingsTable.address,
+      ts_default_currency: tenantSettingsTable.default_currency,
+      ts_timezone: tenantSettingsTable.timezone,
+      ts_low_stock: tenantSettingsTable.low_stock_threshold_default,
+      ts_updated_at: tenantSettingsTable.updated_at,
     })
     .from(sessionTable)
     .innerJoin(userTable, eq(sessionTable.user_id, userTable.user_id))
     .innerJoin(tenantTable, eq(sessionTable.tenant_id, tenantTable.tenant_id))
+    .leftJoin(tenantSettingsTable, eq(tenantSettingsTable.tenant_id, tenantTable.tenant_id))
     .innerJoin(
       tenantMembershipTable,
-      and(
-        eq(tenantMembershipTable.user_id, userTable.user_id),
-        eq(tenantMembershipTable.tenant_id, tenantTable.tenant_id)
-      )
+      and(eq(tenantMembershipTable.user_id, userTable.user_id), eq(tenantMembershipTable.tenant_id, tenantTable.tenant_id))
     )
-    .where(
-      and(
-        eq(sessionTable.session_id, sessionId),
-        gt(sessionTable.expires_at, now),
-        isNull(sessionTable.revoked_at)
-      )
-    )
+    .where(and(eq(sessionTable.session_id, sessionId), gt(sessionTable.expires_at, now), isNull(sessionTable.revoked_at)))
     .limit(1);
 
   const r = rows[0];
@@ -281,16 +318,47 @@ export async function me(sessionId?: string | null): Promise<MeOk | MeFail> {
   if (r.membership_active === false) return { ok: false, status: 401 };
 
   // last_used
-  await db
-    .update(sessionTable)
-    .set({ last_used: now })
-    .where(eq(sessionTable.session_id, sessionId));
+  await db.update(sessionTable).set({ last_used: now }).where(eq(sessionTable.session_id, sessionId));
+
+  const hasTenantSettingsRow =
+    r.ts_updated_at !== null ||
+    r.ts_business_name !== null ||
+    r.ts_logo_url !== null ||
+    r.ts_cuit !== null ||
+    r.ts_address !== null;
+
+  const tenantSettings: TenantSettings | null = hasTenantSettingsRow
+    ? {
+        business_name: r.ts_business_name ?? null,
+        logo_url: r.ts_logo_url ?? null,
+        cuit: r.ts_cuit ?? null,
+        address: r.ts_address ?? null,
+        default_currency: r.ts_default_currency ?? "ARS",
+        timezone: r.ts_timezone ?? "America/Argentina/Buenos_Aires",
+        low_stock_threshold_default: r.ts_low_stock ?? 3,
+        updated_at: r.ts_updated_at ?? null,
+      }
+    : null;
 
   return {
     ok: true,
     status: 200,
-    user: { id: r.user_id, email: r.email, role: r.user_role ?? "user" },
-    tenant: { id: r.tenant_id, name: r.tenant_name ?? null },
+    user: {
+      id: r.user_id,
+      email: r.email,
+      role: r.user_role ?? "user",
+      is_active: r.user_active ?? true,
+      created_at: r.user_created_at ?? null,
+      last_login: r.user_last_login ?? null,
+    },
+    tenant: {
+      id: r.tenant_id,
+      name: r.tenant_name ?? null,
+      is_active: r.tenant_active ?? true,
+      created_at: r.tenant_created_at ?? null,
+      updated_at: r.tenant_updated_at ?? null,
+    },
     roleInTenant: r.membership_role,
+    tenantSettings,
   };
 }
