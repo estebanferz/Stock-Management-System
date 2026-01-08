@@ -17,6 +17,18 @@ export const userTable = pgTable("users", {
   emailUnique: uniqueIndex("users_email_unique").on(t.email),
 }));
 
+export const userSettingsTable = pgTable("user_settings", {
+  user_id: integer("user_id")
+    .primaryKey()
+    .references(() => userTable.user_id, { onDelete: "cascade" }),
+
+  display_name: varchar({ length: 120 }),      // nombre para UI (no legal)
+  phone: varchar({ length: 32 }),              // opcional
+  email_notifications: boolean().notNull().default(true),
+  updated_at: timestamp({ withTimezone: true }).notNull().defaultNow(),
+});
+
+
 export const tenantTable = pgTable("tenants", {
   tenant_id: serial().primaryKey(),
   name: varchar({ length: 255 }).notNull(),
