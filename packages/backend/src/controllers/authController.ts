@@ -111,7 +111,13 @@ export const authController = new Elysia({ prefix: "/auth" })
             return { ok: false, error: "UNAUTHORIZED" };
         }
 
-        return { ok: true, user: result.user, tenant: result.tenant, roleInTenant: result.roleInTenant };
+        return {
+            ok: true,
+            user: result.user,
+            tenant: result.tenant,
+            roleInTenant: result.roleInTenant,
+            tenantSettings: result.tenantSettings ?? null,
+        };    
     },
     {
         detail: { summary: "Get current user from session", tags: ["auth"] },

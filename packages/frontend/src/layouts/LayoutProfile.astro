@@ -1,3 +1,21 @@
+---
+const pathname = Astro.url.pathname;
+
+const navItems = [
+  { href: "/profile", label: "Resumen" },
+  { href: "/profile/user", label: "Perfil personal" },
+  { href: "/profile/bussines", label: "Preferencias de empresa" },
+] as const;
+
+const linkClass = (href: string) => {
+  const isActive = pathname === href;
+  return [
+    "flex items-center gap-2 rounded-xl px-3 py-2 font-medium transition",
+    isActive ? "bg-slate-100 text-slate-900" : "text-slate-700 hover:bg-slate-50 hover:text-slate-900",
+  ].join(" ");
+};
+---
+
 <!doctype html>
 <html lang="es">
   <head>
@@ -7,44 +25,40 @@
     <link rel="icon" href="/favicon-32x32.png" />
   </head>
 
-  <body class="min-h-screen bg-muted/40">
-    <!-- Fondo tipo dashboard (suave, cálido) -->
+  <body class="min-h-screen bg-muted/40 mx-5">
+    <!-- Fondo cálido tipo dashboard -->
     <div class="min-h-screen bg-[radial-gradient(ellipse_at_top,_rgba(253,230,220,0.55),_transparent_60%),radial-gradient(ellipse_at_bottom,_rgba(253,230,220,0.45),_transparent_55%)]">
-      <main class="mx-auto w-full max-w-6xl px-4 py-8 md:px-8">
-        <!-- Header -->
+      <main class="mx-auto w-full py-8 md:px-8">
         <header class="mb-6">
-          <h1 class="text-3xl font-semibold text-slate-800">Configuración</h1>
-          <p class="text-sm text-slate-500">
-            Gestioná tu cuenta y la información de tu empresa
+          <h1 class="text-3xl font-semibold tracking-tight text-slate-800">Configuración</h1>
+          <p class="mt-1 text-sm text-slate-500">
+            Gestión de tu cuenta y de tu empresa
           </p>
         </header>
 
-        <!-- Layout principal: sidebar + contenido -->
         <div class="grid gap-6 md:grid-cols-[260px_1fr]">
-          <!-- Sidebar -->
+          <!-- Sidebar único -->
           <aside class="h-fit rounded-2xl border bg-white p-4 shadow-sm">
             <div class="mb-4">
-              <div class="text-base font-semibold text-slate-800">Menu</div>
+              <div class="text-base font-semibold text-slate-800">Menú</div>
               <div class="text-xs text-slate-500">Perfil y preferencias</div>
             </div>
 
-            <nav class="grid gap-1 text-sm text-slate-600">
-              <a
-                href="/profile/user"
-                class="rounded-xl px-3 py-2 font-medium text-slate-900 hover:bg-slate-50"
-              >
-                Perfil personal
-              </a>
-              <a
-                href="/profile/bussines"
-                class="rounded-xl px-3 py-2 font-medium text-slate-900 hover:bg-slate-50"
-              >
-                Preferencia de empresa
-              </a>
+            <nav class="grid gap-1 text-sm">
+              {navItems.map((item) => (
+                <a href={item.href} class={linkClass(item.href)}>
+                  <span class="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-slate-100 text-slate-700">
+                    {/* icono simple sin dependencias */}
+                    {item.href === "/profile" ? "🏠" : item.href === "/profile/user" ? "👤" : "🏢"}
+                  </span>
+                  <span class="truncate">{item.label}</span>
+                </a>
+              ))}
+            </nav>
           </aside>
 
           <!-- Contenido -->
-          <section>
+          <section class="min-w-0">
             <slot name="content" />
           </section>
         </div>

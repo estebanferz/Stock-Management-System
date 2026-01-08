@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 type Props = {
-tenant: { id: number; name: string | null };
+tenant: { id: number; name: string | null } | null;
 roleInTenant: "owner" | "admin" | "staff" | string;
 tenantSettings?: {
     business_name?: string | null;
@@ -28,7 +28,7 @@ export default function TenantSettingsForm({ tenant, roleInTenant, tenantSetting
     const [loading, setLoading] = useState(false);
     const [status, setStatus] = useState<{ kind: "ok" | "err"; msg: string } | null>(null);
 
-    const [tenantName, setTenantName] = useState((tenant.name ?? ""));
+    const [tenantName, setTenantName] = useState((tenant?.name ?? ""));
 
     const [form, setForm] = useState({
     business_name: tenantSettings?.business_name ?? "",
@@ -45,13 +45,17 @@ export default function TenantSettingsForm({ tenant, roleInTenant, tenantSetting
         setStatus(null);
 
     try {
-    if (!editable) {
-        setStatus({ kind: "err", msg: "No tenés permisos para editar la empresa." });
-        return;
-    }
+        if (!tenant) {
+            setStatus({ kind: "err", msg: "No se encontró el tenant actual." });
+            return;
+        }
+        if (!editable) {
+            setStatus({ kind: "err", msg: "No tenés permisos para editar la empresa." });
+            return;
+        }
 
         if (tenantName.trim() && tenantName.trim() !== (tenant.name ?? "").trim()) {
-        await clientApp.tenant.name.put({ body: { name: tenantName.trim() } } as any);
+        await clientApp.tenant.name.put({ name: tenantName.trim() } as any);
         }
 
     // 2) upsert tenant_settings
@@ -66,8 +70,8 @@ export default function TenantSettingsForm({ tenant, roleInTenant, tenantSetting
         low_stock_threshold_default: Number.isFinite(low) ? low : 3,
     };
 
-    await clientApp.tenant.current.put({ body } as any);
-
+    await clientApp.tenant.current.put(body as any);
+    
     setStatus({ kind: "ok", msg: "Configuración de empresa guardada." });
     } catch (e) {
     setStatus({ kind: "err", msg: "Error al guardar configuración de empresa." });
@@ -85,15 +89,6 @@ return (
     )}
 
     <div className="grid gap-3 sm:grid-cols-2">
-        <div className="grid gap-2">
-        <Label>Nombre del tenant (interno)</Label>
-        <Input
-            value={tenantName}
-            disabled={!editable}
-            onChange={(e) => setTenantName(e.target.value)}
-        />
-        <p className="text-xs text-slate-500">Este es el campo <code>tenants.name</code>.</p>
-        </div>
 
         <div className="grid gap-2">
         <Label>Nombre comercial</Label>
@@ -103,7 +98,6 @@ return (
             placeholder="Ej: Mi Empresa SRL"
             onChange={(e) => setForm((p) => ({ ...p, business_name: e.target.value }))}
         />
-        <p className="text-xs text-slate-500">Este es <code>tenant_settings.business_name</code>.</p>
         </div>
 
         <div className="grid gap-2">

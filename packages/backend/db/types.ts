@@ -40,11 +40,16 @@ export type AuthUser = {
   id: number;
   email: string;
   role?: string | null;
+  is_active: boolean;
+  created_at: Date | string | null;
+  last_login: Date | string | null;
 };
-
 export type AuthTenant = {
   id: number;
   name: string | null;
+  is_active: boolean;
+  created_at: string | Date | null;
+  updated_at: string | Date | null;
 };
 
 export type TenantSettings = {
@@ -55,6 +60,7 @@ export type TenantSettings = {
   default_currency?: string | null;
   timezone?: string | null;
   low_stock_threshold_default?: number | null;
+  updated_at?: string | Date | null;
 };
 
 export type AuthMe = {

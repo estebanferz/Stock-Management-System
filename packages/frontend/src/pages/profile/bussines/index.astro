@@ -4,109 +4,158 @@ import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import LayoutProfile from "@/layouts/LayoutProfile.astro";
 import { requireAuth } from "@/lib/requireAuth";
 
+import TenantSettingsForm from "@/components/TenantSettingsForm";
+
 const auth = await requireAuth(Astro);
 if (!auth) return Astro.redirect("/login");
 
-const { user, tenant, roleInTenant, tenantSettings } = auth.auth;
-
-const initials = (email: string) => {
-  const name = email.split("@")[0] || "";
-  const parts = name.replace(/[._-]+/g, " ").trim().split(" ").filter(Boolean);
-  const a = (parts[0]?.[0] ?? email[0] ?? "?").toUpperCase();
-  const b = (parts[1]?.[0] ?? parts[0]?.[1] ?? "").toUpperCase();
-  return `${a}${b}`.trim();
-};
+const { tenant, roleInTenant, tenantSettings } = auth.auth;
 
 const businessName =
   tenantSettings?.business_name?.trim() ||
   tenant?.name?.trim() ||
   "Empresa sin nombre";
+
+const fmtDate = (d: any) => {
+  try {
+    if (!d) return "—";
+    const dt = typeof d === "string" ? new Date(d) : d;
+    if (Number.isNaN(dt?.getTime?.())) return "—";
+    return dt.toLocaleString("es-AR", { dateStyle: "short", timeStyle: "short" });
+  } catch {
+    return "—";
+  }
+};
+
+const boolLabel = (b: any) => (b === true ? "Sí" : b === false ? "No" : "—");
 ---
 
 <LayoutProfile>
   <Fragment slot="content">
-    <!-- “sub-layout” interno: nav Usuario/Empresa + cards -->
     <div class="grid gap-6">
-
-        <Card id="empresa" className="rounded-2xl shadow-sm scroll-mt-24">
+      <Card className="rounded-2xl shadow-sm">
         <CardHeader>
-            <div class="flex items-start gap-4">
+          <div class="flex items-start gap-4">
             <!-- Avatar circular (logo o fallback) -->
-            <div class="h-12 w-12 shrink-0 overflow-hidden rounded-full border bg-slate-100">
-                {
+            <div class="h-14 w-14 shrink-0 overflow-hidden rounded-full border bg-slate-100">
+              {
                 tenantSettings?.logo_url ? (
-                    <img
+                  <img
                     src={tenantSettings.logo_url}
                     alt={`Logo de ${businessName}`}
                     class="h-full w-full object-cover"
                     loading="lazy"
                     referrerpolicy="no-referrer"
-                    />
+                  />
                 ) : (
-                    <div class="flex h-full w-full items-center justify-center text-sm font-semibold text-slate-700">
+                  <div class="flex h-full w-full items-center justify-center text-base font-semibold text-slate-700">
                     {businessName
-                        .split(" ")
-                        .filter(Boolean)
-                        .slice(0, 2)
-                        .map((w) => w[0]?.toUpperCase())
-                        .join("") || "🏢"}
-                    </div>
+                      .split(" ")
+                      .filter(Boolean)
+                      .slice(0, 2)
+                      .map((w) => w[0]?.toUpperCase())
+                      .join("") || "🏢"}
+                  </div>
                 )
-                }
+              }
             </div>
 
-            <!-- Título real + descripción -->
             <div class="min-w-0">
-                <CardTitle className="truncate">{businessName}</CardTitle>
-                <CardDescription>Datos del negocio y configuración</CardDescription>
+              <CardTitle className="truncate">{businessName}</CardTitle>
+              <CardDescription>Datos del negocio y configuración</CardDescription>
 
-                <div class="pt-2">
+              <div class="pt-2 flex flex-wrap items-center gap-2">
                 <Badge variant="outline" className="bg-slate-50">
-                    Tenant ID: {tenant?.id}
+                  Tenant ID: {tenant?.id ?? "—"}
                 </Badge>
-                </div>
+                <Badge variant="outline" className="bg-slate-50">
+                  Rol: {roleInTenant ?? "staff"}
+                </Badge>
+              </div>
             </div>
-            </div>
+          </div>
         </CardHeader>
 
         <CardContent className="grid gap-4 sm:grid-cols-2">
-            <div class="rounded-xl border bg-white p-4">
+          <div class="rounded-xl border bg-white p-4">
+            <div class="text-xs uppercase tracking-wide text-slate-500">Tenant name (interno)</div>
+            <div class="pt-1 text-base font-medium text-slate-900">{tenant?.name ?? "—"}</div>
+          </div>
+
+          <div class="rounded-xl border bg-white p-4">
+            <div class="text-xs uppercase tracking-wide text-slate-500">Activo</div>
+            <div class="pt-1 text-base font-medium text-slate-900">{boolLabel(tenant?.is_active)}</div>
+          </div>
+
+          <div class="rounded-xl border bg-white p-4">
+            <div class="text-xs uppercase tracking-wide text-slate-500">Creado</div>
+            <div class="pt-1 text-sm text-slate-900">{fmtDate(tenant?.created_at)}</div>
+          </div>
+
+          <div class="rounded-xl border bg-white p-4">
+            <div class="text-xs uppercase tracking-wide text-slate-500">Actualizado</div>
+            <div class="pt-1 text-sm text-slate-900">{fmtDate(tenant?.updated_at)}</div>
+          </div>
+
+          <div class="rounded-xl border bg-white p-4">
             <div class="text-xs uppercase tracking-wide text-slate-500">Moneda</div>
             <div class="pt-1 text-base font-medium text-slate-900">
-                {tenantSettings?.default_currency ?? "ARS"}
+              {tenantSettings?.default_currency ?? "ARS"}
             </div>
-            </div>
+          </div>
 
-            <div class="rounded-xl border bg-white p-4">
+          <div class="rounded-xl border bg-white p-4">
             <div class="text-xs uppercase tracking-wide text-slate-500">Timezone</div>
             <div class="pt-1 text-base font-medium text-slate-900">
-                {tenantSettings?.timezone ?? "America/Argentina/Buenos_Aires"}
+              {tenantSettings?.timezone ?? "America/Argentina/Buenos_Aires"}
             </div>
-            </div>
+          </div>
 
-            <div class="rounded-xl border bg-white p-4">
+          <div class="rounded-xl border bg-white p-4">
             <div class="text-xs uppercase tracking-wide text-slate-500">Stock mínimo</div>
             <div class="pt-1 text-base font-medium text-slate-900">
-                {tenantSettings?.low_stock_threshold_default ?? 3}
+              {tenantSettings?.low_stock_threshold_default ?? 3}
             </div>
-            </div>
+          </div>
+
+          <div class="rounded-xl border bg-white p-4">
+            <div class="text-xs uppercase tracking-wide text-slate-500">Actualizado (settings)</div>
+            <div class="pt-1 text-sm text-slate-900">{fmtDate(tenantSettings?.updated_at)}</div>
+          </div>
+
+          <div class="rounded-xl border bg-white p-4 sm:col-span-2">
+            <div class="text-xs uppercase tracking-wide text-slate-500">CUIT</div>
+            <div class="pt-1 text-sm text-slate-900">{tenantSettings?.cuit ?? "—"}</div>
+          </div>
+
+          <div class="rounded-xl border bg-white p-4 sm:col-span-2">
+            <div class="text-xs uppercase tracking-wide text-slate-500">Dirección</div>
+            <div class="pt-1 text-sm text-slate-900">{tenantSettings?.address ?? "—"}</div>
+          </div>
         </CardContent>
+      </Card>
 
-        <CardFooter className="flex justify-end border-t px-6 py-4">
-            <Button disabled>Guardar</Button>
-        </CardFooter>
-        </Card>
+      <Card className="rounded-2xl shadow-sm">
+        <CardHeader>
+          <CardTitle>Editar empresa</CardTitle>
+        </CardHeader>
 
-      </section>
+        <CardContent className="rounded-2xl border bg-white p-4">
+          <TenantSettingsForm
+            client:load
+            tenant={tenant}
+            roleInTenant={roleInTenant}
+            tenantSettings={tenantSettings}
+          />
+        </CardContent>
+      </Card>
     </div>
   </Fragment>
 </LayoutProfile>
