@@ -1,0 +1,90 @@
+---
+import "@/styles/tailwind.css";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import LayoutProfile from "@/layouts/LayoutProfile.astro";
+import { requireAuth } from "@/lib/requireAuth";
+
+import UserSettingsForm from "@/components/UserSettingsForm";
+import TenantSettingsForm from "@/components/TenantSettingsForm";
+
+const auth = await requireAuth(Astro);
+if (!auth) return Astro.redirect("/login");
+
+const { user, tenant, roleInTenant, tenantSettings } = auth.auth;
+---
+
+<LayoutProfile>
+  <Fragment slot="content">
+    <div class="grid gap-6">
+      <section class="space-y-6">
+        <Card id="usuario" className="rounded-2xl shadow-sm scroll-mt-24">
+          <CardHeader>
+            <CardTitle>Usuario</CardTitle>
+            <CardDescription>Información de tu cuenta</CardDescription>
+          </CardHeader>
+
+          <CardContent className="grid gap-4">
+            <div class="grid gap-4 sm:grid-cols-2">
+              <div class="rounded-xl border bg-white p-4">
+                <div class="text-xs uppercase tracking-wide text-slate-500">Email</div>
+                <div class="pt-1 text-base font-medium text-slate-900">{user.email}</div>
+              </div>
+
+              <div class="rounded-xl border bg-white p-4">
+                <div class="text-xs uppercase tracking-wide text-slate-500">User ID</div>
+                <div class="pt-1 font-mono text-sm text-slate-900">{user.id}</div>
+              </div>
+
+              <div class="rounded-xl border bg-white p-4">
+                <div class="text-xs uppercase tracking-wide text-slate-500">Rol app</div>
+                <div class="pt-2">
+                  <Badge variant="outline" className="bg-slate-50">{user.role ?? "user"}</Badge>
+                </div>
+              </div>
+
+              <div class="rounded-xl border bg-white p-4">
+                <div class="text-xs uppercase tracking-wide text-slate-500">Rol empresa</div>
+                <div class="pt-2">
+                  <Badge variant="outline" className="bg-slate-50">{roleInTenant ?? "staff"}</Badge>
+                </div>
+              </div>
+            </div>
+
+            <div class="rounded-2xl border bg-white p-4">
+              <div class="mb-3 text-sm font-medium text-slate-900">Preferencias</div>
+              <UserSettingsForm client:load user={user} roleInTenant={roleInTenant} />
+            </div>
+          </CardContent>
+
+          <CardFooter className="flex justify-end border-t px-6 py-4">
+            <span class="text-xs text-slate-500">Los cambios se guardan con el botón “Guardar cambios”.</span>
+          </CardFooter>
+        </Card>
+
+        <Card id="empresa" className="rounded-2xl shadow-sm scroll-mt-24">
+          <CardHeader>
+            <CardTitle>Empresa</CardTitle>
+            <CardDescription>Configuración del tenant</CardDescription>
+          </CardHeader>
+
+          <CardContent className="rounded-2xl border bg-white p-4">
+            <TenantSettingsForm
+              client:load
+              tenant={tenant}
+              roleInTenant={roleInTenant}
+              tenantSettings={tenantSettings}
+            />
+          </CardContent>
+        </Card>
+      </section>
+    </div>
+  </Fragment>
+</LayoutProfile>

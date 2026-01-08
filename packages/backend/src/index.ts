@@ -10,13 +10,14 @@ import {expenseController} from "./controllers/expenseController";
 import {providerController} from "./controllers/providerController";
 import {saleController} from "./controllers/saleController";
 import {sellerController} from "./controllers/sellerController";
+import {userController} from "./controllers/userController";
+import {tenantController} from "./controllers/tenantController";
 
 const port = Number(process.env.PORT ?? 3000);
 
 const app = new Elysia({prefix: '/api'})
   .use(cors({ origin: [
     Bun.env.PUBLIC_FRONTEND_URL,
-    /\.ngrok-free\.app$/,                         //Accept Ngrok conections for client Demo
   ].filter(Boolean) as (string | RegExp)[] }))
   .get("/", () => {
     return { message: "app" };
@@ -31,6 +32,8 @@ const app = new Elysia({prefix: '/api'})
   .use(providerController)
   .use(saleController)
   .use(sellerController)
+  .use(userController)
+  .use(tenantController)
 
   .listen({
     hostname: "0.0.0.0",
