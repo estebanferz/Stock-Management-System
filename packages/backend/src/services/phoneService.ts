@@ -1,6 +1,6 @@
 import { db } from "@server/db/db";
 import { phoneTable } from "@server/db/schema.ts";
-import { ilike, and, eq, or, gte } from "drizzle-orm";
+import { ilike, and, eq, or, gte, sql } from "drizzle-orm";
 import { normalizeShortString } from "../util/formattersBackend";
 
 export async function getPhonesByFilter(
@@ -160,3 +160,41 @@ export async function softDeletePhone(tenantId: number, id: number) {
 
   return result.length > 0;
 }
+
+export const getStockInvestment = async (tenantId: number) => {
+  const res = await db
+    .select({
+      total: sql<number>`SUM(COALESCE(${phoneTable.buy_cost}, 0))`,
+    })
+    .from(phoneTable)
+    .where(
+      and(
+        eq(phoneTable.tenant_id, tenantId),
+        eq(phoneTable.is_deleted, false),
+        eq(phoneTable.sold, false)
+      )
+    );
+
+  return Number(Number(res[0]?.total ?? 0).toFixed(2));
+};
+
+export const getStockInvestmentBreakdown = async (tenantId: number) => {
+  const rows = await db
+    .select({
+      device_id: phoneTable.device_id,
+      device_name: phoneTable.name,
+      buy_cost: sql<number>`COALESCE(${phoneTable.buy_cost}, 0)`,
+    })
+    .from(phoneTable)
+    .where(
+      and(
+        eq(phoneTable.tenant_id, tenantId),
+        eq(phoneTable.is_deleted, false),
+        eq(phoneTable.sold, false) 
+      )
+    )
+    .orderBy(sql`COALESCE(${phoneTable.buy_cost}, 0) DESC`);
+
+  return rows;
+};
+

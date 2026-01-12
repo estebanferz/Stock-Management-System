@@ -12,6 +12,9 @@ import grossincome from "../assets/gross-income.svg"
 import expenseIcon from '../assets/expense.svg';
 import debtIcon from "../assets/debt.svg";
 import { requireAuth } from "@/lib/requireAuth";
+import { NetIncomeCard } from '@/components/Dashboard/NetincomeCard';
+import { InvestmentCard } from "@/components/Dashboard/InvestmentCard";
+
 const session = await requireAuth(Astro);
 if (!session) return Astro.redirect("/login");
 const { auth, cookieHeader } = session;
@@ -19,28 +22,39 @@ const authed = { headers: { cookie: cookieHeader } };
 
 const resultGross = await serverApp.sale['gross-income'].get(authed)
 const gross_income = String(resultGross.data);
-const resultNet = await serverApp.sale['net-income'].get(authed)
-const net_income = String(resultNet.data);
 const saleData = await serverApp.sale.all.get({ ...authed, query: { is_deleted: false }});
 const units_sold_count = Array.isArray(saleData.data)
-  ? saleData.data.length
-  : 0;
+? saleData.data.length
+: 0;
 const expenseData = await serverApp.expense['expenses'].get(authed)
 console.log(expenseData)
 const expensesFormatted = expenseData.data || []
 const initialYear = new Date().getFullYear();
 const saleDataByMonth = await serverApp.sale["sales-by-month"].get({
 	...authed,
-  	query: { year: String(initialYear) },
+	query: { year: String(initialYear) },
 });
 const row = Array.isArray(saleDataByMonth.data) ? saleDataByMonth.data : []
 const saleDataFormatted = SalesDataByMonth(row);
 const deudoresCount = await serverApp.client['debts'].get(authed)
 const deudoresCountFormatted = Array.isArray(deudoresCount.data)
-  ? deudoresCount.data.length
-  : 0;
+? deudoresCount.data.length
+: 0;
 const totalDebt = await serverApp.client['total-debt'].get(authed)
 const totalDebtFormatted = totalDebt.data || 0;
+
+//net-income
+const resultNet = await serverApp.sale['net-income'].get(authed)
+const net_income = String(resultNet.data);
+const netIncomeBreakdown = await serverApp.sale["net-income-breakdown"].get(authed);
+const net_income_rows = Array.isArray(netIncomeBreakdown.data) ? netIncomeBreakdown.data : [];
+
+//investment
+const stockInvestment = await serverApp.phone["stock-investment"].get(authed);
+const stock_investment_total = String(stockInvestment.data ?? 0);
+const stockInvestmentBreakdown = await serverApp.phone["stock-investment-breakdown"].get(authed);
+const stock_rows = Array.isArray(stockInvestmentBreakdown.data) ? stockInvestmentBreakdown.data : [];
+
 
 type ProductSoldCount = { name: string; sold_count: number };
 const phoneSoldCount = await serverApp.sale["products-sold-count"].get(authed);
@@ -69,8 +83,9 @@ const secondaryData = `
 	<p class="px-3 mb-8 text-sm text-gray-600 font-medium">Resumen completo de tu negocio con métricas clave</p>
 	<div class="px-3 grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
 		<CustomCard title="Unidades Vendidas" amount={String(units_sold_count)} icon={devicesIcon}/>
-		<CustomCard title="Ingresos Netos" amount=`$${net_income}` icon={moneyIcon}/>
-		<CustomCard title="Ingresos Brutos" amount=`$${gross_income}` icon={grossincome}/>
+		<NetIncomeCard netIncome={net_income} rows={net_income_rows} client:load/>
+		<InvestmentCard totalInvestment={stock_investment_total} rows={stock_rows} client:load />
+		<CustomCard title="Ingresos Brutos" amount={`$${gross_income}`} icon={grossincome}/>
 		<CustomCard title="Gastos Totales" amount={`$${expensesFormatted}`} icon={expenseIcon}/>
 	</div>
 	<div class="px-3">
@@ -89,4 +104,6 @@ const secondaryData = `
 			<CustomCard title="Deudores" amount=`$${totalDebtFormatted}` secondaryData={secondaryData} icon={debtIcon}/>
 		</div>
 	</div>
+
+	</CenteredModal>
 </Layout>

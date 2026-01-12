@@ -6,6 +6,8 @@ import {
   addPhone,
   updatePhone,
   softDeletePhone,
+  getStockInvestment,
+  getStockInvestmentBreakdown,
 } from "../services/phoneService";
 import { phoneInsertDTO, phoneUpdateDTO } from "@server/db/types";
 import { protectedController } from "../util/protectedController";
@@ -160,4 +162,10 @@ export const phoneController = new Elysia({ prefix: "/phone" })
       ctx.set.status = ok ? 200 : 404;
       return ok;
     })
-  );
+  )
+  .get("/stock-investment", protectedController(async (ctx) => {
+    return await getStockInvestment(ctx.tenantId);
+  }))
+  .get("/stock-investment-breakdown", protectedController(async (ctx) => {
+    return await getStockInvestmentBreakdown(ctx.tenantId);
+  }));
