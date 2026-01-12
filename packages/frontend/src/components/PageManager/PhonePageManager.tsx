@@ -5,6 +5,7 @@ import { PhoneTableManager } from "@/components/TableManager/PhoneTableManager";
 import { type Phone } from "@server/db/schema"
 import { phoneCategories } from "@/components/Structures/phoneCategories";
 import ActionPanel from "../ActionPanel";
+import { normalizeShortString } from "@/utils/formatters";
 
 type Props = {
   initialData: Phone[];
@@ -29,36 +30,18 @@ function buildQuery(filters: {
 }) {
   const query: Record<string, any> = {};
 
-  if (filters.device.trim()) query.device = filters.device.trim();
-
-  // IMEI (exacto)
+  if (filters.device.trim()) query.device = normalizeShortString(filters.device);
   if (filters.imei.trim()) query.imei = filters.imei.trim();
-
-  // Storage (exacto)
   const storage = filters.storage_capacity.trim();
   if (storage) query.storage_capacity = storage;
-
-  // Battery health (mínimo)
   const battery = filters.battery_health.trim();
   if (battery) query.battery_health = battery;
-
-  // Color (parcial)
-  if (filters.color.trim()) query.color = filters.color.trim();
-
-  // Categoría (exacto)
+  if (filters.color.trim()) query.color = normalizeShortString(filters.color);
   if (filters.category.trim()) query.category = filters.category.trim();
-
-  // Tipo de producto (exacto, viene del select)
   if (filters.device_type.trim()) query.device_type = filters.device_type.trim();
-
-  // Trade-in boolean (string)
   if (filters.trade_in !== "all") query.trade_in = filters.trade_in;
-
-  // Sold boolean (string)
   if (filters.sold === "sold") query.sold = "true";
   if (filters.sold === "available") query.sold = "false";
-
-  // Is_deleted boolean (string) — importante por tu endpoint
   if (filters.deleted === "active") query.is_deleted = "false";
   if (filters.deleted === "deleted") query.is_deleted = "true";
 

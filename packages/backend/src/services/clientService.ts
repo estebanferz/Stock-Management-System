@@ -50,9 +50,14 @@ export async function updateClient(
   client_id: number,
   client_upd: typeof clientUpdateDTO.static
 ) {
+  const normalizedClient = {
+    ...client_upd,
+    name: normalizeShortString(client_upd.name),
+    email: client_upd.email?.toLowerCase().trim(),
+  };
   const result = await db
     .update(clientTable)
-    .set(client_upd)
+    .set(normalizedClient)
     .where(and(eq(clientTable.tenant_id, tenantId), eq(clientTable.client_id, client_id)))
     .returning();
 

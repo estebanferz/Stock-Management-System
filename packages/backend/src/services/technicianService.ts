@@ -92,7 +92,6 @@ export const addTechnician = async (
     ...newTechnician,
     tenant_id: tenantId, // ✅ force server-side
     name: normalizeShortString(newTechnician.name),
-    speciality: normalizeShortString(newTechnician.speciality),
     state: normalizeShortString(newTechnician.state),
     email: normalizeEmail(newTechnician.email),
     phone_number: normalizePhoneE164AR(newTechnician.phone_number),
@@ -115,9 +114,6 @@ export const updateTechnician = async (
   const normalizedUpd = {
     ...technician_upd,
     name: technician_upd.name ? normalizeShortString(technician_upd.name) : undefined,
-    speciality: technician_upd.speciality
-      ? normalizeShortString(technician_upd.speciality)
-      : undefined,
     state: technician_upd.state ? normalizeShortString(technician_upd.state) : undefined,
     email: technician_upd.email !== undefined ? normalizeEmail(technician_upd.email) : undefined,
     phone_number:

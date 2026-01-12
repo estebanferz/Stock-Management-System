@@ -3,6 +3,7 @@ import { clientApp } from "@/lib/clientAPI";
 import { ProviderTableManager } from "@/components/TableManager/ProviderTableManager";
 import { type Provider } from "@server/db/schema";
 import {ActionPanel} from "@/components/ActionPanel";
+import { normalizeShortString } from "@/utils/formatters";
 
 type Props = {
   initialData: Provider[];
@@ -20,7 +21,7 @@ function buildQuery(filters: {
 }) {
   const query: Record<string, any> = {};
 
-  if (filters.name.trim()) query.name = filters.name.trim();
+  if (filters.name.trim()) query.name = normalizeShortString(filters.name);
   if (filters.email.trim()) query.email = filters.email.trim();
   if (filters.phone_number.trim()) query.phone_number = filters.phone_number.trim();
   if (filters.address.trim()) query.address = filters.address.trim();

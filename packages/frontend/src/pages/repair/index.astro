@@ -8,13 +8,16 @@ import ActionPanel from "@/components/ActionPanel";
 import { RepairPageManager } from "@/components/PageManager/RepairPageManager";
 import { requireAuth } from "@/lib/requireAuth";
 
-const user = await requireAuth(Astro);
-if (!user) return Astro.redirect("/login");
+const session = await requireAuth(Astro);
+if (!session) return Astro.redirect("/login");
+const { auth, cookieHeader } = session;
+const authed = { headers: { cookie: cookieHeader } };
+
 const [repairsRes, clientsRes, techniciansRes, phonesRes] = await Promise.all([
-  serverApp.repair.all.get({ query: { is_deleted: false }}),
-  serverApp.client.all.get(),
-  serverApp.technician.all.get(),
-  serverApp.phone.all.get(),
+  serverApp.repair.all.get({ ...authed, query: { is_deleted: false }}),
+  serverApp.client.all.get(authed),
+  serverApp.technician.all.get(authed),
+  serverApp.phone.all.get(authed),
 ]);
 const repairs = Array.isArray(repairsRes.data)
     ? repairsRes.data
@@ -53,7 +56,7 @@ const data = repairs.map((repair: any) => ({
 
 ---
 
-<Layout title="Reparaciones" user={user}>
+<Layout title="Reparaciones" user={auth.user}>
     <h1 class="w-full text-center text-4xl text-gray-700 font-bold my-5">Reparaciones</h1>
     
 

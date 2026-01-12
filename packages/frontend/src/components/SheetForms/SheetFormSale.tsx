@@ -148,7 +148,6 @@ export function SheetFormSale({zIndex}:SheetFormSaleProps) {
       } else {
         response = await clientApp.sale.post(saleData);
 
-        // ✅ SUMAR DEUDA AL CLIENTE (debt es integer)
         if (saleData.debt && saleData.debt_amount) {
           const clientId = Number(saleData.client_id);
           const addDebt = toInt(saleData.debt_amount);

@@ -7,8 +7,10 @@ import { technicianColumns } from "@/config/TechnicianColumnConfig";
 import ActionPanel from "@/components/ActionPanel";
 import { TechnicianPageManager } from "@/components/PageManager/TechnicianPageManager";
 import { requireAuth } from "@/lib/requireAuth";
-const user = await requireAuth(Astro);
-if (!user) return Astro.redirect("/login");
+const session = await requireAuth(Astro);
+if (!session) return Astro.redirect("/login");
+const { auth, cookieHeader } = session;
+const authed = { headers: { cookie: cookieHeader } };
 const response = await serverApp.technician.all.get({ query: { is_deleted: false }});
 
 const data = Array.isArray(response.data)
@@ -16,7 +18,7 @@ const data = Array.isArray(response.data)
     : [];
 ---
 
-<Layout title="Tecnicos" user={user}>
+<Layout title="Tecnicos" user={auth.user}>
     <h1 class="w-full text-center text-4xl text-gray-700 font-bold my-5">Técnicos</h1>
     
     <TechnicianPageManager

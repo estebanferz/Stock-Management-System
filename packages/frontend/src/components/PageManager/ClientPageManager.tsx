@@ -3,6 +3,7 @@ import { clientApp } from "@/lib/clientAPI";
 import { ClientsTableManager } from "@/components/TableManager/ClientsTableManager";
 import { type Client } from "@server/db/schema"
 import ActionPanel from "../ActionPanel";
+import { normalizeShortString } from "@/utils/formatters";
 
 
 type Props = {
@@ -21,7 +22,7 @@ function buildQuery(filters: {
 }) {
   const query: Record<string, any> = {};
 
-  if (filters.name.trim()) query.name = filters.name.trim();
+  if (filters.name.trim()) query.name = normalizeShortString(filters.name);
   if (filters.id_number.trim()) query.id_number = filters.id_number.trim();
   if (filters.email.trim()) query.email = filters.email.trim();
   if (filters.phone_number.trim()) query.phone_number = filters.phone_number.trim();

@@ -3,6 +3,7 @@ import { clientApp } from "@/lib/clientAPI";
 import { SellerTableManager } from "@/components/TableManager/SellerTableManager";
 import { type Seller } from "@server/db/schema"
 import ActionPanel from "../ActionPanel";
+import { normalizeShortString } from "@/utils/formatters";
 
 type DeletedFilter = "active" | "deleted" | "all";
 
@@ -23,7 +24,7 @@ function buildQuery(filters: {
 }) {
   const query: Record<string, any> = {};
 
-  if (filters.name.trim()) query.name = filters.name.trim();
+  if (filters.name.trim()) query.name = normalizeShortString(filters.name);
   if (filters.hire_date) query.hire_date = filters.hire_date;
   if (filters.pay_date) query.pay_date = filters.pay_date;
   if (filters.age_min) query.age_min = filters.age_min;
