@@ -8,15 +8,17 @@ import ActionPanel from "@/components/ActionPanel";
 import { SalesPageManager } from "@/components/PageManager/SalePageManager";
 import { requireAuth } from "@/lib/requireAuth";
 
-const user = await requireAuth(Astro);
-if (!user) return Astro.redirect("/login");
+const session = await requireAuth(Astro);
+if (!session) return Astro.redirect("/login");
+const { auth, cookieHeader } = session;
+const authed = { headers: { cookie: cookieHeader } };
 
 // 1) Traer todo en paralelo
 const [salesRes, clientsRes, sellersRes, phonesRes] = await Promise.all([
-  serverApp.sale.all.get({query : { is_deleted: false }}),
-  serverApp.client.all.get(),
-  serverApp.seller.all.get(),
-  serverApp.phone.all.get(),
+  serverApp.sale.all.get({...authed, query : { is_deleted: false }}),
+  serverApp.client.all.get(authed),
+  serverApp.seller.all.get(authed),
+  serverApp.phone.all.get(authed),
 ]);
 
 const sales = Array.isArray(salesRes.data)
@@ -61,7 +63,7 @@ console.log("Ventas:", data);
 
 ---
 
-<Layout title="Ventas" user={user}>
+<Layout title="Ventas" user={auth.user}>
     <h1 class="w-full text-center text-4xl text-gray-700 font-bold my-5">Ventas</h1>
     
     <SalesPageManager

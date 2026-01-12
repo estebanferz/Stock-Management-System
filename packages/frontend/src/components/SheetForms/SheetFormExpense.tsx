@@ -170,7 +170,6 @@ export function SheetFormExpense({
         side="right"
         isOpen={controlledOpen}
         onOpenChange={handleOpenChange}
-        isModal={!isNested}
         isNested={isNested}
         depth={depth}
         zIndex={zIndex}

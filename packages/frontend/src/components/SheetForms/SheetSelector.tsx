@@ -4,24 +4,22 @@ import { Button } from "@/components/ui/button";
 import { Search, ChevronRight } from "lucide-react";
 import { CustomSheet } from "@/components/CustomSheet";
 import { Input } from "@/components/ui/input";
+import { generalStringFormat } from "@/utils/formatters";
 
 interface SheetSelectorProps {
   type: "client" | "seller" | "device" | "technician" | "provider";
   currentId: string;
   onSelect: (id: string, price?: string) => void;
   depth?: number;
-
-  /**
-   * ✅ NUEVO (opcional pero recomendado):
-   * zIndex del sheet padre (Sale/Phone/Expense/etc.)
-   * para que el selector siempre quede arriba.
-   */
   parentZIndex?: number;
 }
 
 interface DataSearchSheetProps extends SheetSelectorProps {
   setIsOpen: (open: boolean) => void;
 }
+
+//formatter
+const fmt = (v: unknown) => generalStringFormat(String(v ?? ""));
 
 const DataSearchSheet: React.FC<DataSearchSheetProps> = ({ type, onSelect, setIsOpen }) => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -113,7 +111,7 @@ const DataSearchSheet: React.FC<DataSearchSheetProps> = ({ type, onSelect, setIs
               className="p-3 border-b cursor-pointer hover:bg-blue-50/50 flex justify-between items-center"
               onClick={() => selectItem(item)}
             >
-              <span>{item[nameKey]}</span>
+              <span>{fmt(item[nameKey])}</span>
               <ChevronRight className="w-4 h-4 text-gray-400" />
             </div>
           ))
@@ -159,7 +157,7 @@ export function SheetSelector({
         const result = await endpoint({ id }).get();
         if (result.data) {
           const itemData = result.data as Record<string, any>;
-          setDisplayName(`${itemData[nameKey]} (ID: ${id})`);
+          setDisplayName(`${fmt(itemData[nameKey])}`);
         } else {
           setDisplayName(`ID ${id} no encontrado`);
         }

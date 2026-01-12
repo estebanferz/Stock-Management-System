@@ -84,6 +84,12 @@ export function SheetFormRepair() {
     e.stopPropagation()
 
     const datetime = `${date}T${time}:00Z`;
+
+    if (!form.client_id || !form.technician_id || !form.device_id) {
+      alert("Por favor, selecciona Cliente, Tecnico y Dispositivo.");
+      return;
+    }
+
     const repairData = {
       ...form,
       datetime: datetime,

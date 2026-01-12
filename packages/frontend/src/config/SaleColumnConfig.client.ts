@@ -25,14 +25,9 @@ export const saleColumns: Column<Sale>[] = [
   },
 
   {
-    accessorKey: "debt",
-    header: "¿Deuda?",
-    renderKey: "yesno",
-  },
-
-  {
     accessorKey: "debt_amount",
-    header: "Monto adeudado",
+    header: "Deuda",
     renderKey: "money",
   },
+
 ]

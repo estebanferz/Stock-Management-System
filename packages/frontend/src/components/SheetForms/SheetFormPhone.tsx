@@ -114,26 +114,13 @@ export function SheetFormPhone({isOpen, onClose, zIndex, depth=0}: SheetFormPhon
     setIsExpenseSheetOpen(false);
   };
 
-useEffect(() => {
-  if (editingPhone) return; // No abrir al editar
+  function handleOpenExpenseSheet() {
+    const cost = parseFloat(form.buy_cost);
 
-  const cost = parseFloat(form.buy_cost);
+    if (!cost || cost <= 0) return;
 
-  if (cost > 0 && !isExpenseSheetOpen && !hasTriggeredExpense) {
-    const timer = setTimeout(() => {
-      setIsExpenseSheetOpen(true);
-      setHasTriggeredExpense(true); // marca que ya se abrió
-    }, 400);
-
-    return () => clearTimeout(timer);
-  }
-
-  if (cost <= 0) {
-    setHasTriggeredExpense(false);
-  }
-}, [form.buy_cost, isExpenseSheetOpen, hasTriggeredExpense]);
-
-
+    setIsExpenseSheetOpen(true);
+}
 
   const handleSubmitPhone = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -239,9 +226,11 @@ return (
           <Input 
             id="imei"
             form="form-phone"
-            type="number"
+            type="text"
+            inputMode="numeric"
+            pattern="[0-9]*"
             value={form.imei} 
-            onChange={(e) => setForm({...form, imei: e.target.value})} 
+            onChange={(e) => setForm({...form, imei:  e.target.value.replace(/\D/g, "")})} 
             required />
         </div>
         
@@ -269,7 +258,28 @@ return (
             id="battery"
             form="form-phone"
             type="number" 
-            value={form.battery_health} onChange={(e) => setForm({...form, battery_health: e.target.value})} 
+            min={0}
+            max={100}
+            step={1}
+            value={form.battery_health} 
+            onChange={(e) => {
+              const value = e.target.value;
+
+              // allow empty while typing
+              if (value === "") {
+                setForm({ ...form, battery_health: "" });
+                return;
+              }
+
+              const num = Number(value);
+
+              if (!Number.isNaN(num)) {
+                setForm({
+                  ...form,
+                  battery_health: String(Math.min(100, Math.max(0, num))),
+                });
+              }
+            }}
             />
         </div>
 
@@ -332,14 +342,24 @@ return (
 
         <div className="grid gap-3">
             <Label>Costo de compra</Label>
-            <Input
-              id="cost"
-              form="form-phone"
-              type="number" 
-              value={form.buy_cost} 
-              onChange={(e) => setForm({...form, buy_cost: e.target.value})}
-              required 
-            />
+            <div className="flex-col space-y-3">
+              <Input
+                id="cost"
+                form="form-phone"
+                type="number" 
+                value={form.buy_cost} 
+                onChange={(e) => setForm({...form, buy_cost: e.target.value})}
+                required 
+              />
+              <Button 
+                  className="w-full" 
+                  type="button"
+                  disabled={!form.buy_cost || Number(form.buy_cost) <= 0}
+                  onClick={(e) => { handleOpenExpenseSheet(); }}
+              >
+                Agregar gasto asociado
+              </Button>
+            </div>
         </div>
 
         <div className="grid gap-3">

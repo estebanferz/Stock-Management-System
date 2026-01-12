@@ -108,7 +108,7 @@ export function SheetFormSeller({zIndex}: SheetFormSellerProps) {
 
 
 return (
-    <form id="form-sale" onSubmit={handleSubmit}>
+    <form id="form-seller" onSubmit={handleSubmit}>
       <CustomSheet
         title="Agregar Vendedor"
         zIndex={zIndex}
@@ -117,7 +117,7 @@ return (
         description="Agregar vendedor al sistema"
         footer={
           <>
-            <Button type="submit" form="form-sale">Agregar</Button>
+            <Button type="submit" form="form-seller">Agregar</Button>
             <SheetClose asChild>
               <Button variant="outline">Cancelar</Button>
             </SheetClose>

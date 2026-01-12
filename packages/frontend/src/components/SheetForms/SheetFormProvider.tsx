@@ -182,6 +182,7 @@ return (
                   form="form-provider"
                   value={form.address_st}
                   onChange={(e) => setForm({ ...form, address_st: e.target.value })}
+                  placeholder="Av. Colon"
                   required
                 />
             </div>
@@ -190,9 +191,12 @@ return (
                 <Input
                   id="address_num"
                   form="form-provider"
-                  type="number"
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
                   value={form.address_number}
-                  onChange={(e) => setForm({ ...form, address_number: e.target.value })}
+                  onChange={(e) => setForm({ ...form, address_number: e.target.value.replace(/\D/g, "")})}
+                  placeholder ="1234"
                 />
             </div>
         </div>

@@ -184,9 +184,11 @@ export function SheetFormClient({
           <Input
             id="dni"
             form="form-client"
-            type="number"
+            type="text"
+            inputMode="numeric"
+            pattern="[0-9]*"
             value={form.id_number}
-            onChange={(e) => setForm({ ...form, id_number: e.target.value })}
+            onChange={(e) => setForm({ ...form, id_number: e.target.value.replace(/\D/g, "") })}
             placeholder="41567234"
             required
           />

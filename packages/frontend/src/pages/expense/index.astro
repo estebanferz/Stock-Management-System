@@ -8,12 +8,14 @@ import ActionPanel from "@/components/ActionPanel";
 import { ExpensesPageManager } from "@/components/PageManager/ExpensePageManager";
 import { requireAuth } from "@/lib/requireAuth";
 
-const user = await requireAuth(Astro);
-if (!user) return Astro.redirect("/login");
+const session = await requireAuth(Astro);
+if (!session) return Astro.redirect("/login");
+const { auth, cookieHeader } = session;
+const authed = { headers: { cookie: cookieHeader } };
     
 const [expensesRes, providersRes] = await Promise.all([
-    serverApp.expense.all.get({ query : { is_deleted: false }}),
-    serverApp.provider.all.get(),
+    serverApp.expense.all.get({ ...authed, query : { is_deleted: false }}),
+    serverApp.provider.all.get(authed),
 ]);
 
 const expenses = Array.isArray(expensesRes.data)
@@ -33,7 +35,7 @@ const data = expenses.map((expense: any) => ({
 }));
 ---
 
-<Layout title="Gastos" user={user}>
+<Layout title="Gastos" user={auth.user}>
     <h1 class="w-full text-center text-4xl text-gray-700 font-bold my-5">Gastos</h1>
     
     <ExpensesPageManager

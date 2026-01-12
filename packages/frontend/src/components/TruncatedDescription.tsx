@@ -32,12 +32,11 @@ export function TruncatedDescription({ text, words = 2 }: TruncatedDescriptionPr
     <>
       {/* Texto truncado clickeable */}
       <div
-        className="flex items-center gap-1 cursor-pointer text-muted-foreground hover:text-foreground transition"
+        className="flex items-center justify-center gap-1 cursor-pointer text-muted-foreground hover:text-foreground transition"
         onClick={() => setOpen(true)}
       >
         <span className="truncate">{preview}</span>
 
-        {/* Icono indicador */}
         <span className="text-xs opacity-70">
           <svg
             xmlns="http://www.w3.org/2000/svg"

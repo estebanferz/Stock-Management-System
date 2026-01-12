@@ -7,16 +7,18 @@ import { phoneColumns } from "@/config/PhoneColumnConfig";
 import ActionPanel from "@/components/ActionPanel";
 import { PhonesPageManager } from "@/components/PageManager/PhonePageManager";
 import { requireAuth } from "@/lib/requireAuth";
+const session = await requireAuth(Astro);
+if (!session) return Astro.redirect("/login");
+const { auth, cookieHeader } = session;
+const authed = { headers: { cookie: cookieHeader } };
 
-const user = await requireAuth(Astro);
-if (!user) return Astro.redirect("/login");
 const response = await serverApp.phone.all.get({ query: { is_deleted: false } });
 const data: any[] = Array.isArray(response.data) ? response.data : [];
     
 
 ---
 
-<Layout title="Inventario" user={user}>
+<Layout title="Inventario" user={auth.user}>
     <h1 class="w-full text-center text-4xl text-gray-700 font-bold my-5">Inventario</h1>
     
 

@@ -4,6 +4,7 @@ import { TechnicianTableManager } from "@/components/TableManager/TechnicianTabl
 import { type Technician } from "@server/db/schema"
 import { technicianStates } from "@/components/Structures/technicianStates";
 import ActionPanel from "../ActionPanel";
+import { normalizeShortString } from "@/utils/formatters";
 
 type Props = {
 initialData: Technician[];
@@ -22,7 +23,7 @@ deleted: DeletedFilter;
 }) {
 const query: Record<string, any> = {};
 
-if (filters.name.trim()) query.name = filters.name.trim();
+if (filters.name.trim()) query.name = normalizeShortString(filters.name);
 if (filters.speciality.trim()) query.speciality = filters.speciality.trim();
 if (filters.state.trim()) query.state = filters.state.trim();
 if (filters.email.trim()) query.email = filters.email.trim();

@@ -71,11 +71,11 @@ export const saleController = new Elysia({ prefix: "/sale" })
         total_amount: body.total_amount,
         payment_method: body.payment_method,
         debt: body.debt,
-        ...(body.debt_amount !== undefined && { debt_amount: body.debt_amount }),
+        ...(body.debt_amount && { debt_amount: body.debt_amount }),
         client_id: body.client_id,
         seller_id: body.seller_id,
         device_id: body.device_id,
-        ...(body.trade_in_device !== undefined && { trade_in_device: body.trade_in_device }),
+        ...(body.trade_in_device && { trade_in_device: body.trade_in_device }),
       };
 
       try {
@@ -124,11 +124,11 @@ export const saleController = new Elysia({ prefix: "/sale" })
         total_amount: body.total_amount,
         payment_method: body.payment_method,
         debt: body.debt,
-        ...(body.debt_amount !== undefined && { debt_amount: body.debt_amount }),
+        ...(body.debt_amount && { debt_amount: body.debt_amount }),
         client_id: body.client_id,
         seller_id: body.seller_id,
         device_id: body.device_id,
-        ...(body.trade_in_device !== undefined && { trade_in_device: body.trade_in_device }),
+        ...(body.trade_in_device && { trade_in_device: body.trade_in_device }),
       };
 
       try {

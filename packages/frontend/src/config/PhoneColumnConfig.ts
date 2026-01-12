@@ -51,6 +51,7 @@ export const phoneColumns: Column<Phone>[] = [
        {
         accessorKey: "sold",
         header: "Vendido",
+        renderKey: "yesno",
     },
 
 ]
