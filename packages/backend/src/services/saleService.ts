@@ -357,19 +357,30 @@ export const getGrossIncome = async (tenantId: number) => {
 };
 
 export const getNetIncome = async (tenantId: number) => {
-  const grossIncome = await getGrossIncome(tenantId);
-
-  const expenseDebts = await db
+  const result = await db
     .select({
-      total_expenses: sql`SUM(${expenseTable.amount})`,
+      net_income: sql`
+        SUM(
+          COALESCE(${saleTable.total_amount}, 0) 
+          - COALESCE(${phoneTable.buy_cost}, 0)
+        )
+      `,
     })
-    .from(expenseTable)
-    .where(and(eq(expenseTable.tenant_id, tenantId), eq(expenseTable.is_deleted, false)));
+    .from(saleTable)
+    .innerJoin(
+      phoneTable,
+      eq(saleTable.device_id, phoneTable.device_id)
+    )
+    .where(
+      and(
+        eq(saleTable.tenant_id, tenantId),
+        eq(saleTable.is_deleted, false)
+      )
+    );
 
-  const expenses = Number(expenseDebts[0]?.total_expenses) || 0;
-
-  return Number((Number(grossIncome) - expenses).toFixed(2));
+  return Number(Number(result[0]?.net_income ?? 0).toFixed(2));
 };
+
 
 type SalesByMonthRow = {
   month_start_date: string;
@@ -449,4 +460,37 @@ export const getTotalDebt = async (tenantId: number) => {
 
   const total = Number(debts[0]?.total_debt) || 0;
   return total;
+};
+
+export const getNetIncomeBreakdown = async (tenantId: number) => {
+  const rows = await db
+    .select({
+      sale_id: saleTable.sale_id,
+      device_name: phoneTable.name,
+      buy_cost: sql<number>`COALESCE(${phoneTable.buy_cost}, 0)`,
+      total_amount: sql<number>`COALESCE(${saleTable.total_amount}, 0)`,
+      profit: sql<number>`
+        COALESCE(${saleTable.total_amount}, 0)
+        - COALESCE(${phoneTable.buy_cost}, 0)
+      `,
+    })
+    .from(saleTable)
+    .innerJoin(
+      phoneTable,
+      eq(saleTable.device_id, phoneTable.device_id)
+    )
+    .where(
+      and(
+        eq(saleTable.tenant_id, tenantId),
+        eq(saleTable.is_deleted, false)
+      )
+    )
+    .orderBy(
+      sql`
+        COALESCE(${saleTable.total_amount}, 0)
+        - COALESCE(${phoneTable.buy_cost}, 0)
+      DESC`
+    );
+
+  return rows;
 };
