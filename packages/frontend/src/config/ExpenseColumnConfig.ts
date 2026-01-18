@@ -15,6 +15,7 @@ export const expenseColumns: Column<Expense>[] = [
     {
         accessorKey: "description",
         header: "Descripción",
+        renderKey: "description"
     },
     {
         accessorKey: "amount",

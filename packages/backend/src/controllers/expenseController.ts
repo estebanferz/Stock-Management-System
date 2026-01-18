@@ -7,6 +7,7 @@ import {
   softDeleteExpense,
   getTotalExpenses,
   getExpenseReceiptFile,
+  getTopExpensesByCategory,
 } from "../services/expenseService";
 import { expenseInsertDTO, expenseUpdateDTO } from "@server/db/types";
 import { safeFilename } from "../util/formattersBackend";
@@ -194,4 +195,7 @@ export const expenseController = new Elysia({ prefix: "/expense" })
         tags: ["sales"],
       },
     }
-  );
+  )
+  .get("/top-by-category", protectedController(async (ctx) => {
+    return await getTopExpensesByCategory(ctx.tenantId, 5);
+  }));

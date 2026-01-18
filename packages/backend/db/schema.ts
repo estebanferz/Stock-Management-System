@@ -1,4 +1,4 @@
-import { index, integer, pgTable, varchar, date, bigint, numeric, timestamp, boolean, text, pgEnum, serial, uniqueIndex } from "drizzle-orm/pg-core";
+import { index, integer, pgTable, varchar, date, bigint, numeric, timestamp, boolean, text, pgEnum, serial, uniqueIndex, unique } from "drizzle-orm/pg-core";
 import { type InferSelectModel, sql } from "drizzle-orm"
 
 export const userRoleEnum = pgEnum("user_role", ["admin", "user"]);
@@ -161,6 +161,7 @@ export const expenseTable = pgTable("expense", {
   receipt_size: integer(),
   provider_id: integer().references(() => providerTable.provider_id),
   is_deleted: boolean().default(false),
+  sale_id: integer().references(() => saleTable.sale_id),
 
   tenant_id: integer("tenant_id")
     .notNull()
@@ -168,6 +169,7 @@ export const expenseTable = pgTable("expense", {
 
   created_by_user_id: integer("created_by_user_id").references(() => userTable.user_id),
 }, (t) => ({
+  tenantSaleIdx: index("expense_tenant_sale_idx").on(t.tenant_id, t.sale_id),
   tenantDeletedIdx: index("expense_tenant_deleted_idx").on(t.tenant_id, t.is_deleted),
   tenantDatetimeIdx: index("expense_tenant_datetime_idx").on(t.tenant_id, t.datetime),
 }));
@@ -201,6 +203,29 @@ export const phoneTable = pgTable("phone", {
   uniqueIndex("phone_tenant_imei_unique").on(t.tenant_id, t.imei),
 ]);
 export type Phone = InferSelectModel<typeof phoneTable>
+
+export const accessoryTable = pgTable("accessory", {
+  accessory_id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  datetime: timestamp().notNull().defaultNow(),
+  name: varchar({ length: 255 }).notNull(),
+  brand: varchar({ length: 100 }).notNull(),
+  stock: integer().notNull().default(0),
+  color: varchar({ length: 50 }),
+  category: varchar({ length: 100 }).notNull(),
+  price: numeric({ precision: 12, scale: 2 }).notNull(),
+  buy_cost: numeric({ precision: 12, scale: 2 }).notNull(),
+  deposit: varchar({ length: 255 }).notNull(),
+  gift: boolean().default(false).notNull(),
+  is_deleted: boolean().default(false),
+
+  tenant_id: integer("tenant_id")
+    .notNull()
+    .references(() => tenantTable.tenant_id, { onDelete: "cascade" }),
+}, (t) => [
+  index("accessory_tenant_deleted_idx").on(t.tenant_id, t.is_deleted),
+  index("accessory_tenant_datetime_idx").on(t.tenant_id, t.datetime),
+]);
+export type Accessory = InferSelectModel<typeof accessoryTable>
 
 export const repairTable = pgTable("repair", {
   repair_id: integer().primaryKey().generatedAlwaysAsIdentity(),
@@ -252,6 +277,29 @@ export const saleTable = pgTable("sale", {
 }));
 export type Sale = InferSelectModel<typeof saleTable>;
 
+export const saleGiftAccessoryTable = pgTable(
+  "sale_gift_accessory",
+  {
+    sale_gift_id: integer().primaryKey().generatedAlwaysAsIdentity(),
+    sale_id: integer().notNull().references(() => saleTable.sale_id, { onDelete: "cascade" }),
+    accessory_id: integer().notNull().references(() => accessoryTable.accessory_id, { onDelete: "restrict" }),
+    qty: integer().notNull().default(1),
+    unit_price: numeric({ precision: 12, scale: 2 }).notNull(),
+    unit_buy_cost: numeric({ precision: 12, scale: 2 }).notNull(),
+
+    tenant_id: integer("tenant_id")
+      .notNull()
+      .references(() => tenantTable.tenant_id, { onDelete: "cascade" }),
+
+    is_deleted: boolean().default(false),
+  },
+  (t) => ({
+    saleIdx: index("sale_gift_sale_idx").on(t.tenant_id, t.sale_id),
+    accessoryIdx: index("sale_gift_accessory_idx").on(t.tenant_id, t.accessory_id),
+    uniq: unique("sale_gift_unique").on(t.sale_id, t.accessory_id),
+  })
+);
+export type SaleGiftAccessory = InferSelectModel<typeof saleGiftAccessoryTable>;
 
 export const sellerTable = pgTable("seller", {
   seller_id: integer().primaryKey().generatedAlwaysAsIdentity(),

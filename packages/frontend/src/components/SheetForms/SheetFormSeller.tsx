@@ -66,9 +66,29 @@ export function SheetFormSeller({zIndex}: SheetFormSellerProps) {
   
       setInternalOpen(true);
     };
-  
+
+    const onNew = () => {
+      setEditingSeller(null);
+
+      setForm({
+        name: "",
+        age: "",
+        email: "",
+        phone_number: "",
+        hire_date: "",
+        pay_date: "",
+        commission: "",
+      });
+
+      setInternalOpen(true);
+    };
+
     window.addEventListener("open-edit-seller", onEdit as any);
-    return () => window.removeEventListener("open-edit-seller", onEdit as any);
+    window.addEventListener("open-new-seller", onNew as any);
+    return () => { 
+      window.removeEventListener("open-edit-seller", onEdit as any);
+      window.removeEventListener("open-new-seller", onNew as any)
+    };
   }, []);
   
   const handleSubmit = async (e: React.FormEvent) => {
@@ -115,6 +135,7 @@ return (
         isOpen={internalOpen}
         onOpenChange={setInternalOpen}
         description="Agregar vendedor al sistema"
+        showTrigger={false}
         footer={
           <>
             <Button type="submit" form="form-seller">Agregar</Button>

@@ -10,6 +10,7 @@ import {expenseController} from "./controllers/expenseController";
 import {providerController} from "./controllers/providerController";
 import {saleController} from "./controllers/saleController";
 import {sellerController} from "./controllers/sellerController";
+import {accessoryController} from "./controllers/accessoryController";
 import {userController} from "./controllers/userController";
 import {tenantController} from "./controllers/tenantController";
 
@@ -32,6 +33,7 @@ const app = new Elysia({prefix: '/api'})
   .use(providerController)
   .use(saleController)
   .use(sellerController)
+  .use(accessoryController)
   .use(userController)
   .use(tenantController)
 

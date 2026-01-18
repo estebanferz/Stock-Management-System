@@ -1,4 +1,4 @@
-import { clientTable, technicianTable, phoneTable, providerTable, expenseTable, repairTable, sellerTable, saleTable } from './schema';
+import { clientTable, technicianTable, phoneTable, providerTable, expenseTable, repairTable, sellerTable, saleTable, accessoryTable } from './schema';
 import { createInsertSchema } from 'drizzle-typebox';
 import { t } from 'elysia';
 
@@ -30,9 +30,28 @@ export const sellerSchema = createInsertSchema(sellerTable);
 export const sellerInsertDTO = t.Omit(sellerSchema, ["seller_id", "tenant_id"]);
 export const sellerUpdateDTO = t.Omit(sellerSchema, ["seller_id", "tenant_id"]);
 
+export const giftAccessoryDTO = t.Object({
+  accessory_id: t.Number(),
+  qty: t.Number({ minimum: 1 }),
+});
+
 export const saleSchema = createInsertSchema(saleTable);
-export const saleInsertDTO = t.Omit(saleSchema, ["sale_id", "tenant_id"]);
-export const saleUpdateDTO = t.Omit(saleSchema, ["sale_id", "tenant_id"]);
+
+export const saleInsertDTO = t.Object({
+  ...t.Omit(saleSchema, ["sale_id", "tenant_id"]).properties,
+  datetime: t.Optional(t.String({ format: "date-time" })),
+  gift_accessories: t.Optional(t.Array(giftAccessoryDTO)),
+});
+
+export const saleUpdateDTO = t.Object({
+  ...t.Omit(saleSchema, ["sale_id", "tenant_id"]).properties,
+  datetime: t.Optional(t.String({ format: "date-time" })),
+  gift_accessories: t.Optional(t.Array(giftAccessoryDTO)),
+});
+
+export const accessorySchema = createInsertSchema(accessoryTable);
+export const accessoryInsertDTO = t.Omit(accessorySchema, ["accessory_id", "tenant_id"]);
+export const accessoryUpdateDTO = t.Omit(accessorySchema, ["accessory_id", "tenant_id"]);
 
 export type TenantRole = "owner" | "admin" | "staff";
 

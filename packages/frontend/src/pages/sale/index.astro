@@ -7,6 +7,7 @@ import { saleColumns } from "@/config/SaleColumnConfig.client";
 import ActionPanel from "@/components/ActionPanel";
 import { SalesPageManager } from "@/components/PageManager/SalePageManager";
 import { requireAuth } from "@/lib/requireAuth";
+import { Store } from "lucide-react";
 
 const session = await requireAuth(Astro);
 if (!session) return Astro.redirect("/login");
@@ -80,7 +81,7 @@ console.log("Ventas:", data);
     </div>
 
     <div
-      class="group fixed right-10 lg:right-1/4 bottom-10 z-30"
+      class="group fixed right-10 bottom-10 z-30"
     >
       <span 
         class="absolute bottom-full right-0 mb-2 whitespace-nowrap rounded-md border bg-white px-4 py-2 
@@ -92,6 +93,20 @@ console.log("Ventas:", data);
         Nueva Venta
       </span>
 
+      <button
+          id="btn-new-sale"
+          type="button"
+          class="flex justify-center items-center h-16 w-16 rounded-full bg-white text-gray-500 hover:bg-mainColor hover:opacity-90 hover:text-white text-3xl shadow-lg"
+      >
+          <Store />
+      </button>
+
       <SheetFormSale zIndex={60} client:load/>
     </div>
 </Layout>
+
+<script is:inline>
+document.getElementById("btn-new-sale")?.addEventListener("click", () => {
+    window.dispatchEvent(new CustomEvent("open-new-sale"));
+});
+</script>

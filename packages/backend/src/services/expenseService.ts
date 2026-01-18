@@ -297,6 +297,29 @@ export const getTotalExpenses = async (tenantId: number) => {
   return Number(total_expenses ?? 0);
 };
 
+type ExpenseCategoryRow = { category: string; total: number };
+
+export const getTopExpensesByCategory = async (tenantId: number, limit = 5) => {
+  const rows = await db
+    .select({
+      category: expenseTable.category,
+      total: sql<number>`SUM(COALESCE(${expenseTable.amount}, 0))`,
+    })
+    .from(expenseTable)
+    .where(
+      and(
+        eq(expenseTable.tenant_id, tenantId),
+        eq(expenseTable.is_deleted, false)
+      )
+    )
+    .groupBy(expenseTable.category)
+    .orderBy(sql`SUM(COALESCE(${expenseTable.amount}, 0)) DESC`)
+    .limit(limit);
+
+  return rows as ExpenseCategoryRow[];
+};
+
+
 export async function getExpenseReceiptFile(tenantId: number, expenseId: number) {
   const [expense] = await db
     .select({

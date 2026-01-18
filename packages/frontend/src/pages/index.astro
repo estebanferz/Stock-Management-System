@@ -6,87 +6,109 @@ import { SalesDataByMonth } from '@/utils/formatters';
 import { PieChart } from '@/components/PieChart';
 import { generalStringFormat } from "@/utils/formatters";
 import { SalesAnnualSection } from "@/components/SalesAnnualSection";
-import moneyIcon from '../assets/money-income.svg';
 import devicesIcon from '../assets/devices.svg';
-import grossincome from "../assets/gross-income.svg"
-import expenseIcon from '../assets/expense.svg';
-import debtIcon from "../assets/debt.svg";
+import grossincome from "../assets/gross-income.svg";
 import { requireAuth } from "@/lib/requireAuth";
-import { NetIncomeCard } from '@/components/Dashboard/NetincomeCard';
+import { NetIncomeCard } from '@/components/Dashboard/NetIncomeCard';
 import { InvestmentCard } from "@/components/Dashboard/InvestmentCard";
+import { DebtorsCard } from "@/components/Dashboard/DebtorsCard";
 
 const session = await requireAuth(Astro);
 if (!session) return Astro.redirect("/login");
 const { auth, cookieHeader } = session;
 const authed = { headers: { cookie: cookieHeader } };
 
-const resultGross = await serverApp.sale['gross-income'].get(authed)
-const gross_income = String(resultGross.data);
-const saleData = await serverApp.sale.all.get({ ...authed, query: { is_deleted: false }});
-const units_sold_count = Array.isArray(saleData.data)
-? saleData.data.length
-: 0;
-const expenseData = await serverApp.expense['expenses'].get(authed)
-console.log(expenseData)
-const expensesFormatted = expenseData.data || []
 const initialYear = new Date().getFullYear();
-const saleDataByMonth = await serverApp.sale["sales-by-month"].get({
-	...authed,
-	query: { year: String(initialYear) },
-});
-const row = Array.isArray(saleDataByMonth.data) ? saleDataByMonth.data : []
-const saleDataFormatted = SalesDataByMonth(row);
-const deudoresCount = await serverApp.client['debts'].get(authed)
-const deudoresCountFormatted = Array.isArray(deudoresCount.data)
-? deudoresCount.data.length
-: 0;
-const totalDebt = await serverApp.client['total-debt'].get(authed)
-const totalDebtFormatted = totalDebt.data || 0;
+const [
+  resultGross,
+  resultNet,
+  netIncomeBreakdown,
+  stockInvestment,
+  stockInvestmentBreakdown,
+  deudores,
+  totalDebt,
+  topExpenses,
+  phoneSoldCount,
+  saleDataByMonth,
+  // ⚠️ si solo lo usás para contar, conviene tener endpoint /sale/count
+  saleData,
+] = await Promise.all([
+  serverApp.sale["gross-income"].get(authed),
+  serverApp.sale["net-income"].get(authed),
+  serverApp.sale["net-income-breakdown"].get(authed),
 
-//net-income
-const resultNet = await serverApp.sale['net-income'].get(authed)
-const net_income = String(resultNet.data);
-const netIncomeBreakdown = await serverApp.sale["net-income-breakdown"].get(authed);
+  serverApp.phone["stock-investment"].get(authed),
+  serverApp.phone["stock-investment-breakdown"].get(authed),
+
+  serverApp.client["debts"].get(authed),
+  serverApp.client["total-debt"].get(authed),
+
+  serverApp.expense["top-by-category"].get(authed),
+  serverApp.sale["products-sold-count"].get(authed),
+
+  serverApp.sale["sales-by-month"].get({ ...authed, query: { year: String(initialYear) } }),
+
+  serverApp.sale.all.get({ ...authed, query: { is_deleted: false } }),
+]);
+
+
+const gross_income = String(resultGross.data ?? 0);
+
+const net_income = String(resultNet.data ?? 0);
 const net_income_rows = Array.isArray(netIncomeBreakdown.data) ? netIncomeBreakdown.data : [];
 
-//investment
-const stockInvestment = await serverApp.phone["stock-investment"].get(authed);
 const stock_investment_total = String(stockInvestment.data ?? 0);
-const stockInvestmentBreakdown = await serverApp.phone["stock-investment-breakdown"].get(authed);
 const stock_rows = Array.isArray(stockInvestmentBreakdown.data) ? stockInvestmentBreakdown.data : [];
 
+// Debtors
+const debt_rows = Array.isArray(deudores.data) ? deudores.data : [];
+const deudoresCountFormatted = debt_rows.length;
+const totalDebtFormatted = totalDebt.data ?? 0;
 
+// Sales by month
+const monthRows = Array.isArray(saleDataByMonth.data) ? saleDataByMonth.data : [];
+const saleDataFormatted = SalesDataByMonth(monthRows);
+
+// Units sold count (⚠️ esto idealmente debería venir de un endpoint agregado)
+const units_sold_count = Array.isArray(saleData.data) ? saleData.data.length : 0;
+
+// Expenses pie
+const top_expense_rows = Array.isArray(topExpenses.data) ? topExpenses.data : [];
+const expensePieData: (string | number)[][] = [
+  ["Categoría", "Monto"],
+  ...top_expense_rows.map((r: any) => [String(r.category ?? "Sin categoría"), Number(r.total ?? 0)]),
+];
+
+// Products sold pie
 type ProductSoldCount = { name: string; sold_count: number };
-const phoneSoldCount = await serverApp.sale["products-sold-count"].get(authed);
-const rows: ProductSoldCount[] = Array.isArray(phoneSoldCount.data)
-  ? phoneSoldCount.data
-  : [];
-const formattedDataName = rows.map((item: ProductSoldCount) => ({
-  ...item,
-  name: generalStringFormat(item.name),
-}));
-
+const rows: ProductSoldCount[] = Array.isArray(phoneSoldCount.data) ? phoneSoldCount.data : [];
+const formattedDataName = rows.map((item) => ({ ...item, name: generalStringFormat(item.name) }));
 const pieChartData: (string | number)[][] = [
   ["Producto", "Unidades Vendidas"],
   ...formattedDataName.map((item) => [item.name, item.sold_count]),
 ];
-
-const secondaryData = `
-    <div>
-        <p>${deudoresCountFormatted}</p>
-    </div>
-`;
+const topExpenseTotal = top_expense_rows.reduce((acc: number, r: any) => acc + Number(r.total ?? 0), 0);
 ---
 
 <LayoutDashboard title="StockManagement" user={auth.user}>
 	<h1 class="px-3 w-full text-left text-4xl text-gray-700 font-bold mt-5 mb-2">Dashboard</h1>
 	<p class="px-3 mb-8 text-sm text-gray-600 font-medium">Resumen completo de tu negocio con métricas clave</p>
-	<div class="px-3 grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
-		<CustomCard title="Unidades Vendidas" amount={String(units_sold_count)} icon={devicesIcon}/>
-		<NetIncomeCard netIncome={net_income} rows={net_income_rows} client:load/>
-		<InvestmentCard totalInvestment={stock_investment_total} rows={stock_rows} client:load />
-		<CustomCard title="Ingresos Brutos" amount={`$${gross_income}`} icon={grossincome}/>
-		<CustomCard title="Gastos Totales" amount={`$${expensesFormatted}`} icon={expenseIcon}/>
+	<div class="px-3 grid grid-cols-1 md:grid-cols-3 gap-3 mb-4 items-start">
+		<div class="col-span-2 grid grid-rows-4 gap-1 p-4 bg-white rounded-2xl shadow-lg">
+			<CustomCard title="Unidades Vendidas" description="Total de unidades vendidas" amount={String(units_sold_count)} icon={devicesIcon}/>
+			<NetIncomeCard netIncome={net_income} rows={net_income_rows} client:load/>
+			<InvestmentCard totalInvestment={stock_investment_total} rows={stock_rows} client:load />
+			<CustomCard title="Ingresos Brutos" description="Ingresos brutos del negocio" amount={`$${gross_income}`} icon={grossincome}/>
+		</div>
+		<div class="col-span-1 p-4 bg-white hover:bg-gray-50 rounded-2xl shadow-lg">
+			<PieChart 
+				data={expensePieData}
+				title={`Gastos principales: $${topExpenseTotal.toFixed(2)}`}
+				description="Top 5 categorías por monto acumulado"
+				height="150px"
+				client:load
+			/>
+		</div>
 	</div>
 	<div class="px-3">
 		<SalesAnnualSection
@@ -97,11 +119,21 @@ const secondaryData = `
 	</div>
 	</div>
 	<div class="flex flex-col md:flex-row gap-3 mt-4 px-3 mb-10">
-		<div class="flex justify-center md:w-1/2 p-3 bg-white hover:bg-gray-50 rounded-2xl shadow-lg">
-			<PieChart data={pieChartData} className="flex justify-center" client:load/>
+		<div class="flex justify-center md:w-1/2 p-4 bg-white hover:bg-gray-50 rounded-2xl shadow-lg">
+			<PieChart 
+				data={pieChartData}
+				className="flex justify-center" 
+				title="Productos más vendidos"
+  				description="Top 5 productos más vendidos"
+				client:load/>
 		</div>
 		<div class="w-1/2">
-			<CustomCard title="Deudores" amount=`$${totalDebtFormatted}` secondaryData={secondaryData} icon={debtIcon}/>
+			<DebtorsCard
+				client:load
+				count={deudoresCountFormatted}
+				totalDebt={totalDebtFormatted}
+				rows={debt_rows}
+			/>
 		</div>
 	</div>
 
