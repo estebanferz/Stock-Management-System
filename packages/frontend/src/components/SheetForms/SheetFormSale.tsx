@@ -83,9 +83,93 @@ export function SheetFormSale({zIndex}:SheetFormSaleProps) {
       setInternalOpen(true);
     };
 
+    const onNew = () => {
+      setEditingSale(null);
+
+      setForm({
+        datetime: "",
+        total_amount: "",
+        payment_method: "Pago",
+        debt: false,
+        debt_amount: "",
+        client_id: "",
+        seller_id: "",
+        device_id: "",
+        trade_in_device: "",
+      });
+
+      setInternalOpen(true);
+    };
+
     window.addEventListener("open-edit-sale", onEdit as any);
-    return () => window.removeEventListener("open-edit-sale", onEdit as any);
+    window.addEventListener("open-new-sale", onNew as any);
+    return () => {
+      window.removeEventListener("open-edit-sale", onEdit as any);
+      window.removeEventListener("open-new-sale", onNew as any);
+    }
   }, []);
+
+  type GiftLine = {
+    accessory_id: number;
+    qty: number;
+  };
+
+  type AccessoryLite = {
+    accessory_id: number;
+    name: string;
+    brand: string;
+    stock: number;
+    price: string; // numeric string
+  };
+
+  const [accessories, setAccessories] = useState<AccessoryLite[]>([]);
+  const [giftLines, setGiftLines] = useState<GiftLine[]>([]);
+
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await clientApp.accessory.all.get({
+          query: { is_deleted: "false" },
+        });
+
+        const rows = (res.data ?? []) as any[];
+        setAccessories(
+          rows.map((a) => ({
+            accessory_id: a.accessory_id,
+            name: a.name,
+            brand: a.brand,
+            stock: Number(a.stock ?? 0),
+            price: String(a.price ?? "0"),
+          }))
+        );
+      } catch (e) {
+        console.error("Error cargando accesorios:", e);
+      }
+    })();
+  }, []);
+
+  const getAccessory = (id: number) =>
+    accessories.find((a) => a.accessory_id === id);
+
+  const giftTotal = giftLines.reduce((acc, line) => {
+    const a = getAccessory(line.accessory_id);
+    if (!a) return acc;
+    return acc + Number(a.price) * line.qty;
+  }, 0);
+
+  function updateGiftQty(id: number, qty: number) {
+    setGiftLines((prev) =>
+      prev.map((x) =>
+        x.accessory_id === id ? { ...x, qty: Math.max(1, qty) } : x
+      )
+    );
+  }
+
+  function removeGiftLine(id: number) {
+    setGiftLines((prev) => prev.filter((x) => x.accessory_id !== id));
+  }
+
 
   const handleDeviceSelect = (id: string, price?: string) => {
     setForm({ ...form, device_id: id });
@@ -109,149 +193,59 @@ export function SheetFormSale({zIndex}:SheetFormSaleProps) {
     e.preventDefault();
     e.stopPropagation();
 
-    const toInt = (v: unknown) => {
-      const n = typeof v === "string" ? Number(v) : Number(v);
-      if (!Number.isFinite(n)) return 0;
-      // si permitís decimales y querés redondear:
-      return Math.round(n);
-      // si preferís truncar:
-      // return Math.trunc(n);
-    };
-
     const datetime = `${date}T${time}:00Z`;
-    alert("Submitting sale with datetime:" + datetime);
-
 
     if (!form.client_id || !form.seller_id || !form.device_id) {
       alert("Por favor, selecciona Cliente, Vendedor y Dispositivo.");
       return;
     }
 
-    const saleData = {
-      ...form,
-      datetime: datetime,
+    for (const line of giftLines) {
+      const a = getAccessory(line.accessory_id);
+      if (!a) {
+        alert("Accesorio no encontrado");
+        return;
+      }
+      if (line.qty > a.stock) {
+        alert(`Stock insuficiente para ${a.brand} ${a.name}`);
+        return;
+      }
+    }
+
+    const payload = {
+      datetime,
       debt_amount: form.debt ? form.debt_amount : null,
+      debt: form.debt,
       client_id: Number(form.client_id),
-      payment_method: form.payment_method,
-      device_id: Number(form.device_id),
-      total_amount: form.total_amount,
       seller_id: Number(form.seller_id),
+      device_id: Number(form.device_id),
       trade_in_device: form.trade_in_device ? Number(form.trade_in_device) : null,
+
+      total_amount: form.total_amount,
+      payment_method: form.payment_method,
+
+      gift_accessories: giftLines.map((l) => ({
+        accessory_id: l.accessory_id,
+        qty: l.qty,
+      })),
     };
 
     try {
-      let response;
       const isEditing = !!editingSale;
 
-      if (isEditing) {
-        response = await clientApp.sale({ id: editingSale.sale_id }).put(saleData);
-      } else {
-        response = await clientApp.sale.post(saleData);
+      console.log("payload sale:", payload);
+      console.log("types:", {
+        client_id: typeof payload.client_id,
+        seller_id: typeof payload.seller_id,
+        device_id: typeof payload.device_id,
+      });
 
-        if (saleData.debt && saleData.debt_amount) {
-          const clientId = Number(saleData.client_id);
-          const addDebt = toInt(saleData.debt_amount);
+      const res = isEditing
+        ? await clientApp.sale({ id: editingSale!.sale_id }).put(payload)
+        : await clientApp.sale.post(payload);
 
-          const { data: clientRow, error: clientGetError } =
-            await clientApp.client({ id: clientId }).get();
-
-          if (clientGetError || !clientRow) {
-            console.error("Error fetching client:", clientGetError);
-          } else {
-            const currentDebt = toInt((clientRow as any).debt);
-            const newDebt = currentDebt + addDebt;
-
-            const clientData = {
-              ...(clientRow as any),
-              debt: newDebt,
-              id_number: String((clientRow as any).id_number),
-            };
-
-            // por si tu API rechaza campos no editables
-            delete (clientData as any).datetime;
-
-            const { error: clientPutError } =
-              await clientApp.client({ id: clientId }).put(clientData);
-
-            if (clientPutError) {
-              console.error(
-                "Failed to update client debt:",
-                clientPutError.value ?? clientPutError
-              );
-            }
-          }
-        }
-
-        // --- comisión vendedor (tu lógica) ---
-        const seller_id = saleData.seller_id;
-        const { data: sellerData, error: sellerError } = await clientApp
-          .seller({ id: seller_id })
-          .get();
-
-        if (sellerError || !sellerData) {
-          console.error("Error fetching seller data:", sellerError);
-          throw new Error("Failed to fetch seller data");
-        }
-
-        const seller_commission = parseFloat((sellerData as any).commission);
-
-        try {
-          const expensePayload = {
-            datetime,
-            category: "Comisión",
-            description: `Comisión por venta (${(sellerData as any).name})`,
-            amount: String(
-              (Number(seller_commission) / 100) * Number(saleData.total_amount)
-            ),
-            payment_method: saleData.payment_method ?? "Unknown",
-            receipt_number: null,
-            provider_id: null,
-          };
-
-          const { error: expenseError } = await clientApp.expense.post(expensePayload);
-          if (expenseError) {
-            console.error(
-              "Failed to create commission expense:",
-              expenseError.value ?? expenseError
-            );
-          } else {
-            console.log("Commission expense created.");
-          }
-        } catch (err) {
-          console.error("Error creating commission expense:", err);
-        }
-      }
-
-      const { error } = response;
+      const { error } = res;
       if (error) throw error.value;
-
-      // --- marcar dispositivo como sold (solo nueva venta) ---
-      if (!isEditing) {
-        const deviceIdNumber = Number(form.device_id);
-
-        const { data: currentPhoneData, error: getError } =
-          await (clientApp.phone as any)({ id: deviceIdNumber }).get();
-
-        if (getError || !currentPhoneData) {
-          window.location.reload();
-          return;
-        }
-        const updatePayload = {
-          ...currentPhoneData,
-          sold: true,
-        };
-        const { error: phoneUpdateError } =
-          await (clientApp.phone as any)({ id: deviceIdNumber }).put(updatePayload);
-
-        if (phoneUpdateError) {
-          console.error(
-            "Falló la actualización final del dispositivo:",
-            phoneUpdateError.value
-          );
-        } else {
-          console.log("Device marked as sold.");
-        }
-      }
 
       window.location.reload();
     } catch (err) {
@@ -287,6 +281,7 @@ return (
         onOpenChange={setInternalOpen}
         description="Agregar venta de dispositivo al sistema"
         isModal={true}
+        showTrigger={false}
         footer={
           <>
             <Button type="submit" form="form-sale">Agregar</Button>
@@ -381,6 +376,110 @@ return (
             depth={1}
           />
         )}
+
+        <div className="grid gap-3">
+          <Label>Accesorios de regalo</Label>
+
+          <select
+            className="w-full rounded-lg border px-3 py-2 text-sm outline-none focus:ring-2"
+            value=""
+            onChange={(e) => {
+              const id = Number(e.target.value);
+              if (!id) return;
+
+              setGiftLines((prev) => {
+                const exists = prev.find((x) => x.accessory_id === id);
+
+                if (exists) {
+                  // si ya estaba, suma 1
+                  return prev.map((x) =>
+                    x.accessory_id === id ? { ...x, qty: x.qty + 1 } : x
+                  );
+                }
+
+                // si no estaba, lo agrega con qty = 1
+                return [...prev, { accessory_id: id, qty: 1 }];
+              });
+
+              // reset del select para permitir elegir otro
+              e.target.value = "";
+            }}
+          >
+            <option value="">Seleccionar accesorio</option>
+            {accessories.map((a) => (
+              <option key={a.accessory_id} value={String(a.accessory_id)}>
+                {a.brand} {a.name} — stock {a.stock}
+              </option>
+            ))}
+          </select>
+
+          {giftLines.length > 0 && (
+            <div className="mt-2 rounded-xl border bg-white p-3">
+              <div className="flex flex-col gap-3">
+                {giftLines.map((line) => {
+                  const a = getAccessory(line.accessory_id);
+                  if (!a) return null;
+
+                  const max = a.stock;
+                  const lineTotal = Number(a.price) * line.qty;
+                  const outOfStock = line.qty > max;
+
+                  return (
+                    <div
+                      key={line.accessory_id}
+                      className="grid grid-cols-12 items-center gap-2"
+                    >
+                      <div className="col-span-6 text-sm">
+                        <div className="font-medium text-gray-800">
+                          {a.brand} {a.name}
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          ${a.price} c/u · stock {a.stock}
+                        </div>
+                        {outOfStock && (
+                          <div className="text-xs text-red-600">
+                            Cantidad supera stock
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="col-span-3">
+                        <Input
+                          type="number"
+                          min={1}
+                          step={1}
+                          value={line.qty}
+                          onChange={(e) =>
+                            updateGiftQty(line.accessory_id, Number(e.target.value))
+                          }
+                        />
+                      </div>
+
+                      <div className="col-span-2 text-right text-sm text-gray-700">
+                        ${lineTotal.toFixed(2)}
+                      </div>
+
+                      <div className="col-span-1 text-right">
+                        <button
+                          type="button"
+                          className="text-red-600 hover:text-red-800"
+                          onClick={() => removeGiftLine(line.accessory_id)}
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+
+                <div className="mt-2 flex items-center justify-between border-t pt-2 text-sm">
+                  <span className="text-gray-600">Total regalo</span>
+                  <span className="font-semibold">${giftTotal.toFixed(2)}</span>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
 
         <div className="grid gap-3">
           <Label>Método de pago</Label>

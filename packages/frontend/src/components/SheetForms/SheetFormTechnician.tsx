@@ -52,9 +52,27 @@ export function SheetFormTechnician({zIndex}:SheetFormTechnicianProps) {
   
       setInternalOpen(true);
     };
+
+    const onNew = () => {
+      setEditingTechnician(null);
+
+      setForm({
+        name: "",
+        email: "",
+        phone_number: "",
+        speciality: "",
+        state: false,
+      });
+
+      setInternalOpen(true);
+    };
   
     window.addEventListener("open-edit-technician", onEdit as any);
-    return () => window.removeEventListener("open-edit-technician", onEdit as any);
+    window.addEventListener("open-new-technician", onNew as any);
+    return () => {
+      window.removeEventListener("open-edit-technician", onEdit as any);
+      window.removeEventListener("open-new-technician", onNew as any);
+    }
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -101,6 +119,7 @@ return (
         isOpen={internalOpen}
         onOpenChange={setInternalOpen}
         description="Agregar técnico al sistema"
+        showTrigger={false}
         footer={
           <>
             <Button type="submit" form="form-technician">Agregar</Button>

@@ -79,8 +79,32 @@ export function SheetFormExpense({
       setInternalOpen(true);
     };
 
+    const onNew = () => {
+      setEditingExpense(null);
+
+      const local = getLocalTime();
+      const iso = local.toISOString();
+      const [d, t] = iso.split("T");
+      setDate(d);
+      setTime(t.slice(0, 5));
+
+      setForm({
+        category: isNested ? "Producto" : "",
+        description: "",
+        amount: `${injectedAmount || ""}`,
+        payment_method: "Pago",
+        provider_id: "",
+      });
+
+      setInternalOpen(true);
+    };
+
     window.addEventListener("open-edit-expense", onEdit as any);
-    return () => window.removeEventListener("open-edit-expense", onEdit as any);
+    window.addEventListener("open-new-expense", onNew as any);
+    return () => {
+      window.removeEventListener("open-edit-expense", onEdit as any);
+      window.removeEventListener("open-new-expense", onNew as any);
+    }
   }, []);
 
   useEffect(() => {
@@ -173,6 +197,7 @@ export function SheetFormExpense({
         isNested={isNested}
         depth={depth}
         zIndex={zIndex}
+        showTrigger={false}
         footer={
           <>
             <Button type="submit" form="form-expense" onClick={handlePropagationStop}>

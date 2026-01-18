@@ -67,6 +67,8 @@ export const saleController = new Elysia({ prefix: "/sale" })
       const tenantId = ctx.tenantId;
       const body = ctx.body;
 
+      console.log("BODY:", ctx.body);
+
       const newSale = {
         datetime: body.datetime ? new Date(body.datetime) : undefined,
         total_amount: body.total_amount,
@@ -77,6 +79,8 @@ export const saleController = new Elysia({ prefix: "/sale" })
         seller_id: body.seller_id,
         device_id: body.device_id,
         ...(body.trade_in_device && { trade_in_device: body.trade_in_device }),
+        gift_accessories: body.gift_accessories ?? [],
+
       };
 
       try {
@@ -102,10 +106,7 @@ export const saleController = new Elysia({ prefix: "/sale" })
       }
     }),
     {
-      body: t.Object({
-        ...saleInsertDTO.properties,
-        datetime: t.Optional(t.String({ format: "date-time" })),
-      }),
+      body: saleInsertDTO,
       detail: {
         summary: "Insert a new sale (scoped by tenant)",
         tags: ["sales"],
@@ -155,10 +156,7 @@ export const saleController = new Elysia({ prefix: "/sale" })
       }
     }),
     {
-      body: t.Object({
-        ...saleUpdateDTO.properties,
-        datetime: t.Optional(t.String({ format: "date-time" })),
-      }),
+      body: saleUpdateDTO,
       detail: {
         summary: "Update a sale (scoped by tenant)",
         tags: ["sales"],

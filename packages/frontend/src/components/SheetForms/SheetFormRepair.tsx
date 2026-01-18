@@ -74,9 +74,32 @@ export function SheetFormRepair() {
   
       setInternalOpen(true);
     };
+
+    const onNew = () => {
+      setEditingRepair(null);
+
+      setForm({
+        datetime: "",
+        repair_state: "Estado",
+        priority: "Prioridad",
+        description: "",
+        diagnostic: "",
+        client_cost: "",
+        internal_cost: "",
+        client_id: "",
+        technician_id: "",
+        device_id: "",
+      });
+
+      setInternalOpen(true);
+    };
   
     window.addEventListener("open-edit-repair", onEdit as any);
-    return () => window.removeEventListener("open-edit-repair", onEdit as any);
+    window.addEventListener("open-new-repair", onNew as any);
+    return () => {
+      window.removeEventListener("open-edit-repair", onEdit as any);
+      window.removeEventListener("open-new-repair", onNew as any);
+    }
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -131,6 +154,7 @@ return (
         onOpenChange={setInternalOpen}
         description="Agregar reparación de dispositivo al sistema"
         isModal={true}
+        showTrigger={false}
         footer={
           <>
             <Button type="submit" form="form-repair">Agregar</Button>

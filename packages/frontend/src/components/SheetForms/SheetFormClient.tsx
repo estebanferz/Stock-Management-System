@@ -67,8 +67,26 @@ export function SheetFormClient({
       setInternalOpen(true);
     };
 
+    const onNew = () => {
+      setEditingClient(null);
+
+      setForm({
+        name: "",
+        email: "",
+        phone_number: "",
+        id_number: "",
+        birth_date: "",
+      });
+
+      setInternalOpen(true);
+    };
+
     window.addEventListener("open-edit-client", onEdit as any);
-    return () => window.removeEventListener("open-edit-client", onEdit as any);
+    window.addEventListener("open-new-client", onNew as any);
+    return () => {
+      window.removeEventListener("open-edit-client", onEdit as any);
+      window.removeEventListener("open-new-client", onNew as any);
+    };
   }, []);
 
   const handleSubmitClient = async (e: React.FormEvent) => {
@@ -122,6 +140,7 @@ export function SheetFormClient({
         isNested={isNested}
         depth={depth}
         zIndex={zIndex}
+        showTrigger={false}
         footer={
           <>
             <Button type="submit" form="form-client">

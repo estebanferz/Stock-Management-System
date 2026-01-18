@@ -107,7 +107,8 @@ export const getDebts = async (tenantId: number) => {
         gt(clientTable.debt, 0),
         eq(clientTable.is_deleted, false)
       )
-    );
+    )
+    .orderBy(sql`${clientTable.debt} DESC`);
 
   return debts;
 };

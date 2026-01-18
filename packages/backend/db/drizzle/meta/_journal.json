@@ -134,6 +134,41 @@
       "when": 1767643678367,
       "tag": "0018_mean_newton_destine",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1768519590116,
+      "tag": "0019_happy_dexter_bennett",
+      "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1768520724951,
+      "tag": "0020_late_shadow_king",
+      "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1768688133858,
+      "tag": "0021_dusty_dakota_north",
+      "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1768701904479,
+      "tag": "0022_striped_grandmaster",
+      "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1768707311906,
+      "tag": "0023_gigantic_the_order",
+      "breakpoints": true
     }
   ]
 }

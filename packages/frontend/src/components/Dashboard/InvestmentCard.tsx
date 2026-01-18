@@ -35,10 +35,11 @@ export function InvestmentCard({
     <>
       <div
         onClick={() => setOpen(true)}
-        className="cursor-pointer transition hover:scale-[1.02] hover:shadow-xl"
+        className="cursor-pointer transition hover:scale-[1.02]"
       >
         <CustomCard
           title="Inversión en Stock"
+          description="Total invertido en inventario"
           amount={`$${totalInvestment}`}
           icon={devicesIcon}
         />

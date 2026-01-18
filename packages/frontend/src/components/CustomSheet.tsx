@@ -27,8 +27,7 @@ interface CustomSheetProps {
   content?: React.ReactNode;
   onInteractOutside?: (event: any) => void;
   style?: React.CSSProperties;
-
-  /** ✅ NUEVO: nesting */
+  showTrigger?: boolean;
   depth?: number; // 0 = root, 1 = primer nested, etc
   isNested?: boolean; // si este sheet está “dentro de otro”
 }
@@ -62,7 +61,7 @@ export function CustomSheet({
   content,
   onInteractOutside,
   style,
-
+  showTrigger = true,
   depth = 0,
   isNested = false,
 }: CustomSheetProps) {
@@ -82,15 +81,17 @@ export function CustomSheet({
 
   return (
     <Sheet modal={isModal} open={isOpen} onOpenChange={onOpenChange}>
-      <SheetTrigger asChild>
-        {trigger ? (
-          trigger
-        ) : (
-          <Button className="flex justify-center items-center h-16 w-16 rounded-full bg-white text-gray-500 hover:bg-mainColor hover:opacity-90 hover:text-white text-3xl shadow-lg">
-            +
-          </Button>
-        )}
-      </SheetTrigger>
+      {showTrigger && (
+        <SheetTrigger asChild>
+          {trigger ? (
+            trigger
+          ) : (
+            <Button className="flex justify-center items-center h-16 w-16 rounded-full bg-white text-gray-500 hover:bg-mainColor hover:opacity-90 hover:text-white text-3xl shadow-lg">
+              +
+            </Button>
+          )}
+        </SheetTrigger>
+      )}
 
       <SheetContent
         onInteractOutside={onInteractOutside}

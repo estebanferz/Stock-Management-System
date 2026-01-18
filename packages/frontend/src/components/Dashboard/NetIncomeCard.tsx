@@ -34,9 +34,9 @@ export function NetIncomeCard({
       {/* Card clickeable */}
       <div
         onClick={() => setOpen(true)}
-        className="cursor-pointer transition hover:scale-[1.02] hover:shadow-xl"
+        className="cursor-pointer transition hover:scale-[1.02]"
       >
-        <CustomCard title="Ingresos Netos" amount={`$${netIncome}`} icon={moneyIcon} />
+        <CustomCard title="Ingresos Netos" description="Ingresos netos del negocio" amount={`$${netIncome}`} icon={moneyIcon} />
       </div>
 
       {/* Modal centrado */}

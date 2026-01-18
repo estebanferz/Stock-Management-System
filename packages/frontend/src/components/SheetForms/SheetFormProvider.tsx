@@ -64,8 +64,26 @@ export function SheetFormProvider({ isOpen, onClose, zIndex }: SheetFormProvider
         setInternalOpen(true);
     };
 
+    const onNew = () => {
+      setEditingProvider(null);
+
+      setForm({
+        name: "",
+        email: "",
+        phone_number: "",
+        address_st: "",
+        address_number: "",
+      });
+
+      setInternalOpen(true);
+    };
+
     window.addEventListener("open-edit-provider", onEdit as any);
-    return () => window.removeEventListener("open-edit-provider", onEdit as any);
+    window.addEventListener("open-new-provider", onNew as any);
+    return () => {
+      window.removeEventListener("open-edit-provider", onEdit as any);
+      window.removeEventListener("open-new-provider", onNew as any);
+    }
   }, []);
 
 const handleSubmitProvider = async (e: React.FormEvent) => {
@@ -121,6 +139,7 @@ return (
         onOpenChange={handleOpenChange}
         isModal={!onClose}
         zIndex={zIndex || (onClose ? 50 : 10)}
+        showTrigger={false}
         footer={
           <>
             <Button type="submit" form="form-provider">{editingProvider ? "Guardar" : "Agregar"}</Button>
