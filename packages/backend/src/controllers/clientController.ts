@@ -8,6 +8,7 @@ import {
   softDeleteClient,
   getDebts,
   getTotalDebt,
+  getClientOverviewMetrics,
 } from "../services/clientService";
 import { clientInsertDTO, clientUpdateDTO } from "@server/db/types";
 import { protectedController } from "../util/protectedController";
@@ -157,6 +158,23 @@ export const clientController = new Elysia({ prefix: "/client" })
       detail: {
         summary: "Get total debt amount (scoped by tenant)",
         tags: ["sales"],
+      },
+    }
+  )
+  .get(
+    "/metrics/overview",
+    protectedController(async (ctx) => {
+      const tenantId = ctx.tenantId;
+      const { limit } = ctx.query as any;
+
+      return await getClientOverviewMetrics(tenantId, {
+        limit: limit ? Number(limit) : 5,
+      });
+    }),
+    {
+      detail: {
+        summary: "Clients overview metrics (debt count, total debt, top clients)",
+        tags: ["clients", "metrics"],
       },
     }
   );

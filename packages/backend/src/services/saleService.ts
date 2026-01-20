@@ -8,7 +8,7 @@ import {
   saleGiftAccessoryTable,
   accessoryTable,
 } from "@server/db/schema.ts";
-import { and, eq, gte, inArray, lt, sql } from "drizzle-orm";
+import { and, eq, gte, inArray, lt, lte, sql } from "drizzle-orm";
 import { normalizeShortString } from "../util/formattersBackend";
 
 // ---- tenant checks ----
@@ -907,3 +907,306 @@ export const getNetIncomeBreakdown = async (tenantId: number) => {
 
   return rows;
 };
+
+function startOfDayUTC(dateStr: string) {
+  return new Date(`${dateStr}T00:00:00.000Z`);
+}
+
+function nextDayUTC(dateStr: string) {
+  const d = startOfDayUTC(dateStr);
+  d.setUTCDate(d.getUTCDate() + 1);
+  return d;
+}
+
+export async function getSellersOverviewMetrics(
+  tenantId: number,
+  filters?: { from?: string; to?: string }
+) {
+  const fromDate = filters?.from ? startOfDayUTC(filters.from) : undefined;
+  const toDateExclusive = filters?.to ? nextDayUTC(filters.to) : undefined;
+
+  const rows = await db
+    .select({
+      sales_count: sql<number>`CAST(COUNT(${saleTable.sale_id}) AS INTEGER)`,
+      total_sold: sql<string>`COALESCE(SUM(${saleTable.total_amount}), 0)::text`,
+      commission_total: sql<string>`
+        COALESCE(
+          SUM(
+            COALESCE(${saleTable.total_amount}, 0)
+            * (COALESCE(${sellerTable.commission}, 0) / 100)
+          ),
+          0
+        )::text
+      `,
+    })
+    .from(saleTable)
+    .innerJoin(
+      sellerTable,
+      and(
+        eq(sellerTable.tenant_id, tenantId),
+        eq(sellerTable.seller_id, saleTable.seller_id)
+      )
+    )
+    .where(
+      and(
+        eq(saleTable.tenant_id, tenantId),
+        eq(saleTable.is_deleted, false),
+        fromDate ? gte(saleTable.datetime, fromDate) : undefined,
+        toDateExclusive ? lt(saleTable.datetime, toDateExclusive) : undefined
+      )
+    );
+
+  const r = rows[0] ?? ({} as any);
+
+  const sales_count = Number(r.sales_count ?? 0);
+
+  const total_sold = Number(r.total_sold ?? 0);
+  const commission_total = Number(r.commission_total ?? 0);
+
+  const avg_ticket =
+    sales_count > 0 ? Number((total_sold / sales_count).toFixed(2)) : 0;
+
+  return {
+    sales_count,
+    total_sold: Number(total_sold.toFixed(2)),
+    commission_total: Number(commission_total.toFixed(2)),
+    avg_ticket,
+  };
+}
+
+
+export async function getSalesCountBySeller(
+  tenantId: number,
+  filters?: {
+    from?: string;
+    to?: string;
+  }
+) {
+  return await db
+    .select({
+      seller_id: sellerTable.seller_id,
+      name: sellerTable.name,
+      sales_count: sql<number>`CAST(COUNT(${saleTable.sale_id}) AS INTEGER)`,
+    })
+    .from(sellerTable)
+    .leftJoin(
+      saleTable,
+      and(
+        eq(saleTable.seller_id, sellerTable.seller_id),
+        eq(saleTable.tenant_id, tenantId),
+        eq(saleTable.is_deleted, false),
+        filters?.from
+          ? gte(saleTable.datetime, new Date(filters.from))
+          : undefined,
+        filters?.to
+          ? lte(saleTable.datetime, new Date(filters.to))
+          : undefined
+      )
+    )
+    .where(
+      and(
+        eq(sellerTable.tenant_id, tenantId),
+        eq(sellerTable.is_deleted, false)
+      )
+    )
+    .groupBy(
+      sellerTable.seller_id,
+      sellerTable.name
+    )
+    .orderBy(
+      sql`COUNT(${saleTable.sale_id}) DESC`
+    );
+}
+
+export async function getSellerLeaderboard(
+  tenantId: number,
+  opts?: { from?: string; to?: string; limit?: number }
+) {
+  const fromDate = opts?.from ? startOfDayUTC(opts.from) : undefined;
+  const toDateExclusive = opts?.to ? nextDayUTC(opts.to) : undefined;
+  const limit = Math.min(Math.max(Number(opts?.limit ?? 5), 1), 20);
+
+  const rows = await db
+    .select({
+      seller_id: sellerTable.seller_id,
+      name: sellerTable.name,
+      sales_count: sql<number>`CAST(COUNT(${saleTable.sale_id}) AS INTEGER)`,
+      total_sold: sql<string>`COALESCE(SUM(${saleTable.total_amount}), 0)::text`,
+      commission_total: sql<string>`
+        COALESCE(
+          SUM(
+            COALESCE(${saleTable.total_amount}, 0)
+            * (COALESCE(${sellerTable.commission}, 0) / 100)
+          ),
+          0
+        )::text
+      `,
+    })
+    .from(saleTable)
+    .innerJoin(
+      sellerTable,
+      and(
+        eq(sellerTable.tenant_id, tenantId),
+        eq(sellerTable.seller_id, saleTable.seller_id),
+        eq(sellerTable.is_deleted, false)
+      )
+    )
+    .where(
+      and(
+        eq(saleTable.tenant_id, tenantId),
+        eq(saleTable.is_deleted, false),
+        fromDate ? gte(saleTable.datetime, fromDate) : undefined,
+        toDateExclusive ? lt(saleTable.datetime, toDateExclusive) : undefined
+      )
+    )
+    .groupBy(sellerTable.seller_id, sellerTable.name)
+    .orderBy(sql`COALESCE(SUM(${saleTable.total_amount}), 0) DESC`)
+    .limit(limit);
+
+  return rows.map((r) => {
+    const sales_count = Number(r.sales_count ?? 0);
+    const total_sold = Number(r.total_sold ?? 0);
+    const commission_total = Number(r.commission_total ?? 0);
+    const avg_ticket = sales_count > 0 ? Number((total_sold / sales_count).toFixed(2)) : 0;
+
+    return {
+      seller_id: Number(r.seller_id),
+      name: String(r.name ?? ""),
+      sales_count,
+      total_sold: Number(total_sold.toFixed(2)),
+      commission_total: Number(commission_total.toFixed(2)),
+      avg_ticket,
+    };
+  });
+}
+export async function getSalesOverviewMetrics(
+  tenantId: number,
+  filters?: { from?: string; to?: string }
+) {
+  const fromDate = filters?.from ? startOfDayUTC(filters.from) : undefined;
+  const toDateExclusive = filters?.to ? nextDayUTC(filters.to) : undefined;
+
+  const rows = await db
+    .select({
+      sales_count: sql<number>`CAST(COUNT(${saleTable.sale_id}) AS INTEGER)`,
+      total_sold: sql<string>`COALESCE(SUM(${saleTable.total_amount}), 0)::text`,
+      debt_sales_count: sql<number>`
+        CAST(
+          COUNT(
+            CASE 
+              WHEN ${saleTable.debt} = true 
+              AND COALESCE(${saleTable.debt_amount}, 0) > 0 
+              THEN 1 
+            END
+          ) AS INTEGER
+        )
+      `,
+    })
+    .from(saleTable)
+    .where(
+      and(
+        eq(saleTable.tenant_id, tenantId),
+        eq(saleTable.is_deleted, false),
+        fromDate ? gte(saleTable.datetime, fromDate) : undefined,
+        toDateExclusive ? lt(saleTable.datetime, toDateExclusive) : undefined
+      )
+    );
+
+  const r = rows[0] ?? ({} as any);
+
+  const sales_count = Number(r.sales_count ?? 0);
+  const total_sold = Number(r.total_sold ?? 0);
+
+  const avg_ticket =
+    sales_count > 0 ? Number((total_sold / sales_count).toFixed(2)) : 0;
+
+  return {
+    sales_count,
+    total_sold: Number(total_sold.toFixed(2)),
+    avg_ticket,
+    debt_sales_count: Number(r.debt_sales_count ?? 0),
+  };
+}
+
+function startOfMonthUTC(d = new Date()) {
+  return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 1));
+}
+function nextMonthUTC(d = new Date()) {
+  return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 1));
+}
+
+export async function getSalesPublicOverviewWithMonthSeries(tenantId: number) {
+  const from = startOfMonthUTC(new Date());
+  const to = nextMonthUTC(new Date());
+
+  // 1) Overview público (sin total_sold visible)
+  const overviewRows = await db
+    .select({
+      sales_count: sql<number>`CAST(COUNT(${saleTable.sale_id}) AS INTEGER)`,
+      total_sold: sql<string>`COALESCE(SUM(${saleTable.total_amount}), 0)::text`,
+      debt_sales_count: sql<number>`
+        CAST(
+          COUNT(
+            CASE 
+              WHEN ${saleTable.debt} = true 
+              AND COALESCE(${saleTable.debt_amount}, 0) > 0 
+              THEN 1 
+            END
+          ) AS INTEGER
+        )
+      `,
+    })
+    .from(saleTable)
+    .where(
+      and(
+        eq(saleTable.tenant_id, tenantId),
+        eq(saleTable.is_deleted, false)
+      )
+    );
+
+  const o = overviewRows[0] ?? ({} as any);
+  const sales_count = Number(o.sales_count ?? 0);
+  const total_sold_all_time = Number(o.total_sold ?? 0);
+
+  const avg_ticket =
+    sales_count > 0 ? Number((total_sold_all_time / sales_count).toFixed(2)) : 0;
+
+  // 2) Serie diaria del mes corriente
+  const seriesRows = await db
+    .select({
+      day: sql<string>`to_char(DATE_TRUNC('day', ${saleTable.datetime}), 'YYYY-MM-DD')`,
+      sold_count: sql<number>`CAST(COUNT(${saleTable.sale_id}) AS INTEGER)`,
+    })
+    .from(saleTable)
+    .where(
+      and(
+        eq(saleTable.tenant_id, tenantId),
+        eq(saleTable.is_deleted, false),
+        gte(saleTable.datetime, from),
+        lt(saleTable.datetime, to)
+      )
+    )
+    .groupBy(sql`DATE_TRUNC('day', ${saleTable.datetime})`)
+    .orderBy(sql`DATE_TRUNC('day', ${saleTable.datetime}) ASC`);
+
+  // Rellenar días faltantes (para que el gráfico no “salte”)
+  const map = new Map<string, number>();
+  for (const r of seriesRows as any[]) {
+    map.set(String(r.day), Number(r.sold_count ?? 0));
+  }
+
+  const points: { day: string; sold_count: number }[] = [];
+  const cursor = new Date(from);
+  while (cursor < to) {
+    const dayStr = cursor.toISOString().slice(0, 10);
+    points.push({ day: dayStr, sold_count: map.get(dayStr) ?? 0 });
+    cursor.setUTCDate(cursor.getUTCDate() + 1);
+  }
+
+  return {
+    avg_ticket,
+    debt_sales_count: Number(o.debt_sales_count ?? 0),
+    month_series: points,
+  };
+}
+

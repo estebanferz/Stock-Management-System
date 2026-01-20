@@ -6,7 +6,6 @@ const origin =
     ? process.env.SERVER_API_URL!.replace(/\/api$/, "")
     : window.location.origin;
 
-// `.api` agrega /api
 export const clientApp = treaty<App>(origin, {
   fetch: { credentials: "include" },
 }).api;

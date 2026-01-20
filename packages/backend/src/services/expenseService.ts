@@ -218,8 +218,6 @@ export const getAllExpenses = async (tenantId: number) => {
     .orderBy(expenseTable.expense_id);
 };
 
-// si todavía usás estas 2 funciones en algún lado, mantenelas pero tenant-scoped:
-
 export const addExpense = async (
   tenantId: number,
   actorUserId: number,

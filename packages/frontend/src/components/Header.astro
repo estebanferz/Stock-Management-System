@@ -1,8 +1,9 @@
 ---
+import { Store } from "lucide-react";
 import { UserMenu } from "./UserMenu";
 
 //import SearchBar from "../components/SearchBar.astro";
-const { user, dolarBlue } = Astro.props
+const { user, dolarBlue, tenantDisplayName, tenantLogoUrl } = Astro.props;
 
 const compra = dolarBlue?.compra;
 const venta = dolarBlue?.venta;
@@ -31,12 +32,12 @@ const fecha = dolarBlue?.fechaActualizacion
     </svg>
   </button>
   <div class="flex items-center space-x-4">
-    <a href="/" class="translate-y-4 translate-x-10 md:translate-x-6 h-20 w-20 text-xl z-20 font-bold text-gray-800 border-[5px] border-white rounded-full shadow-md">
-      <img
-        src="../../logo-apple-mdp.jpg"
-        alt="Logo empresa"
-        class="h-full w-auto object-contain rounded-full"
-      />
+    <a href="/" class="translate-y-4 translate-x-10 md:translate-x-6 h-20 w-20 text-xl z-20 font-bold text-gray-800 border-[5px] border-white bg-white rounded-full shadow-md">
+    <img
+      src={tenantLogoUrl}
+      alt={`Logo ${tenantDisplayName}`}
+      class="h-full w-auto object-contain rounded-full"
+    />
     </a>
   </div>
 
@@ -68,8 +69,22 @@ const fecha = dolarBlue?.fechaActualizacion
   class="fixed left-0 pt-16 z-20 h-screen overflow-y-auto w-56 transform bg-white shadow-lg transition-transform duration-200 translate-x-0"
 >
 
-  <div class="flex items-center justify-between p-4 pt-8">
-    <h2 class="text-lg font-semibold text-gray-700">Menu</h2>
+  <div class="flex flex-col gap-4 items-left justify-between px-4 pt-12 pb-5 md:pb-0">
+    <div class="flex flex-row items-center gap-2">
+      <div class="flex justify-center items-center bg-gray-300 h-10 w-10 border-2 border-gray-500 rounded-lg opacity-90">
+        <Store className=" text-gray-700"/>
+      </div>
+      <h2 class="text-md font-medium text-gray-700">
+        <span class="font-bold">
+          {tenantDisplayName
+            ? tenantDisplayName.length > 20
+              ? tenantDisplayName.slice(0, 10) + "..."
+              : tenantDisplayName
+            : "Mi Empresa"}
+        </span>
+      </h2>
+    </div>
+    <div class="text-gray-700 font-base">Menu</div>
   </div>
 
   <div class="text-xs border rounded-lg p-1 gap-3 block md:hidden mx-4">
@@ -140,7 +155,7 @@ const fecha = dolarBlue?.fechaActualizacion
         <span class="opacity-65">
           <svg id="Layer_1" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" data-name="Layer 1" width="20" height="20"><path d="m13.993 7h.994v-1h-.998l-.002-.552c0-3.004-2.445-5.448-5.45-5.448h-1.1c-3.005 0-5.45 2.445-5.45 5.452l.002.548h-1.002v1h1.006l.007 2c0 3.309 2.691 6 6 6s6-2.691 6-6.002zm-11.006-1.55c0-1.943 1.26-3.582 3-4.187v2.737h1v-2.955c.15-.015.296-.045.45-.045h1.1c.154 0 .3.03.45.046v2.954h1v-2.737c1.74.605 3 2.244 3 4.187l.002.55h-10zm5.013 8.55c-2.757 0-5-2.243-5-5.002l-.007-1.998h10l.007 2c0 2.757-2.243 5-5 5zm-3 2h6v1h-6c-2.206 0-4 1.794-4 4v3h-1v-3c0-2.757 2.243-5 5-5zm19 .5c0 2.071-1.167 3.958-3 4.894v2.606h-1v-3.249c1.781-.661 3.01-2.346 3-4.251 0-1.516-.765-2.911-2-3.737v1.737c0 1.378-1.122 2.5-2.5 2.5s-2.5-1.122-2.5-2.5v-1.737c-1.235.826-2 2.221-2 3.737-.01 1.905 1.219 3.59 3 4.251v3.249h-1v-2.606c-1.833-.937-3-2.823-3-4.894-.028-2.485 1.69-4.559 4-5.343v3.343c0 .827.673 1.5 1.5 1.5s1.5-.673 1.5-1.5v-3.343c2.31.784 4.028 2.858 4 5.343z"/></svg>
         </span>
-        <div class="w-full pl-4">Tecnico</div>
+        <div class="w-full pl-4">Tecnicos</div>
       </a>
       <!-- <a href="/dashboardst" class="flex text-sm font-medium hover:text-gray-800 hover:bg-gray-100 rounded-md p-3 pl-5 w-full items-center">
         <span class="opacity-65">

@@ -6,6 +6,10 @@ import {
   updateTenantName,
   deactivateTenant,
 } from "../services/tenantService";
+import { mkdir, writeFile } from "node:fs/promises";
+import path from "node:path";
+
+const UPLOADS_DIR = path.join(import.meta.dir, "../../uploads");
 
 export const tenantController = new Elysia({ prefix: "/tenant" })
   .get("/", () => ({ message: "Tenant endpoint" }))
@@ -79,4 +83,60 @@ export const tenantController = new Elysia({ prefix: "/tenant" })
         tags: ["tenants"],
       },
     }
+  )
+  .post(
+    "/logo",
+    protectedController(async (ctx) => {
+      try {
+        const file = (ctx.body as any)?.file as File | undefined;
+        console.log("content-type:", ctx.request.headers.get("content-type"));
+        console.log("ctx.body:", ctx.body);
+
+        if (!(file instanceof File)) {
+          ctx.set.status = 400;
+          return { ok: false, error: "Missing file" };
+        }
+
+        const maxBytes = 5 * 1024 * 1024; // 5MB
+        if (file.size > maxBytes) {
+          ctx.set.status = 400;
+          return { ok: false, error: "File too large (max 5MB)" };
+        }
+
+        const allowed = new Set(["image/png", "image/jpeg", "image/webp"]);
+        if (!allowed.has(file.type)) {
+          ctx.set.status = 400;
+          return { ok: false, error: "Invalid type (png/jpg/webp only)" };
+        }
+
+        const ext =
+          file.type === "image/png" ? "png" : file.type === "image/webp" ? "webp" : "jpg";
+
+        const dir = path.join(UPLOADS_DIR, "logos", "tenants", String(ctx.tenantId));
+        await mkdir(dir, { recursive: true });
+
+        const filename = `logo.${ext}`;
+        const absPath = path.join(dir, filename);
+
+        const bytes = new Uint8Array(await file.arrayBuffer());
+        await writeFile(absPath, bytes);
+
+        const publicUrl = `/api/uploads/logos/tenants/${ctx.tenantId}/${filename}?v=${Date.now()}`;
+
+        await upsertTenantSettings(ctx.tenantId, ctx.roleInTenant, { logo_url: publicUrl });
+
+        ctx.set.status = 200;
+        return { ok: true, logo_url: publicUrl };
+      } catch (err: any) {
+        console.error("[tenant/logo] error:", err);
+
+        if (String(err?.message).includes("FORBIDDEN")) {
+          ctx.set.status = 403;
+          return { ok: false, error: "FORBIDDEN" };
+        }
+
+        ctx.set.status = 500;
+        return { ok: false, error: "INTERNAL_ERROR", detail: err?.message ?? String(err) };
+      }
+    })
   );

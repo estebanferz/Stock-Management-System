@@ -40,6 +40,45 @@ export default function TenantSettingsForm({ tenant, roleInTenant, tenantSetting
     low_stock_threshold_default: String(tenantSettings?.low_stock_threshold_default ?? 3),
     });
 
+    const [logoUploading, setLogoUploading] = useState(false);
+
+    const currentLogo =
+    (form.logo_url?.trim() ? form.logo_url : null) ||
+    "/logo-apple-mdp.jpg";
+
+    async function onLogoPick(file: File) {
+    if (!editable) return;
+
+    setLogoUploading(true);
+    setStatus(null);
+
+    try {
+        const fd = new FormData();
+        fd.append("file", file);
+
+        const res = await fetch("/api/tenant/logo", {
+        method: "POST",
+        body: fd,
+        credentials: "include",
+        // NO pongas headers Content-Type acá: el browser lo setea con boundary
+        });
+
+        const data = await res.json();
+
+        if (!res.ok || !data.ok) {
+        throw new Error(data.detail || data.error || `Upload failed (${res.status})`);
+        }
+
+        setForm((p) => ({ ...p, logo_url: data.logo_url }));
+        setStatus({ kind: "ok", msg: "Logo actualizado. No te olvides de guardar cambios." });
+    } catch (e: any) {
+        setStatus({ kind: "err", msg: e?.message || "Error al subir el logo." });
+    } finally {
+        setLogoUploading(false);
+    }
+    }
+
+
     async function onSave() {
         setLoading(true);
         setStatus(null);
@@ -62,7 +101,6 @@ export default function TenantSettingsForm({ tenant, roleInTenant, tenantSetting
     const low = Number(form.low_stock_threshold_default);
     const body = {
         business_name: form.business_name.trim() || null,
-        logo_url: form.logo_url.trim() || null,
         cuit: form.cuit.trim() || null,
         address: form.address.trim() || null,
         default_currency: form.default_currency.trim() || "ARS",
@@ -101,13 +139,33 @@ return (
         </div>
 
         <div className="grid gap-2">
-        <Label>Logo URL</Label>
-        <Input
-            value={form.logo_url}
-            disabled={!editable}
-            placeholder="https://..."
-            onChange={(e) => setForm((p) => ({ ...p, logo_url: e.target.value }))}
-        />
+        <Label>Logo de la empresa</Label>
+
+        <div className="flex items-center gap-3">
+            <div className="h-14 w-14 rounded-full border bg-white overflow-hidden flex items-center justify-center">
+            <img
+                src={currentLogo}
+                alt="Logo"
+                className="h-full w-full object-contain"
+            />
+            </div>
+
+            <div className="flex flex-col gap-2">
+                <Input
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp"
+                    disabled={!editable || logoUploading}
+                    onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) void onLogoPick(file);
+                    }}
+                />
+
+                <p className="text-xs text-gray-500">
+                    PNG/JPG/WEBP, máx 2MB. Se actualiza al seleccionar.
+                </p>
+                </div>
+            </div>
         </div>
 
         <div className="grid gap-2">
