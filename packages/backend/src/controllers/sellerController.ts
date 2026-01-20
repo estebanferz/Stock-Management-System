@@ -9,6 +9,7 @@ import {
 } from "../services/sellerService";
 import { sellerInsertDTO, sellerUpdateDTO } from "@server/db/types";
 import { protectedController } from "../util/protectedController";
+import { getSalesCountBySeller, getSellerLeaderboard, getSellersOverviewMetrics } from "../services/saleService";
 
 export const sellerController = new Elysia({ prefix: "/seller" })
   .get("/", () => ({ message: "Seller endpoint" }))
@@ -142,4 +143,69 @@ export const sellerController = new Elysia({ prefix: "/seller" })
       ctx.set.status = ok ? 200 : 404;
       return ok;
     })
+  )
+  .get(
+    "/metrics/sales-count",
+    protectedController(async (ctx) => {
+      const tenantId = ctx.tenantId;
+
+      const { from, to } = ctx.query;
+
+      const data = await getSalesCountBySeller(tenantId, {
+        from,
+        to,
+      });
+
+      return data;
+    }),
+    {
+      detail: {
+        summary: "Get sales count per seller",
+        tags: ["sellers", "metrics"],
+      },
+    }
+  )
+  .get(
+    "/metrics/overview",
+    protectedController(async (ctx) => {
+      const tenantId = ctx.tenantId;
+
+      // opcional: YYYY-MM-DD
+      const { from, to } = ctx.query as any;
+
+      const data = await getSellersOverviewMetrics(tenantId, { from, to });
+      return data;
+    }),
+    {
+      detail: {
+        summary: "Global sellers overview metrics (count, total sold, commission, avg ticket)",
+        tags: ["sellers", "metrics"],
+      },
+    }
+  )
+  .get(
+    "/metrics/leaderboard",
+    protectedController(async (ctx) => {
+      if (ctx.roleInTenant !== "owner") {
+        ctx.set.status = 403;
+        return { error: "FORBIDDEN" };
+      }
+
+      const tenantId = ctx.tenantId;
+      const { from, to, limit } = ctx.query as any;
+
+      const data = await getSellerLeaderboard(tenantId, {
+        from,
+        to,
+        limit: limit ? Number(limit) : 5,
+      });
+
+      return data;
+    }),
+    {
+      detail: {
+        summary: "Top sellers leaderboard (owner only)",
+        tags: ["sellers", "metrics"],
+      },
+    }
   );

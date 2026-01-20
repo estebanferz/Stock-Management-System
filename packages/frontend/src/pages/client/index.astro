@@ -7,6 +7,7 @@ import { clientColumns } from "@/config/ClientColumnConfig";
 import { ClientsPageManager } from "@/components/PageManager/ClientPageManager";
 import { requireAuth } from "@/lib/requireAuth";
 import { User } from "lucide-react";
+import { ClientMetricsOverview } from "@/components/ClientMetricsOverview";
 
 const session = await requireAuth(Astro);
 if (!session) return Astro.redirect("/login");
@@ -22,10 +23,10 @@ const data = Array.isArray(response.data)
 
 <Layout title="Clientes" user={auth.user}>
 
-  <h1 class="w-full text-center text-4xl text-gray-700 font-bold my-5">
-    Clientes
-  </h1>
+  <h1 class="w-full text-3xl text-gray-700 font-bold mt-5">Clientes</h1>
+  <p class="mb-5 text-sm text-gray-600 font-medium">Información relevante a los clientes de la empresa</p>
 
+  <ClientMetricsOverview client:load/>
   
   <ClientsPageManager 
   client:load 

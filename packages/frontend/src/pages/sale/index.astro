@@ -8,6 +8,7 @@ import ActionPanel from "@/components/ActionPanel";
 import { SalesPageManager } from "@/components/PageManager/SalePageManager";
 import { requireAuth } from "@/lib/requireAuth";
 import { Store } from "lucide-react";
+import { SaleMetricsOverview } from "@/components/SaleMetricsOverview";
 
 const session = await requireAuth(Astro);
 if (!session) return Astro.redirect("/login");
@@ -67,6 +68,8 @@ console.log("Ventas:", data);
 <Layout title="Ventas" user={auth.user}>
     <h1 class="w-full text-center text-4xl text-gray-700 font-bold my-5">Ventas</h1>
     
+    <SaleMetricsOverview client:load/>
+
     <SalesPageManager
         client:load
         initialSales={sales}

@@ -13,6 +13,8 @@ import {
   getDebts,
   getTotalDebt,
   getNetIncomeBreakdown,
+  getSalesOverviewMetrics,
+  getSalesPublicOverviewWithMonthSeries,
 } from "../services/saleService";
 import { saleInsertDTO, saleUpdateDTO } from "@server/db/types";
 import { protectedController } from "../util/protectedController";
@@ -254,14 +256,26 @@ export const saleController = new Elysia({ prefix: "/sale" })
     }
   )
   .get(
-  "/net-income-breakdown",
+    "/net-income-breakdown",
+    protectedController(async (ctx) => {
+      return await getNetIncomeBreakdown(ctx.tenantId);
+    }),
+    {
+      detail: {
+        summary: "Net income breakdown by sale",
+        tags: ["sales"],
+      },
+    }
+  )
+  .get(
+  "/metrics/overview",
   protectedController(async (ctx) => {
-    return await getNetIncomeBreakdown(ctx.tenantId);
-  }),
+    return await getSalesPublicOverviewWithMonthSeries(ctx.tenantId);
+  }),    
   {
-    detail: {
-      summary: "Net income breakdown by sale",
-      tags: ["sales"],
-    },
-  }
+      detail: {
+        summary: "Public sales metrics overview (staff + owner)",
+        tags: ["sales", "metrics"],
+      },
+    }
 );

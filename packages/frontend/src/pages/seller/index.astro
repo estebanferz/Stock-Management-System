@@ -8,11 +8,14 @@ import ActionPanel from "@/components/ActionPanel";
 import { SellerPageManager } from "@/components/PageManager/SellerPageManager";
 import { requireAuth } from "@/lib/requireAuth";
 import { User } from "lucide-react";
+import { SellerMetricsOverview } from "@/components/SellerMetricsOverview";
+import { SellerLeaderboard } from "@/components/SellerLeaderboard";
 const session = await requireAuth(Astro);
 if (!session) return Astro.redirect("/login");
 const { auth, cookieHeader } = session;
 const authed = { headers: { cookie: cookieHeader } };
-const response = await serverApp.seller.all.get({ query: { is_deleted: false } });
+
+const response = await serverApp.seller.all.get({ ...authed, query: { is_deleted: false } });
 const data = Array.isArray(response.data)
     ? response.data
     : [];
@@ -20,13 +23,19 @@ const data = Array.isArray(response.data)
 ---
 
 <Layout title="Vendedores" user={auth.user}>
-    <h1 class="w-full text-center text-4xl text-gray-700 font-bold my-5">Vendedores</h1>
+    <h1 class="w-full text-3xl text-gray-700 font-bold mt-5">Vendedores</h1>
+    <p class="mb-5 text-sm text-gray-600 font-medium">Vendedores asociados a la empresa</p>
+
+    <SellerMetricsOverview client:load />
+    <SellerLeaderboard role={auth.roleInTenant} client:load />
     
     <SellerPageManager
         client:load
         initialData={data}
         columns={sellerColumns}
     />
+
+
 
     <div class="justify-center mt-24 lg:mt-20 hidden md:block" slot="tercer-columna">
         <ActionPanel client:load />
