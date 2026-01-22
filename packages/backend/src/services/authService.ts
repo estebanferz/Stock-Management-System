@@ -6,6 +6,7 @@ import {
   tenantTable,
   tenantMembershipTable,
   tenantSettingsTable,
+  userSettingsTable,
 } from "../../db/schema";
 import { eq, and, gt, isNull } from "drizzle-orm";
 import { randomBytes } from "crypto";
@@ -16,6 +17,7 @@ import {
   type AuthTenant,
   type TenantSettings,
   type AuthUser,
+  type UserSettings,
 } from "@server/db/types";
 
 function normalizeEmail(email: string) {
@@ -119,7 +121,7 @@ export async function register(emailRaw: string, password: string): Promise<Serv
     // Settings default (opcional pero prolijo)
     await tx.insert(tenantSettingsTable).values({
       tenant_id: tenantRow.tenant_id,
-      default_currency: "ARS",
+      display_currency: "ARS",
       timezone: "America/Argentina/Buenos_Aires",
       low_stock_threshold_default: 3,
     });
@@ -258,6 +260,7 @@ export type MeOk = {
   tenant: AuthTenant;
   roleInTenant: "owner" | "admin" | "staff";
   tenantSettings: TenantSettings | null;
+  userSettings: UserSettings | null;
 };
 
 type MeFail = { ok: false; status: 401 };
@@ -293,15 +296,23 @@ export async function me(sessionId?: string | null): Promise<MeOk | MeFail> {
       ts_logo_url: tenantSettingsTable.logo_url,
       ts_cuit: tenantSettingsTable.cuit,
       ts_address: tenantSettingsTable.address,
-      ts_default_currency: tenantSettingsTable.default_currency,
+      ts_display_currency: tenantSettingsTable.display_currency,
       ts_timezone: tenantSettingsTable.timezone,
       ts_low_stock: tenantSettingsTable.low_stock_threshold_default,
       ts_updated_at: tenantSettingsTable.updated_at,
+      
+      // user_settings (LEFT JOIN)
+      us_user_id: userSettingsTable.user_id,
+      us_display_name: userSettingsTable.display_name,
+      us_phone: userSettingsTable.phone,
+      us_email_notifications: userSettingsTable.email_notifications,
+      us_updated_at: userSettingsTable.updated_at,
     })
     .from(sessionTable)
     .innerJoin(userTable, eq(sessionTable.user_id, userTable.user_id))
     .innerJoin(tenantTable, eq(sessionTable.tenant_id, tenantTable.tenant_id))
     .leftJoin(tenantSettingsTable, eq(tenantSettingsTable.tenant_id, tenantTable.tenant_id))
+    .leftJoin(userSettingsTable, eq(userSettingsTable.user_id, userTable.user_id))
     .innerJoin(
       tenantMembershipTable,
       and(eq(tenantMembershipTable.user_id, userTable.user_id), eq(tenantMembershipTable.tenant_id, tenantTable.tenant_id))
@@ -312,7 +323,6 @@ export async function me(sessionId?: string | null): Promise<MeOk | MeFail> {
   const r = rows[0];
   if (!r) return { ok: false, status: 401 };
 
-  // ✅ validaciones duras
   if (r.user_active === false) return { ok: false, status: 401 };
   if (r.tenant_active === false) return { ok: false, status: 401 };
   if (r.membership_active === false) return { ok: false, status: 401 };
@@ -333,10 +343,21 @@ export async function me(sessionId?: string | null): Promise<MeOk | MeFail> {
         logo_url: r.ts_logo_url ?? null,
         cuit: r.ts_cuit ?? null,
         address: r.ts_address ?? null,
-        default_currency: r.ts_default_currency ?? "ARS",
+        display_currency: r.ts_display_currency ?? "ARS",
         timezone: r.ts_timezone ?? "America/Argentina/Buenos_Aires",
         low_stock_threshold_default: r.ts_low_stock ?? 3,
         updated_at: r.ts_updated_at ?? null,
+      }
+    : null;
+  
+  const hasUserSettingsRow = r.us_user_id !== null;
+
+  const userSettings = hasUserSettingsRow
+    ? {
+        display_name: r.us_display_name ?? null,
+        phone: r.us_phone ?? null,
+        email_notifications: r.us_email_notifications ?? true,
+        updated_at: r.us_updated_at ?? null,
       }
     : null;
 
@@ -360,5 +381,6 @@ export async function me(sessionId?: string | null): Promise<MeOk | MeFail> {
     },
     roleInTenant: r.membership_role,
     tenantSettings,
+    userSettings,
   };
 }

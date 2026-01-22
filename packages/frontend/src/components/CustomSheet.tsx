@@ -86,7 +86,7 @@ export function CustomSheet({
           {trigger ? (
             trigger
           ) : (
-            <Button className="flex justify-center items-center h-16 w-16 rounded-full bg-white text-gray-500 hover:bg-mainColor hover:opacity-90 hover:text-white text-3xl shadow-lg">
+            <Button className="flex justify-center items-center h-16 w-16 rounded-full bg-white text-gray-500 hover:bg-secondColor hover:opacity-90 hover:text-white text-3xl shadow-lg">
               +
             </Button>
           )}

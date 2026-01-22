@@ -16,8 +16,9 @@ import {
   getSalesOverviewMetrics,
   getSalesPublicOverviewWithMonthSeries,
 } from "../services/saleService";
-import { saleInsertDTO, saleUpdateDTO } from "@server/db/types";
+import { saleInsertDTO, saleUpdateDTO, type Currency } from "@server/db/types";
 import { protectedController } from "../util/protectedController";
+import { getFxSnapshotVenta } from "../services/currencyService";
 
 export const saleController = new Elysia({ prefix: "/sale" })
   .get("/", () => ({ message: "Sale endpoint" }))
@@ -177,21 +178,12 @@ export const saleController = new Elysia({ prefix: "/sale" })
       return ok;
     })
   )
-
-  .get(
-    "/gross-income",
-    protectedController(async (ctx) => {
-      return await getGrossIncome(ctx.tenantId);
-    }),
-    {
-      detail: { summary: "Get gross income (scoped by tenant)", tags: ["sales"] },
-    }
-  )
-
   .get(
     "/net-income",
     protectedController(async (ctx) => {
-      return await getNetIncome(ctx.tenantId);
+      const display: Currency = ctx.tenantSettings.display_currency ?? "ARS";
+      const fx = await getFxSnapshotVenta();
+      return await getNetIncome(ctx.tenantId, display, fx);
     }),
     {
       detail: { summary: "Get net income (scoped by tenant)", tags: ["sales"] },
@@ -258,7 +250,9 @@ export const saleController = new Elysia({ prefix: "/sale" })
   .get(
     "/net-income-breakdown",
     protectedController(async (ctx) => {
-      return await getNetIncomeBreakdown(ctx.tenantId);
+      const display: Currency = ctx.tenantSettings.display_currency ?? "ARS";
+      const fx = await getFxSnapshotVenta();
+      return await getNetIncomeBreakdown(ctx.tenantId, display, fx);
     }),
     {
       detail: {

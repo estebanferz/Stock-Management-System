@@ -18,62 +18,65 @@ if (!session) return Astro.redirect("/login");
 const { auth, cookieHeader } = session;
 const authed = { headers: { cookie: cookieHeader } };
 
+type Currency = "ARS" | "USD" | "EUR" | "BRL";
+
 const initialYear = new Date().getFullYear();
 const [
-  resultGross,
-  resultNet,
-  netIncomeBreakdown,
-  stockInvestment,
-  stockInvestmentBreakdown,
-  deudores,
-  totalDebt,
-  topExpenses,
-  phoneSoldCount,
-  saleDataByMonth,
-  // ⚠️ si solo lo usás para contar, conviene tener endpoint /sale/count
-  saleData,
+	currencyOverview,
+	netIncomeBreakdown,
+	stockInvestmentBreakdown,
+	phoneSoldCount,
+	saleDataByMonth,
+	saleData,
 ] = await Promise.all([
-  serverApp.sale["gross-income"].get(authed),
-  serverApp.sale["net-income"].get(authed),
-  serverApp.sale["net-income-breakdown"].get(authed),
+	serverApp.currency.metrics["overview"].get(authed),
 
-  serverApp.phone["stock-investment"].get(authed),
-  serverApp.phone["stock-investment-breakdown"].get(authed),
+	serverApp.sale["net-income-breakdown"].get(authed),
 
-  serverApp.client["debts"].get(authed),
-  serverApp.client["total-debt"].get(authed),
+	serverApp.phone["stock-investment-breakdown"].get(authed),
 
-  serverApp.expense["top-by-category"].get(authed),
-  serverApp.sale["products-sold-count"].get(authed),
+	serverApp.sale["products-sold-count"].get(authed),
 
-  serverApp.sale["sales-by-month"].get({ ...authed, query: { year: String(initialYear) } }),
+	serverApp.sale["sales-by-month"].get({ ...authed, query: { year: String(initialYear) } }),
 
-  serverApp.sale.all.get({ ...authed, query: { is_deleted: false } }),
+	serverApp.sale.all.get({ ...authed, query: { is_deleted: false } }),
 ]);
 
+const displayCurrency: Currency =
+  (currencyOverview.data?.displayCurrency as Currency) ?? "ARS";
 
-const gross_income = String(resultGross.data ?? 0);
+const fmtMoney = (n: number) =>
+  new Intl.NumberFormat("es-AR", {
+    style: "currency",
+    currency: displayCurrency,
+    maximumFractionDigits: 2,
+  }).format(Number.isFinite(n) ? n : 0);
 
-const net_income = String(resultNet.data ?? 0);
+// Gross income
+const gross_income = Number(currencyOverview.data?.grossIncome ?? 0);
+
+// Net Income
+const net_income = Number(currencyOverview.data?.netIncome ?? 0);
 const net_income_rows = Array.isArray(netIncomeBreakdown.data) ? netIncomeBreakdown.data : [];
 
-const stock_investment_total = String(stockInvestment.data ?? 0);
+// Investment in Stock
+const stock_investment_total = Number(currencyOverview.data?.stockInvestment ?? 0);
 const stock_rows = Array.isArray(stockInvestmentBreakdown.data) ? stockInvestmentBreakdown.data : [];
 
 // Debtors
-const debt_rows = Array.isArray(deudores.data) ? deudores.data : [];
+const debt_rows = Array.isArray(currencyOverview.data?.debtors) ? currencyOverview.data?.debtors : [];
 const deudoresCountFormatted = debt_rows.length;
-const totalDebtFormatted = totalDebt.data ?? 0;
+const totalDebtFormatted = currencyOverview.data?.total_debt ?? fmtMoney(0);
 
 // Sales by month
 const monthRows = Array.isArray(saleDataByMonth.data) ? saleDataByMonth.data : [];
 const saleDataFormatted = SalesDataByMonth(monthRows);
 
-// Units sold count (⚠️ esto idealmente debería venir de un endpoint agregado)
+// Units sold count
 const units_sold_count = Array.isArray(saleData.data) ? saleData.data.length : 0;
 
 // Expenses pie
-const top_expense_rows = Array.isArray(topExpenses.data) ? topExpenses.data : [];
+const top_expense_rows = Array.isArray(currencyOverview.data?.top_expenses) ? currencyOverview.data?.top_expenses : [];
 const expensePieData: (string | number)[][] = [
   ["Categoría", "Monto"],
   ...top_expense_rows.map((r: any) => [String(r.category ?? "Sin categoría"), Number(r.total ?? 0)]),
@@ -91,19 +94,19 @@ const topExpenseTotal = top_expense_rows.reduce((acc: number, r: any) => acc + N
 ---
 
 <LayoutDashboard title="StockManagement" user={auth.user}>
-	<h1 class="px-3 w-full text-left text-4xl text-gray-700 font-bold mt-5 mb-2">Dashboard</h1>
+	<h1 class="px-3 w-full text-left text-4xl text-gray-700 font-bold mt-5 mb-2">Bienvenido{auth.userSettings ? `, ${auth.userSettings.display_name?.split(" ")[0]}` : ""}</h1>
 	<p class="px-3 mb-8 text-sm text-gray-600 font-medium">Resumen completo de tu negocio con métricas clave</p>
 	<div class="px-3 grid grid-cols-1 md:grid-cols-3 gap-3 mb-4 items-start">
 		<div class="col-span-2 grid grid-rows-4 gap-1 p-4 bg-white rounded-2xl shadow-lg">
 			<CustomCard title="Unidades Vendidas" description="Total de unidades vendidas" amount={String(units_sold_count)} icon={devicesIcon}/>
-			<NetIncomeCard netIncome={net_income} rows={net_income_rows} client:load/>
-			<InvestmentCard totalInvestment={stock_investment_total} rows={stock_rows} client:load />
-			<CustomCard title="Ingresos Brutos" description="Ingresos brutos del negocio" amount={`$${gross_income}`} icon={grossincome}/>
+			<NetIncomeCard netIncome={fmtMoney(net_income)} rows={net_income_rows} client:load/>
+			<InvestmentCard totalInvestment={fmtMoney(stock_investment_total)} rows={stock_rows} client:load />
+			<CustomCard title="Ingresos Brutos" description="Ingresos brutos del negocio" amount={fmtMoney(gross_income)} icon={grossincome}/>
 		</div>
 		<div class="col-span-1 p-4 bg-white hover:bg-gray-50 rounded-2xl shadow-lg">
 			<PieChart 
 				data={expensePieData}
-				title={`Gastos principales: $${topExpenseTotal.toFixed(2)}`}
+				title={`Gastos principales: ${fmtMoney(topExpenseTotal)}`}
 				description="Top 5 categorías por monto acumulado"
 				height="150px"
 				client:load

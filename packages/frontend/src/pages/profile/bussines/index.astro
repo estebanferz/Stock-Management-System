@@ -107,7 +107,7 @@ const boolLabel = (b: any) => (b === true ? "Sí" : b === false ? "No" : "—");
           <div class="rounded-xl border bg-white p-4">
             <div class="text-xs uppercase tracking-wide text-slate-500">Moneda</div>
             <div class="pt-1 text-base font-medium text-slate-900">
-              {tenantSettings?.default_currency ?? "ARS"}
+              {tenantSettings?.display_currency ?? "ARS"}
             </div>
           </div>
 

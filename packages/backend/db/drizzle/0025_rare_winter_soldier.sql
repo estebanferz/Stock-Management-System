@@ -1,0 +1,1 @@
+ALTER TABLE "tenant_settings" RENAME COLUMN "default_currency" TO "display_currency";

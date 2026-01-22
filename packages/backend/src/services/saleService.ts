@@ -9,7 +9,8 @@ import {
   accessoryTable,
 } from "@server/db/schema.ts";
 import { and, eq, gte, inArray, lt, lte, sql } from "drizzle-orm";
-import { normalizeShortString } from "../util/formattersBackend";
+import { fmtMoney, isCurrency, normalizeShortString, round2 } from "../util/formattersBackend";
+import { convert, type Currency } from "./currencyService";
 
 // ---- tenant checks ----
 async function assertTenantClient(tenantId: number, clientId: number) {
@@ -748,36 +749,38 @@ export async function softDeleteSale(tenantId: number, id: number) {
 
 // ------------------ analytics ------------------
 
-export const getGrossIncome = async (tenantId: number) => {
-  const income = await db
-    .select({
-      gross_income: sql`SUM(${saleTable.total_amount})`,
-    })
-    .from(saleTable)
-    .where(and(eq(saleTable.tenant_id, tenantId), eq(saleTable.is_deleted, false)));
+export const getGrossIncome = async (tenantId: number, display: Currency, fx: any) => {
 
-  const debts = await db
-    .select({
-      total_debt: sql`SUM(${saleTable.debt_amount})`,
-    })
-    .from(saleTable)
-    .where(and(eq(saleTable.tenant_id, tenantId), eq(saleTable.debt, true), eq(saleTable.is_deleted, false)));
+  const sales = await db.select({
+      amount: saleTable.total_amount,
+      debt_amount: saleTable.debt_amount,
+      currency: saleTable.currency,
+  }).from(saleTable).where(
+      and(
+          eq(saleTable.tenant_id, tenantId),
+          eq(saleTable.is_deleted, false),
+      )
+  );
+  
+  const round2 = (n: number) => Math.round(n * 100) / 100;
+  let gross = 0;
+  for (const s of sales) {
+      gross += convert(Number(s.amount), s.currency as Currency, display, fx.ratesToARS);
+      if (s.debt_amount) {
+          gross -= convert(Number(s.debt_amount), s.currency as Currency, display, fx.ratesToARS);
+      }
+  }
+  gross = round2(gross);
 
-  const gross = Number(income[0]?.gross_income) || 0;
-  const debt = Number(debts[0]?.total_debt) || 0;
-
-  return Number((gross - debt).toFixed(2));
+  return gross;
 };
 
-export const getNetIncome = async (tenantId: number) => {
+export const getNetIncome = async (tenantId: number, display: Currency, fx: any) => {
   const result = await db
     .select({
-      net_income: sql`
-        SUM(
-          COALESCE(${saleTable.total_amount}, 0) 
-          - COALESCE(${phoneTable.buy_cost}, 0)
-        )
-      `,
+      amount: saleTable.total_amount,
+      buy_cost: phoneTable.buy_cost,
+      currency: saleTable.currency,
     })
     .from(saleTable)
     .innerJoin(
@@ -791,7 +794,14 @@ export const getNetIncome = async (tenantId: number) => {
       )
     );
 
-  return Number(Number(result[0]?.net_income ?? 0).toFixed(2));
+  let net = 0;
+  for (const s of result) {
+      net += convert(Number(s.amount), s.currency as Currency, display, fx.ratesToARS);
+      net -= convert(Number(s.buy_cost), s.currency as Currency, display, fx.ratesToARS);
+  }
+  net = round2(net);
+
+  return net;
 };
 
 
@@ -875,37 +885,46 @@ export const getTotalDebt = async (tenantId: number) => {
   return total;
 };
 
-export const getNetIncomeBreakdown = async (tenantId: number) => {
+export const getNetIncomeBreakdown = async (
+  tenantId: number,
+  display: Currency,
+  fx: any
+) => {
   const rows = await db
     .select({
       sale_id: saleTable.sale_id,
       device_name: phoneTable.name,
+
       buy_cost: sql<number>`COALESCE(${phoneTable.buy_cost}, 0)`,
+      phone_currency: phoneTable.currency,
+
       total_amount: sql<number>`COALESCE(${saleTable.total_amount}, 0)`,
-      profit: sql<number>`
-        COALESCE(${saleTable.total_amount}, 0)
-        - COALESCE(${phoneTable.buy_cost}, 0)
-      `,
+      sale_currency: saleTable.currency,
     })
     .from(saleTable)
-    .innerJoin(
-      phoneTable,
-      eq(saleTable.device_id, phoneTable.device_id)
-    )
-    .where(
-      and(
-        eq(saleTable.tenant_id, tenantId),
-        eq(saleTable.is_deleted, false)
-      )
-    )
-    .orderBy(
-      sql`
-        COALESCE(${saleTable.total_amount}, 0)
-        - COALESCE(${phoneTable.buy_cost}, 0)
-      DESC`
-    );
+    .innerJoin(phoneTable, eq(saleTable.device_id, phoneTable.device_id))
+    .where(and(eq(saleTable.tenant_id, tenantId), eq(saleTable.is_deleted, false)));
 
-  return rows;
+    return rows.map((r) => {
+      const buy = Number(r.buy_cost ?? 0);
+      const sale = Number(r.total_amount ?? 0);
+
+      const buyCur: Currency = isCurrency(r.phone_currency) ? r.phone_currency : "ARS";
+      const saleCur: Currency = isCurrency(r.sale_currency) ? r.sale_currency : "ARS";
+
+      const buyDisplay = convert(buy, buyCur, display, fx.ratesToARS);
+      const saleDisplay = convert(sale, saleCur, display, fx.ratesToARS);
+      const netDisplay = saleDisplay - buyDisplay;
+
+      return {
+        sale_id: r.sale_id,
+        device_name: r.device_name,
+        displayCurrency: display,
+        buy_display: fmtMoney(buy, r.phone_currency as Currency),
+        sale_display: fmtMoney(sale, r.sale_currency as Currency),
+        net_display: fmtMoney(netDisplay, display),
+      };
+    });
 };
 
 function startOfDayUTC(dateStr: string) {

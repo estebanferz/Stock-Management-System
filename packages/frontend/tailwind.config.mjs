@@ -12,9 +12,10 @@ module.exports = {
   			sm: 'calc(var(--radius) - 4px)'
   		},
   		colors: {
-			mainColor: "#fe7903",
-			secondColor: "#f4521f",
-			thirdColor: "#546148",
+			mainColor: "#204e22",
+			secondColor: "#3d8f41",
+			thirdColor: "#53c259",
+			fourthColor: "#55d85d",
 			crema: "#ecebe0",
   			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',

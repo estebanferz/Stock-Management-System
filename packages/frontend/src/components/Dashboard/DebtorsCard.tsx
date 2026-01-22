@@ -4,12 +4,8 @@ import { generalStringFormat } from "@/utils/formatters";
 type DebtorRow = {
   client_id: number;
   name: string;
-  debt: number | null;
+  debt: string | null;
 };
-
-function money(v: number) {
-  return `$${Number(v || 0).toFixed(0)}`;
-}
 
 export function DebtorsCard({
   count,
@@ -17,7 +13,7 @@ export function DebtorsCard({
   rows,
 }: {
   count: number;
-  totalDebt: number;
+  totalDebt: string;
   rows: DebtorRow[];
 }) {
   return (
@@ -27,7 +23,7 @@ export function DebtorsCard({
         <div>
           <h3 className="text-base font-semibold text-gray-800">Deudores</h3>
           <p className="text-sm text-gray-600">
-            {count} Deudores, {money(totalDebt)} deuda total.
+            {count} Deudores, {totalDebt} deuda total.
           </p>
         </div>
 
@@ -54,7 +50,7 @@ export function DebtorsCard({
                   {generalStringFormat(String(r.name ?? ""))}
                 </div>
                 <div className="text-right font-semibold tabular-nums">
-                  {money(Number(r.debt))}
+                  {r.debt}
                 </div>
               </div>
             ))

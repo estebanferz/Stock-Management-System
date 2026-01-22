@@ -9,7 +9,7 @@ import devicesIcon from "@/assets/devices.svg";
 type Row = {
   device_id: number;
   device_name: string;
-  buy_cost: number;
+  buy_cost: string;
 };
 
 function money(v: number) {
@@ -40,7 +40,7 @@ export function InvestmentCard({
         <CustomCard
           title="Inversión en Stock"
           description="Total invertido en inventario"
-          amount={`$${totalInvestment}`}
+          amount={totalInvestment}
           icon={devicesIcon}
         />
       </div>
@@ -74,7 +74,7 @@ export function InvestmentCard({
                     {generalStringFormat(String(r.device_name ?? ""))}
                   </div>
                   <div className="text-right tabular-nums font-semibold">
-                    {money(r.buy_cost)}
+                    {r.buy_cost}
                   </div>
                 </div>
               ))
@@ -96,7 +96,7 @@ export function InvestmentCard({
 
         <button
           onClick={() => setOpen(false)}
-          className="mt-5 px-4 py-2 rounded-lg bg-gray-200 hover:bg-mainColor hover:text-white w-full transition"
+          className="mt-5 px-4 py-2 rounded-lg bg-gray-200 hover:bg-secondColor hover:text-white w-full transition"
         >
           Cerrar
         </button>

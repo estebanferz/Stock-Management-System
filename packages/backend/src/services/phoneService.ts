@@ -1,7 +1,8 @@
 import { db } from "@server/db/db";
 import { phoneTable } from "@server/db/schema.ts";
 import { ilike, and, eq, or, gte, sql } from "drizzle-orm";
-import { normalizeShortString } from "../util/formattersBackend";
+import { fmtMoney, isCurrency, normalizeShortString, round2 } from "../util/formattersBackend";
+import { convert, type Currency } from "./currencyService";
 
 export async function getPhonesByFilter(
   tenantId: number,
@@ -161,10 +162,15 @@ export async function softDeletePhone(tenantId: number, id: number) {
   return result.length > 0;
 }
 
-export const getStockInvestment = async (tenantId: number) => {
-  const res = await db
+export const getStockInvestment = async (
+  tenantId: number,
+  display: Currency,
+  fx: any
+) => {
+  const rows = await db
     .select({
-      total: sql<number>`SUM(COALESCE(${phoneTable.buy_cost}, 0))`,
+      buy_cost: sql<number>`COALESCE(${phoneTable.buy_cost}, 0)`,
+      currency: phoneTable.currency,
     })
     .from(phoneTable)
     .where(
@@ -175,7 +181,17 @@ export const getStockInvestment = async (tenantId: number) => {
       )
     );
 
-  return Number(Number(res[0]?.total ?? 0).toFixed(2));
+  let total = 0;
+
+  for (const r of rows) {
+    const cost = Number(r.buy_cost ?? 0);
+    if (!Number.isFinite(cost)) continue;
+
+    const cur: Currency = isCurrency(r.currency) ? r.currency : "ARS";
+    total += convert(cost, cur, display, fx.ratesToARS);
+  }
+
+  return round2(total);
 };
 
 export const getStockInvestmentBreakdown = async (tenantId: number) => {
@@ -184,6 +200,7 @@ export const getStockInvestmentBreakdown = async (tenantId: number) => {
       device_id: phoneTable.device_id,
       device_name: phoneTable.name,
       buy_cost: sql<number>`COALESCE(${phoneTable.buy_cost}, 0)`,
+      phone_currency: phoneTable.currency,
     })
     .from(phoneTable)
     .where(
@@ -195,6 +212,13 @@ export const getStockInvestmentBreakdown = async (tenantId: number) => {
     )
     .orderBy(sql`COALESCE(${phoneTable.buy_cost}, 0) DESC`);
 
-  return rows;
+    return rows.map((r) => {
+      const costFormatted = fmtMoney(Number(r.buy_cost), r.phone_currency as Currency);
+      return {
+        device_id: r.device_id,
+        device_name: r.device_name,
+        buy_cost: costFormatted,
+      }
+    })
 };
 

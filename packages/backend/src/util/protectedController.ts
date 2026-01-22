@@ -1,4 +1,4 @@
-import { type AuthUser, SESSION_COOKIE } from "@server/db/types";
+import { type AuthUser, SESSION_COOKIE, type TenantSettings } from "@server/db/types";
 import { me } from "@server/src/services/authService";
 
 export type TenantRole = "owner" | "admin" | "staff";
@@ -7,6 +7,7 @@ export type ProtectedCtx = {
   user: AuthUser;
   tenantId: number;
   roleInTenant: TenantRole;
+  tenantSettings: TenantSettings;
 };
 
 export function protectedController<TResult>(
@@ -26,6 +27,7 @@ export function protectedController<TResult>(
     ctx.user = result.user;
     ctx.tenantId = result.tenant.id;
     ctx.roleInTenant = result.roleInTenant;
+    ctx.tenantSettings = result.tenantSettings ?? { display_currency: "ARS" };
 
     return handler(ctx);
   };

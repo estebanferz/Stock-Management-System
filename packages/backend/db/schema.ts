@@ -66,7 +66,7 @@ export const tenantSettingsTable = pgTable("tenant_settings", {
   cuit: varchar({ length: 32 }),
   address: varchar({ length: 255 }),
 
-  default_currency: varchar({ length: 8 }).notNull().default("ARS"),
+  display_currency: varchar({ length: 8 }).notNull().default("ARS"),
   timezone: varchar({ length: 64 }).notNull().default("America/Argentina/Buenos_Aires"),
 
   low_stock_threshold_default: integer().notNull().default(3),
@@ -154,6 +154,7 @@ export const expenseTable = pgTable("expense", {
   category: varchar({ length: 255 }).notNull(),
   description: varchar({ length: 255 }),
   amount: numeric({ precision: 12, scale: 2 }).notNull(),
+  currency: varchar({ length: 8 }).notNull().default("USD"),
   payment_method: varchar({ length: 50 }).notNull(),
   receipt_path: varchar({ length: 255 }),
   receipt_original_name: varchar({ length: 255 }),
@@ -188,6 +189,7 @@ export const phoneTable = pgTable("phone", {
   category: varchar({ length: 100 }).notNull(),
   price: numeric({ precision: 12, scale: 2 }).notNull(),
   buy_cost: numeric({ precision: 12, scale: 2 }).notNull(),
+  currency: varchar({ length: 8 }).notNull().default("USD"), 
   deposit: varchar({ length: 255 }).notNull(),
   sold: boolean().default(false).notNull(),
   trade_in: boolean().default(false),
@@ -257,6 +259,7 @@ export const saleTable = pgTable("sale", {
   sale_id: integer().primaryKey().generatedAlwaysAsIdentity(),
   datetime: timestamp().notNull().defaultNow(),
   total_amount: numeric({ precision: 12, scale: 2 }).notNull(),
+  currency: varchar({ length: 8 }).notNull().default("USD"),
   payment_method: varchar({ length: 50 }).notNull(),
   debt: boolean().default(false).notNull(),
   debt_amount: numeric({ precision: 12, scale: 2 }),

@@ -1,11 +1,11 @@
 import { Chart } from "react-google-charts";
 
 const customColors = [
-  "#004aad",
-  "#275fa8",
-  "#3b69a6",
-  "#4e72a2",
-  "#627c9f",
+  "#204e22",
+  "#3d8f41",
+  "#53c259",
+  "#55d85d",
+  "#63ff6c",
 ];
 
 export const options = {
@@ -44,12 +44,10 @@ export function PieChart({
 }: PieChartProps) {
   return (
     <div className={`w-full flex flex-col ${className ?? ""}`}>
-      {/* Título */}
       <h3 className="text-base font-semibold text-gray-800 text-left">
         {title}
       </h3>
 
-      {/* Descripción */}
       <p className="text-sm text-gray-600 text-left mb-2">
         {description}
       </p>

@@ -1,5 +1,4 @@
 ---
-import { Store } from "lucide-react";
 import { UserMenu } from "./UserMenu";
 
 //import SearchBar from "../components/SearchBar.astro";
@@ -36,7 +35,7 @@ const fecha = dolarBlue?.fechaActualizacion
     <img
       src={tenantLogoUrl}
       alt={`Logo ${tenantDisplayName}`}
-      class="h-full w-auto object-contain rounded-full"
+      class="h-full w-auto object-cover rounded-full"
     />
     </a>
   </div>
@@ -69,22 +68,25 @@ const fecha = dolarBlue?.fechaActualizacion
   class="fixed left-0 pt-16 z-20 h-screen overflow-y-auto w-56 transform bg-white shadow-lg transition-transform duration-200 translate-x-0"
 >
 
-  <div class="flex flex-col gap-4 items-left justify-between px-4 pt-12 pb-5 md:pb-0">
+  <div class="flex flex-col gap-8 items-left justify-between px-4 pt-12 pb-5 md:pb-0">
     <div class="flex flex-row items-center gap-2">
-      <div class="flex justify-center items-center bg-gray-300 h-10 w-10 border-2 border-gray-500 rounded-lg opacity-90">
-        <Store className=" text-gray-700"/>
+      <div class="flex justify-center items-center h-10 w-10 opacity-90">
+        <img src="../../public/Suma-logo.png" class="rounded-md"/>
       </div>
-      <h2 class="text-md font-medium text-gray-700">
-        <span class="font-bold">
-          {tenantDisplayName
-            ? tenantDisplayName.length > 20
-              ? tenantDisplayName.slice(0, 10) + "..."
-              : tenantDisplayName
-            : "Mi Empresa"}
-        </span>
-      </h2>
+      <div class="flex flex-col ">
+        <h2 class="text-md font-medium text-gray-700">
+          <span class="font-bold">
+            {tenantDisplayName
+              ? tenantDisplayName.length > 20
+                ? tenantDisplayName.slice(0, 10) + "..."
+                : tenantDisplayName
+              : "Mi Empresa"}
+          </span>
+        </h2>
+        <p class="font-thin text-xs">Suma</p>
+      </div>
     </div>
-    <div class="text-gray-700 font-base">Menu</div>
+    <div class="text-gray-600 font-base">Menu</div>
   </div>
 
   <div class="text-xs border rounded-lg p-1 gap-3 block md:hidden mx-4">

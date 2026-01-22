@@ -7,14 +7,11 @@ import { generalStringFormat } from "@/utils/formatters";
 type Row = {
   sale_id: number;
   device_name: string;
-  buy_cost: number;
-  total_amount: number;
-  profit: number;
+  displayCurrency: string;
+  buy_display: string;
+  sale_display: string;
+  net_display: string;
 };
-
-function money(v: number) {
-  return `$${Number(v || 0).toFixed(0)}`;
-}
 
 export function NetIncomeCard({
   netIncome,
@@ -26,7 +23,7 @@ export function NetIncomeCard({
   const [open, setOpen] = useState(false);
 
   const totalProfit = useMemo(() => {
-    return (rows ?? []).reduce((acc, r) => acc + Number(r.profit || 0), 0);
+    return (rows ?? []).reduce((acc, r) => acc + Number(r.net_display || 0), 0);
   }, [rows]);
 
   return (
@@ -36,7 +33,7 @@ export function NetIncomeCard({
         onClick={() => setOpen(true)}
         className="cursor-pointer transition hover:scale-[1.02]"
       >
-        <CustomCard title="Ingresos Netos" description="Ingresos netos del negocio" amount={`$${netIncome}`} icon={moneyIcon} />
+        <CustomCard title="Ingresos Netos" description="Ingresos netos del negocio" amount={netIncome} icon={moneyIcon} />
       </div>
 
       {/* Modal centrado */}
@@ -47,7 +44,7 @@ export function NetIncomeCard({
         maxWidth="max-w-3xl"
       >
         <div className="text-sm text-muted-foreground mb-4">
-          Ganancia por venta (Valor vendido − Costo de compra)
+          Ganancia por venta (valor vendido − costo de compra) mostrada en la moneda elegida.
         </div>
 
         <div className="border rounded-xl overflow-hidden">
@@ -70,11 +67,11 @@ export function NetIncomeCard({
                   <div className="truncate">
                     {generalStringFormat(String(r.device_name ?? ""))}
                   </div>
-                  <div className="text-right tabular-nums">{money(r.buy_cost)}</div>
-                  <div className="text-right tabular-nums">{money(r.total_amount)}</div>
+                  <div className="text-right tabular-nums">{r.buy_display}</div>
+                  <div className="text-right tabular-nums">{r.sale_display}</div>
 
                   <div className="text-right tabular-nums font-semibold">
-                    {money(r.profit)}
+                    {r.net_display}
                   </div>
                 </div>
               ))
@@ -96,7 +93,7 @@ export function NetIncomeCard({
 
         <button
           onClick={() => setOpen(false)}
-          className="mt-5 px-4 py-2 rounded-lg bg-gray-200 hover:bg-mainColor hover:text-white w-full transition"
+          className="mt-5 px-4 py-2 rounded-lg bg-gray-200 hover:bg-secondColor hover:text-white w-full transition"
         >
           Cerrar
         </button>

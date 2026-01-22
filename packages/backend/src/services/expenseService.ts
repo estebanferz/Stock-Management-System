@@ -1,10 +1,12 @@
 import { db } from "@server/db/db";
 import { expenseTable, providerTable } from "@server/db/schema.ts";
 import { ilike, and, eq, sql, gte, lte } from "drizzle-orm";
-import { normalizeShortString } from "../util/formattersBackend";
+import { fmtMoney, isCurrency, normalizeShortString, round2 } from "../util/formattersBackend";
 import { mkdir, unlink } from "node:fs/promises";
 import path from "node:path";
 import fs from "node:fs";
+import type { Currency } from "@server/db/types";
+import { convert } from "./currencyService";
 
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "application/pdf"] as const;
 const MAX_SIZE = 5 * 1024 * 1024;
@@ -295,26 +297,53 @@ export const getTotalExpenses = async (tenantId: number) => {
   return Number(total_expenses ?? 0);
 };
 
-type ExpenseCategoryRow = { category: string; total: number };
+type ExpenseCategoryRow = {
+  category: string;
+  total: number;
+};
 
-export const getTopExpensesByCategory = async (tenantId: number, limit = 5) => {
+export const getTopExpensesByCategory = async (
+  tenantId: number,
+  display: Currency,
+  fx: any,
+  limit = 5
+) => {
+  const since = new Date();
+  since.setMonth(since.getMonth() - 6);
+
   const rows = await db
     .select({
       category: expenseTable.category,
-      total: sql<number>`SUM(COALESCE(${expenseTable.amount}, 0))`,
+      amount: sql<number>`COALESCE(${expenseTable.amount}, 0)`,
+      currency: expenseTable.currency,
+      datetime: expenseTable.datetime,
     })
     .from(expenseTable)
     .where(
       and(
         eq(expenseTable.tenant_id, tenantId),
-        eq(expenseTable.is_deleted, false)
+        eq(expenseTable.is_deleted, false),
+        gte(expenseTable.datetime, since)
       )
-    )
-    .groupBy(expenseTable.category)
-    .orderBy(sql`SUM(COALESCE(${expenseTable.amount}, 0)) DESC`)
-    .limit(limit);
+    );
 
-  return rows as ExpenseCategoryRow[];
+  const totals = new Map<string, number>();
+
+  for (const r of rows) {
+    const category = String(r.category ?? "Sin categoría");
+    const amt = Number(r.amount ?? 0);
+    if (!Number.isFinite(amt) || amt === 0) continue;
+    const cur: Currency = isCurrency(r.currency) ? r.currency : "ARS";
+    const converted = convert(amt, cur, display, fx.ratesToARS);
+    totals.set(category, (totals.get(category) ?? 0) + converted);
+  }
+
+  const result: ExpenseCategoryRow[] = [...totals.entries()]
+    .map(([category, total]) => ({ category, total: round2(total) }))
+    .sort((a, b) => b.total - a.total)
+    .slice(0, limit);
+
+  return result;
 };
 
 

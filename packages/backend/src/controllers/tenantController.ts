@@ -5,6 +5,8 @@ import {
   upsertTenantSettings,
   updateTenantName,
   deactivateTenant,
+  patchMyTenant,
+  patchMyTenantSettings,
 } from "../services/tenantService";
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
@@ -139,4 +141,40 @@ export const tenantController = new Elysia({ prefix: "/tenant" })
         return { ok: false, error: "INTERNAL_ERROR", detail: err?.message ?? String(err) };
       }
     })
+  )
+  .patch(
+    "/me",
+    protectedController(async (ctx) => {
+      const row = await patchMyTenant(ctx.tenantId, ctx.user.id, ctx.body);
+      ctx.set.status = 200;
+      return row;
+    }),
+    {
+      body: t.Object({
+        name: t.Optional(t.String({ maxLength: 255 })),
+      }),
+      detail: { summary: "Patch my tenant (name)", tags: ["tenants"] },
+    }
+  )
+
+  // PATCH tenant_settings
+  .patch(
+    "/me/settings",
+    protectedController(async (ctx) => {
+      const row = await patchMyTenantSettings(ctx.tenantId, ctx.user.id, ctx.body);
+      ctx.set.status = 200;
+      return row;
+    }),
+    {
+      body: t.Object({
+        business_name: t.Optional(t.Union([t.String({ maxLength: 255 }), t.Null()])),
+        logo_url: t.Optional(t.Union([t.String({ maxLength: 1024 }), t.Null()])),
+        cuit: t.Optional(t.Union([t.String({ maxLength: 32 }), t.Null()])),
+        address: t.Optional(t.Union([t.String({ maxLength: 255 }), t.Null()])),
+        display_currency: t.Optional(t.String({ maxLength: 8 })),
+        timezone: t.Optional(t.String({ maxLength: 64 })),
+        low_stock_threshold_default: t.Optional(t.Number()),
+      }),
+      detail: { summary: "Patch my tenant settings", tags: ["tenants"] },
+    }
   );

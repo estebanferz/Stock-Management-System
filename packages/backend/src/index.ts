@@ -14,6 +14,7 @@ import {accessoryController} from "./controllers/accessoryController";
 import {userController} from "./controllers/userController";
 import {tenantController} from "./controllers/tenantController";
 import { uploadsController } from "./controllers/uploadController";
+import { currencyController } from "./controllers/currencyController";
 
 const port = Number(process.env.PORT ?? 3000);
 
@@ -38,6 +39,7 @@ const app = new Elysia({prefix: '/api'})
   .use(userController)
   .use(tenantController)
   .use(uploadsController)
+  .use(currencyController)
   
   .listen({
     hostname: "0.0.0.0",

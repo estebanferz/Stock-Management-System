@@ -1,7 +1,7 @@
 type Props = {
   title: string;
   description: string;
-  amount: string;
+  amount: number | string;
   icon?: string | { src: string };
   secondaryData?: string;
 };

@@ -37,7 +37,8 @@ const data = expenses.map((expense: any) => ({
 ---
 
 <Layout title="Gastos" user={auth.user}>
-    <h1 class="w-full text-center text-4xl text-gray-700 font-bold my-5">Gastos</h1>
+    <h1 class="w-full text-3xl text-gray-700 font-bold mt-5">Gastos</h1>
+    <p class="mb-5 text-sm text-gray-600 font-medium">Comisiones, publicidad y demás gastos de la empresa</p>
     
     <ExpensesPageManager
     client:load
@@ -66,7 +67,7 @@ const data = expenses.map((expense: any) => ({
         <button
             id="btn-new-expense"
             type="button"
-            class="flex justify-center items-center h-16 w-16 rounded-full bg-white text-gray-500 hover:bg-mainColor hover:opacity-90 hover:text-white text-3xl shadow-lg"
+            class="flex justify-center items-center h-16 w-16 rounded-full bg-white text-gray-500 hover:bg-secondColor hover:opacity-90 hover:text-white text-3xl shadow-lg"
         >
             <Receipt />
         </button>
