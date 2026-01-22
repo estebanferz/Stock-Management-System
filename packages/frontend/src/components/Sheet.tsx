@@ -20,15 +20,12 @@ export function SheetDemo() {
   return (
     <Sheet>
       <SheetTrigger asChild>
-        {/* Este es TU botón */}
-        <Button className="flex justify-center items-center h-16 w-16 rounded-full bg-white text-gray-500 hover:bg-mainColor hover:opacity-90 hover:text-white text-3xl shadow-lg">
+        <Button className="flex justify-center items-center h-16 w-16 rounded-full bg-white text-gray-500 hover:bg-secondColor hover:opacity-90 hover:text-white text-3xl shadow-lg">
           +
         </Button>
       </SheetTrigger>
 
-      {/* Este es el contenido. Está BIEN ESTRUCTURADO, 
-          así que NO PUEDE dar el error de <SheetContent> */}
-      <SheetContent claassName="duration-200">
+      <SheetContent className="duration-200">
         <SheetHeader>
           <SheetTitle>Edit profile</SheetTitle>
           <SheetDescription>

@@ -9,8 +9,9 @@ import {
   getStockInvestment,
   getStockInvestmentBreakdown,
 } from "../services/phoneService";
-import { phoneInsertDTO, phoneUpdateDTO } from "@server/db/types";
+import { phoneInsertDTO, phoneUpdateDTO, type Currency } from "@server/db/types";
 import { protectedController } from "../util/protectedController";
+import { getFxSnapshotVenta } from "../services/currencyService";
 
 export const phoneController = new Elysia({ prefix: "/phone" })
   .get("/", () => ({ message: "Phone endpoint" }))
@@ -164,7 +165,9 @@ export const phoneController = new Elysia({ prefix: "/phone" })
     })
   )
   .get("/stock-investment", protectedController(async (ctx) => {
-    return await getStockInvestment(ctx.tenantId);
+    const display: Currency = ctx.tenantSettings.display_currency ?? "ARS";
+    const fx = await getFxSnapshotVenta();
+    return await getStockInvestment(ctx.tenantId, display, fx);
   }))
   .get("/stock-investment-breakdown", protectedController(async (ctx) => {
     return await getStockInvestmentBreakdown(ctx.tenantId);

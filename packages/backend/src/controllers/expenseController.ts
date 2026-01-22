@@ -9,9 +9,10 @@ import {
   getExpenseReceiptFile,
   getTopExpensesByCategory,
 } from "../services/expenseService";
-import { expenseInsertDTO, expenseUpdateDTO } from "@server/db/types";
+import { expenseInsertDTO, expenseUpdateDTO, type Currency } from "@server/db/types";
 import { safeFilename } from "../util/formattersBackend";
 import { protectedController } from "../util/protectedController";
+import { getFxSnapshotVenta } from "../services/currencyService";
 
 export const expenseController = new Elysia({ prefix: "/expense" })
   .get("/", () => ({ message: "Expense endpoint" }))
@@ -197,5 +198,7 @@ export const expenseController = new Elysia({ prefix: "/expense" })
     }
   )
   .get("/top-by-category", protectedController(async (ctx) => {
-    return await getTopExpensesByCategory(ctx.tenantId, 5);
+    const display: Currency = ctx.tenantSettings.display_currency ?? "ARS";
+    const fx = await getFxSnapshotVenta();
+    return await getTopExpensesByCategory(ctx.tenantId, display, fx, 5);
   }));

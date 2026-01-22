@@ -10,8 +10,9 @@ import {
   getTotalDebt,
   getClientOverviewMetrics,
 } from "../services/clientService";
-import { clientInsertDTO, clientUpdateDTO } from "@server/db/types";
+import { clientInsertDTO, clientUpdateDTO, type Currency } from "@server/db/types";
 import { protectedController } from "../util/protectedController";
+import { getFxSnapshotVenta } from "../services/currencyService";
 
 export const clientController = new Elysia({ prefix: "/client" })
   .get("/", () => ({ message: "Client endpoint" }))
@@ -139,7 +140,9 @@ export const clientController = new Elysia({ prefix: "/client" })
   .get(
     "/debts",
     protectedController(async (ctx) => {
-      return await getDebts(ctx.tenantId);
+      const display: Currency = ctx.tenantSettings.display_currency ?? "ARS";
+      const fx = await getFxSnapshotVenta();
+      return await getDebts(ctx.tenantId, display, fx);
     }),
     {
       detail: {
@@ -152,7 +155,9 @@ export const clientController = new Elysia({ prefix: "/client" })
   .get(
     "/total-debt",
     protectedController(async (ctx) => {
-      return await getTotalDebt(ctx.tenantId);
+      const display: Currency = ctx.tenantSettings.display_currency ?? "ARS";
+      const fx = await getFxSnapshotVenta();
+      return await getTotalDebt(ctx.tenantId, display, fx);
     }),
     {
       detail: {

@@ -2,32 +2,30 @@ import { Elysia, t } from "elysia";
 import { protectedController } from "../util/protectedController";
 import {
   getMyUser,
-  upsertMyUserSettings,
+  patchMyUserSettings,
+  replaceMyUserSettings,
+  resetMyUserSettings,
   deactivateMyUser,
 } from "../services/userService";
 
 export const userController = new Elysia({ prefix: "/user" })
-  .get("/", () => ({ message: "User endpoint" }))
-
   .get(
     "/me",
     protectedController(async (ctx) => {
       return await getMyUser(ctx.tenantId, ctx.user.id);
     }),
     {
-      detail: {
-        summary: "Get my user info + settings (scoped by tenant via session)",
-        tags: ["users"],
-      },
+      detail: { summary: "Get my user info + settings", tags: ["users"] },
     }
   )
 
-  .put(
-    "/me",
+  // PATCH (parcial, no pisa undefined)
+  .patch(
+    "/me/settings",
     protectedController(async (ctx) => {
-      const result = await upsertMyUserSettings(ctx.tenantId, ctx.user.id, ctx.body);
+      const row = await patchMyUserSettings(ctx.tenantId, ctx.user.id, ctx.body);
       ctx.set.status = 200;
-      return result;
+      return row;
     }),
     {
       body: t.Object({
@@ -35,13 +33,42 @@ export const userController = new Elysia({ prefix: "/user" })
         phone: t.Optional(t.Union([t.String({ maxLength: 32 }), t.Null()])),
         email_notifications: t.Optional(t.Boolean()),
       }),
-      detail: {
-        summary: "Upsert my user settings",
-        tags: ["users"],
-      },
+      detail: { summary: "Patch my user settings", tags: ["users"] },
     }
   )
 
+  // PUT (reemplazo completo)
+  .put(
+    "/me/settings",
+    protectedController(async (ctx) => {
+      const row = await replaceMyUserSettings(ctx.tenantId, ctx.user.id, ctx.body);
+      ctx.set.status = 200;
+      return row;
+    }),
+    {
+      body: t.Object({
+        display_name: t.Union([t.String({ maxLength: 120 }), t.Null()]),
+        phone: t.Union([t.String({ maxLength: 32 }), t.Null()]),
+        email_notifications: t.Boolean(),
+      }),
+      detail: { summary: "Replace my user settings", tags: ["users"] },
+    }
+  )
+
+  // DELETE settings (reset)
+  .delete(
+    "/me/settings",
+    protectedController(async (ctx) => {
+      const deleted = await resetMyUserSettings(ctx.tenantId, ctx.user.id);
+      ctx.set.status = deleted ? 200 : 404;
+      return deleted;
+    }),
+    {
+      detail: { summary: "Delete/reset my user settings", tags: ["users"] },
+    }
+  )
+
+  // DELETE user (desactivar cuenta en el tenant + revocar sesiones)
   .delete(
     "/me",
     protectedController(async (ctx) => {
@@ -50,9 +77,6 @@ export const userController = new Elysia({ prefix: "/user" })
       return ok;
     }),
     {
-      detail: {
-        summary: "Deactivate my user (soft) and revoke sessions in this tenant",
-        tags: ["users"],
-      },
+      detail: { summary: "Deactivate my user and revoke sessions for this tenant", tags: ["users"] },
     }
   );

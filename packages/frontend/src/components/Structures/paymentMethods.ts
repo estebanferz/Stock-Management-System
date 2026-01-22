@@ -1,6 +1,5 @@
 export const paymentMethods = [
   { value: "transferencia", label: "Transferencia"},
-  { value: "efectivo-usd", label: "Efectivo USD" },
-  { value: "efectivo-ars", label: "Efectivo ARS" },
+  { value: "efectivo", label: "Efectivo" },
   { value: "crypto", label: "Crypto" },
 ];

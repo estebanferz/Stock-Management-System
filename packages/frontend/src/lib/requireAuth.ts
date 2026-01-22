@@ -22,6 +22,7 @@ export async function requireAuth(Astro: any): Promise<RequireAuthResult | null>
     tenant: data.tenant,
     roleInTenant: data.roleInTenant,
     tenantSettings: data.tenantSettings ?? data.tenant_settings ?? null,
+    userSettings: data.userSettings ?? data.user_settings ?? null,
   };
 
   return { auth, cookieHeader };

@@ -19,7 +19,7 @@ type SaleChart = {
 const chartConfig = {
   count: {
     label: "Ventas",
-    color: "#2563eb",
+    color: "#204e22",
   },
 } satisfies ChartConfig
 

@@ -64,7 +64,7 @@ export function TruncatedDescription({ text, words = 2 }: TruncatedDescriptionPr
 
             <button
               onClick={() => setOpen(false)}
-              className="mt-4 px-4 py-2 rounded-lg bg-gray-200 text-black hover:text-white hover:bg-mainColor w-full transition"
+              className="mt-4 px-4 py-2 rounded-lg bg-gray-200 text-black hover:text-white hover:bg-secondColor w-full transition"
             >
               Cerrar
             </button>

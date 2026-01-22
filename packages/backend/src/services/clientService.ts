@@ -1,8 +1,9 @@
 import { db } from "../../db/db";
 import { clientTable, saleTable } from "../../db/schema";
 import { eq, and, ilike, gt, sql } from "drizzle-orm";
-import { clientUpdateDTO } from "@server/db/types";
-import { normalizeShortString } from "@server/src/util/formattersBackend";
+import { clientUpdateDTO, type Currency } from "@server/db/types";
+import { fmtMoney, normalizeShortString, round2 } from "@server/src/util/formattersBackend";
+import { convert } from "./currencyService";
 
 export async function getClientByFilter(
   tenantId: number,
@@ -97,7 +98,7 @@ export async function softDeleteClient(tenantId: number, id: number) {
   return result.length > 0;
 }
 
-export const getDebts = async (tenantId: number) => {
+export const getDebts = async (tenantId: number, display: Currency, fx: any) => {
   const debts = await db
     .select()
     .from(clientTable)
@@ -110,24 +111,29 @@ export const getDebts = async (tenantId: number) => {
     )
     .orderBy(sql`${clientTable.debt} DESC`);
 
-  return debts;
+  return debts.map((c) => {
+    const debtUsd = Number(c.debt ?? 0);
+    const debtDisplay = convert(debtUsd, "USD", display, fx.ratesToARS);
+
+    return {
+      ...c,
+      debt: fmtMoney(debtDisplay, display),
+    };
+  });
 };
 
-export const getTotalDebt = async (tenantId: number) => {
-  const debts = await db
+export const getTotalDebt = async (tenantId: number, display: Currency, fx: any) => {
+  const rows = await db
     .select({
-      total_debt: sql`SUM(${clientTable.debt})`,
+      total_debt_usd: sql<number>`COALESCE(SUM(${clientTable.debt}), 0)`,
     })
     .from(clientTable)
-    .where(
-      and(
-        eq(clientTable.tenant_id, tenantId),
-        eq(clientTable.is_deleted, false)
-      )
-    );
+    .where(and(eq(clientTable.tenant_id, tenantId), eq(clientTable.is_deleted, false)));
 
-  const { total_debt } = debts[0] ?? { total_debt: 0 };
-  return Number(total_debt ?? 0);
+  const totalUsd = Number(rows[0]?.total_debt_usd ?? 0);
+  const totalDisplay = convert(totalUsd, "USD", display, fx.ratesToARS);
+
+  return fmtMoney(totalDisplay, display);
 };
 
 export async function getClientOverviewMetrics(

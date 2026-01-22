@@ -58,8 +58,9 @@ const data = repairs.map((repair: any) => ({
 ---
 
 <Layout title="Reparaciones" user={auth.user}>
-    <h1 class="w-full text-center text-4xl text-gray-700 font-bold my-5">Reparaciones</h1>
-    
+
+    <h1 class="w-full text-3xl text-gray-700 font-bold mt-5">Reparaciones</h1>
+    <p class="mb-5 text-sm text-gray-600 font-medium">Centro de reparación de dispositivos</p>    
 
     <RepairPageManager
       client:load
@@ -90,7 +91,7 @@ const data = repairs.map((repair: any) => ({
       <button
         id="btn-new-repair"
         type="button"
-        class="flex justify-center items-center h-16 w-16 rounded-full bg-white text-gray-500 hover:bg-mainColor hover:opacity-90 hover:text-white text-3xl shadow-lg"
+        class="flex justify-center items-center h-16 w-16 rounded-full bg-white text-gray-500 hover:bg-secondColor hover:opacity-90 hover:text-white text-3xl shadow-lg"
       >
         <Hammer />
       </button>

@@ -17,7 +17,10 @@ export const saleColumns: Column<Sale>[] = [
     header: "Total",
     renderKey: "money",
   },
-
+  {
+    accessorKey: "currency",
+    header: "Moneda",
+  },  
   { 
     accessorKey: "payment_method", 
     header: "Método",

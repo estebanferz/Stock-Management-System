@@ -54,6 +54,7 @@ export const accessoryInsertDTO = t.Omit(accessorySchema, ["accessory_id", "tena
 export const accessoryUpdateDTO = t.Omit(accessorySchema, ["accessory_id", "tenant_id"]);
 
 export type TenantRole = "owner" | "admin" | "staff";
+export type Currency = "ARS" | "USD" | "EUR" | "BRL";
 
 export type AuthUser = {
   id: number;
@@ -74,19 +75,27 @@ export type AuthTenant = {
 export type TenantSettings = {
   business_name?: string | null;
   logo_url?: string | null;
+  display_currency?: string | null;
   cuit?: string | null;
   address?: string | null;
-  default_currency?: string | null;
   timezone?: string | null;
   low_stock_threshold_default?: number | null;
   updated_at?: string | Date | null;
+};
+
+export type UserSettings = {
+  display_name: string | null;
+  phone: string | null;
+  email_notifications: boolean;
+  updated_at: Date | string | null;
 };
 
 export type AuthMe = {
   user: AuthUser;
   tenant: AuthTenant;
   roleInTenant: TenantRole;
-  tenantSettings?: TenantSettings | null; // opcional por ahora
+  tenantSettings?: TenantSettings | null;
+  userSettings?: UserSettings | null;
 };
 
 export const SESSION_COOKIE = "session"

@@ -1,4 +1,5 @@
 import { and, ilike, sql } from "drizzle-orm";
+import type { Currency } from "../services/currencyService";
 
 export function normalizeShortString(str: string): string {
   return str
@@ -43,3 +44,15 @@ export function ilikeWordsNormalized(column: any, value?: string) {
 
   return and(...words.map((w) => ilike(normalizedCol as any, `%${w}%`)));
 }
+
+export const fmtMoney = (n: number, displayCurrency: Currency) =>
+  new Intl.NumberFormat("es-AR", {
+    style: "currency",
+    currency: displayCurrency,
+    maximumFractionDigits: 2,
+  }).format(Number.isFinite(n) ? n : 0);
+
+const CURRENCIES = ["ARS", "USD", "EUR", "BRL"] as const;
+export const isCurrency = (v: any): v is Currency => CURRENCIES.includes(v);
+
+export const round2 = (n: number) => Math.round(n * 100) / 100;

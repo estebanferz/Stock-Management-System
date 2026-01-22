@@ -117,6 +117,7 @@ export const authController = new Elysia({ prefix: "/auth" })
             tenant: result.tenant,
             roleInTenant: result.roleInTenant,
             tenantSettings: result.tenantSettings ?? null,
+            userSettings: result.userSettings ?? null,
         };    
     },
     {

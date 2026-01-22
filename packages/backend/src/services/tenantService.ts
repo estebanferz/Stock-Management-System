@@ -1,9 +1,10 @@
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { db } from "@server/db/db"; // ajustá si tu import es distinto
 import {
   tenantTable,
   tenantSettingsTable,
   sessionTable,
+  tenantMembershipTable,
 } from "@server/db/schema";
 import type { TenantRole } from "../util/protectedController";
 
@@ -106,4 +107,73 @@ export async function deactivateTenant(tenantId: number, roleInTenant: TenantRol
     .where(eq(sessionTable.tenant_id, tenantId));
 
   return Boolean(row);
+}
+
+function pickDefined<T extends Record<string, any>>(obj: T) {
+  const out: Record<string, any> = {};
+  for (const [k, v] of Object.entries(obj)) if (v !== undefined) out[k] = v;
+  return out as Partial<T>;
+}
+
+async function assertCanEditTenant(tenantId: number, userId: number) {
+  const [m] = await db
+    .select({ is_active: tenantMembershipTable.is_active, role: tenantMembershipTable.role })
+    .from(tenantMembershipTable)
+    .where(and(eq(tenantMembershipTable.tenant_id, tenantId), eq(tenantMembershipTable.user_id, userId)));
+
+  if (!m || !m.is_active) throw new Error("Membership inválida o inactiva.");
+  if (m.role !== "owner" && m.role !== "admin") throw new Error("No autorizado.");
+  return m;
+}
+
+export async function patchMyTenant(tenantId: number, userId: number, patch: { name?: string }) {
+  await assertCanEditTenant(tenantId, userId);
+  const defined = pickDefined(patch);
+  if (!Object.keys(defined).length) {
+    const [t] = await db.select().from(tenantTable).where(eq(tenantTable.tenant_id, tenantId));
+    return t ?? null;
+  }
+
+  const [row] = await db
+    .update(tenantTable)
+    .set({ ...defined, updated_at: new Date() })
+    .where(eq(tenantTable.tenant_id, tenantId))
+    .returning();
+
+  return row;
+}
+
+export async function patchMyTenantSettings(
+  tenantId: number,
+  userId: number,
+  patch: Partial<{
+    business_name: string | null;
+    logo_url: string | null;
+    cuit: string | null;
+    address: string | null;
+    display_currency: string;
+    timezone: string;
+    low_stock_threshold_default: number;
+  }>
+) {
+  await assertCanEditTenant(tenantId, userId);
+
+  const now = new Date();
+  const defined = pickDefined(patch);
+
+  if (!Object.keys(defined).length) {
+    const [s] = await db.select().from(tenantSettingsTable).where(eq(tenantSettingsTable.tenant_id, tenantId));
+    return s ?? null;
+  }
+
+  const [row] = await db
+    .insert(tenantSettingsTable)
+    .values({ tenant_id: tenantId, ...defined, updated_at: now })
+    .onConflictDoUpdate({
+      target: tenantSettingsTable.tenant_id,
+      set: { ...defined, updated_at: now },
+    })
+    .returning();
+
+  return row;
 }

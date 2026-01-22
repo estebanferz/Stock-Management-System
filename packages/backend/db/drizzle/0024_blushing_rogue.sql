@@ -1,0 +1,1 @@
+ALTER TABLE "sale" ADD COLUMN "currency" varchar(8) DEFAULT 'ARS' NOT NULL;
