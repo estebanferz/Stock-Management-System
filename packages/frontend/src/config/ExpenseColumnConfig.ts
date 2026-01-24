@@ -28,6 +28,10 @@ export const expenseColumns: Column<Expense>[] = [
         renderKey: "paymentMethod"
     },
     {
+        accessorKey: "currency",
+        header: "Moneda",
+    },
+    {
         accessorKey: "receipt_number",
         header: "Comprobante",
         renderKey: "receipt",

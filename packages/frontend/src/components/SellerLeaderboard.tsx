@@ -1,21 +1,19 @@
 import { useEffect, useState } from "react";
 import { clientApp } from "@/lib/clientAPI";
-import { Crown, DollarSign, Percent, ShoppingCart, TrendingUp } from "lucide-react";
+import { Crown } from "lucide-react";
 import type { TenantRole } from "@server/db/types";
 import { generalStringFormat } from "@/utils/formatters";
-
-type Role = TenantRole;
 
 type Row = {
   seller_id: number;
   name: string;
   sales_count: number;
-  total_sold: number;
-  commission_total: number;
-  avg_ticket: number;
+  total_sold_formatted: string;
+  commission_total_formatted: string;
+  avg_ticket_formatted: string;
 };
 
-export function SellerLeaderboard({ role }: { role: Role }) {
+export function SellerLeaderboard({ role }: { role: TenantRole }) {
   if (role !== "owner") return null;
 
   const [rows, setRows] = useState<Row[]>([]);
@@ -37,10 +35,12 @@ export function SellerLeaderboard({ role }: { role: Role }) {
 
   return (
     <div className="my-6 rounded-2xl border bg-white p-4 shadow-md">
-      <div className="mb-3 flex items-center gap-2">
-        <Crown className="h-5 w-5 text-gray-700" />
-        <h3 className="text-base font-semibold text-gray-900">Mejores vendedores</h3>
-        <span className="text-sm text-gray-500">(Top 5)</span>
+      <div className="mb-3 flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-2">
+        <div className="flex items-center gap-2">
+          <Crown className="h-5 w-5 text-gray-700" />
+          <h3 className="text-base font-semibold text-gray-900">Mejores vendedores</h3>
+        </div>
+        <span className="text-sm text-gray-500 sm:ml-1">(últimos 6 meses)</span>
       </div>
 
       {loading ? (
@@ -56,31 +56,36 @@ export function SellerLeaderboard({ role }: { role: Role }) {
           {rows.map((r, idx) => (
             <div
               key={r.seller_id}
-              className="flex items-center justify-between rounded-xl border p-3"
+              className="
+                rounded-xl border p-3
+                flex flex-col gap-3
+                md:flex-row md:items-center md:justify-between md:gap-4
+              "
             >
-                <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gray-100 text-gray-700 font-semibold">
-                    #{idx + 1}
-                    </div>
-
-                    <div className="font-semibold text-gray-900">{generalStringFormat(r.name)}</div>
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gray-100 text-gray-700 font-semibold">
+                  #{idx + 1}
                 </div>
 
-                <div className="grid grid-cols-4 gap-6 text-right">
+                <div className="font-semibold text-gray-900">
+                  {generalStringFormat(r.name)}
+                </div>
+              </div>
+
+              <div
+                className="
+                  w-full
+                  grid grid-cols-2 gap-x-6 gap-y-3
+                  text-left
+                  md:w-auto md:text-right md:grid-cols-2
+                  lg:grid-cols-4
+                "
+              >
                 <MetricCol label="Ventas" value={r.sales_count} />
-                <MetricCol
-                    label="Vendido"
-                    value={`$${r.total_sold.toLocaleString("es-AR")}`}
-                />
-                <MetricCol
-                    label="Comisión"
-                    value={`$${r.commission_total.toLocaleString("es-AR")}`}
-                />
-                <MetricCol
-                    label="Ticket prom."
-                    value={`$${r.avg_ticket.toLocaleString("es-AR")}`}
-                />
-                </div>
+                <MetricCol label="Vendido" value={r.total_sold_formatted} />
+                <MetricCol label="Comisión" value={r.commission_total_formatted} />
+                <MetricCol label="Ticket prom." value={r.avg_ticket_formatted} />
+              </div>
             </div>
           ))}
         </div>
@@ -97,7 +102,7 @@ function MetricCol({
   value: string | number;
 }) {
   return (
-    <div className="flex flex-col items-end">
+    <div className="flex flex-col md:items-end">
       <span className="text-xs text-gray-400">{label}</span>
       <span className="text-sm font-semibold text-gray-900">
         {value}

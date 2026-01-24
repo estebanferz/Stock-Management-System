@@ -2,7 +2,7 @@ import { db } from "../../db/db";
 import { clientTable, saleTable } from "../../db/schema";
 import { eq, and, ilike, gt, sql } from "drizzle-orm";
 import { clientUpdateDTO, type Currency } from "@server/db/types";
-import { fmtMoney, normalizeShortString, round2 } from "@server/src/util/formattersBackend";
+import { fmtMoney, isCurrency, normalizeShortString, round2 } from "@server/src/util/formattersBackend";
 import { convert } from "./currencyService";
 
 export async function getClientByFilter(
@@ -138,11 +138,13 @@ export const getTotalDebt = async (tenantId: number, display: Currency, fx: any)
 
 export async function getClientOverviewMetrics(
   tenantId: number,
-  opts?: { limit?: number }
+  opts: { limit?: number } | undefined,
+  display: Currency,
+  fx: any
 ) {
   const limit = Math.min(Math.max(Number(opts?.limit ?? 5), 1), 20);
 
-  // 1) clientes con deuda
+  // 1) clientes con deuda (count)
   const debtCountRows = await db
     .select({
       clients_with_debt: sql<number>`CAST(COUNT(*) AS INTEGER)`,
@@ -158,61 +160,106 @@ export async function getClientOverviewMetrics(
 
   const clients_with_debt = Number(debtCountRows[0]?.clients_with_debt ?? 0);
 
-  // 2) deuda total
+  // 2) deuda total (USD fijo) -> convertir una vez
   const totalDebtRows = await db
     .select({
-      total_debt: sql<string>`COALESCE(SUM(${clientTable.debt}), 0)::text`,
+      total_debt_usd: sql<number>`COALESCE(SUM(${clientTable.debt}), 0)`,
     })
     .from(clientTable)
-    .where(
+    .where(and(eq(clientTable.tenant_id, tenantId), eq(clientTable.is_deleted, false)));
+
+  const totalDebtUsd = Number(totalDebtRows[0]?.total_debt_usd ?? 0);
+  const total_debt = round2(convert(totalDebtUsd, "USD", display, fx.ratesToARS));
+
+  // 3) top clientes por total gastado (multi-currency) -> convertir fila a fila
+  // Traemos todas las ventas con cliente, y agregamos en JS
+  const saleRows = await db
+    .select({
+      client_id: saleTable.client_id,
+      client_name: clientTable.name,
+      amount: sql<number>`COALESCE(${saleTable.total_amount}, 0)`,
+      currency: saleTable.currency,
+      datetime: saleTable.datetime,
+    })
+    .from(saleTable)
+    .innerJoin(
+      clientTable,
       and(
+        eq(clientTable.client_id, saleTable.client_id),
         eq(clientTable.tenant_id, tenantId),
         eq(clientTable.is_deleted, false)
       )
-    );
-
-  const total_debt = Number(totalDebtRows[0]?.total_debt ?? 0);
-
-  // 3) top clientes por total gastado (ventas)
-  const topRows = await db
-    .select({
-      client_id: clientTable.client_id,
-      name: clientTable.name,
-      sales_count: sql<number>`CAST(COUNT(${saleTable.sale_id}) AS INTEGER)`,
-      total_spent: sql<string>`COALESCE(SUM(${saleTable.total_amount}), 0)::text`,
-      last_sale_datetime: sql<string>`MAX(${saleTable.datetime})::text`,
-    })
-    .from(clientTable)
-    .innerJoin(
-      saleTable,
+    )
+    .where(
       and(
-        eq(saleTable.client_id, clientTable.client_id),
         eq(saleTable.tenant_id, tenantId),
         eq(saleTable.is_deleted, false)
       )
-    )
-    .where(
-      and(
-        eq(clientTable.tenant_id, tenantId),
-        eq(clientTable.is_deleted, false)
-      )
-    )
-    .groupBy(clientTable.client_id, clientTable.name)
-    .orderBy(sql`COALESCE(SUM(${saleTable.total_amount}), 0) DESC`)
-    .limit(limit);
+    );
 
-  const top_clients = topRows.map((r) => ({
-    client_id: Number(r.client_id),
-    name: String(r.name ?? ""),
-    sales_count: Number(r.sales_count ?? 0),
-    total_spent: Number(Number(r.total_spent ?? 0).toFixed(2)),
-    last_sale_datetime: r.last_sale_datetime ? new Date(r.last_sale_datetime).toISOString() : null,
-  }));
+  // aggregate por cliente
+  const byClient = new Map<
+    number,
+    {
+      client_id: number;
+      name: string;
+      sales_count: number;
+      total_spent_display: number;
+      last_sale_dt: Date | null;
+    }
+  >();
+
+  for (const r of saleRows) {
+    const cid = Number(r.client_id);
+    if (!Number.isFinite(cid)) continue;
+
+    const amt = Number(r.amount ?? 0);
+    if (!Number.isFinite(amt)) continue;
+
+    const cur: Currency = isCurrency(r.currency) ? r.currency : "ARS";
+    const spent = convert(amt, cur, display, fx.ratesToARS);
+
+    const existing =
+      byClient.get(cid) ??
+      {
+        client_id: cid,
+        name: String(r.client_name ?? ""),
+        sales_count: 0,
+        total_spent_display: 0,
+        last_sale_dt: null,
+      };
+
+    existing.sales_count += 1;
+    existing.total_spent_display += spent;
+
+    const dt = r.datetime ? new Date(r.datetime as any) : null;
+    if (dt && (!existing.last_sale_dt || dt > existing.last_sale_dt)) existing.last_sale_dt = dt;
+
+    byClient.set(cid, existing);
+  }
+
+  // ordenar por total gastado convertido y limitar
+  const top_clients = [...byClient.values()]
+    .map((c) => {
+      const total = round2(c.total_spent_display);
+
+      return {
+        client_id: c.client_id,
+        name: c.name,
+        sales_count: c.sales_count,
+        total_spent: total,
+        total_spent_formatted: fmtMoney(total, display),
+        last_sale_datetime: c.last_sale_dt
+          ? c.last_sale_dt.toISOString()
+          : null,
+      };
+    })
+    .sort((a, b) => b.total_spent - a.total_spent)
+    .slice(0, limit);
 
   return {
     clients_with_debt,
-    total_debt: Number(total_debt.toFixed(2)),
+    total_debt: fmtMoney(total_debt, display),
     top_clients,
   };
 }
-

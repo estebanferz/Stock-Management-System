@@ -7,15 +7,17 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { MetricCard } from "@/components/MetricCard";
+import type { TenantRole } from "@server/db/types";
 
 type Metrics = {
   sales_count: number;
-  total_sold: number;
-  commission_total: number;
-  avg_ticket: number;
+  total_sold_formatted: string;
+  commission_total_formatted: string;
+  avg_ticket_formatted: string;
 };
 
-export function SellerMetricsOverview() {
+export function SellerMetricsOverview({ role }: { role: TenantRole }) {
+  if (role !== "owner") return null;
   const [data, setData] = useState<Metrics | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -46,7 +48,7 @@ export function SellerMetricsOverview() {
   if (!data) return null;
 
   return (
-    <div className="grid grid-cols-4 gap-4 mb-6">
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
       <MetricCard
         label="Ventas totales"
         value={data.sales_count}
@@ -55,19 +57,19 @@ export function SellerMetricsOverview() {
 
       <MetricCard
         label="Total vendido"
-        value={`$${data.total_sold.toLocaleString("es-AR")}`}
+        value={data.total_sold_formatted}
         icon={DollarSign}
       />
 
       <MetricCard
         label="Comisión total"
-        value={`$${data.commission_total.toLocaleString("es-AR")}`}
+        value={data.commission_total_formatted}
         icon={Percent}
       />
 
       <MetricCard
         label="Ticket promedio"
-        value={`$${data.avg_ticket.toLocaleString("es-AR")}`}
+        value={data.avg_ticket_formatted}
         icon={TrendingUp}
       />
     </div>

@@ -75,6 +75,7 @@ export const saleController = new Elysia({ prefix: "/sale" })
       const newSale = {
         datetime: body.datetime ? new Date(body.datetime) : undefined,
         total_amount: body.total_amount,
+        currency: body.currency,
         payment_method: body.payment_method,
         debt: body.debt,
         ...(body.debt_amount && { debt_amount: body.debt_amount }),
@@ -127,6 +128,7 @@ export const saleController = new Elysia({ prefix: "/sale" })
       const updSale = {
         datetime: body.datetime ? new Date(body.datetime) : undefined,
         total_amount: body.total_amount,
+        currency: body.currency,
         payment_method: body.payment_method,
         debt: body.debt,
         ...(body.debt_amount && { debt_amount: body.debt_amount }),
@@ -264,7 +266,9 @@ export const saleController = new Elysia({ prefix: "/sale" })
   .get(
   "/metrics/overview",
   protectedController(async (ctx) => {
-    return await getSalesPublicOverviewWithMonthSeries(ctx.tenantId);
+    const display: Currency = ctx.tenantSettings.display_currency ?? "ARS";
+    const fx = await getFxSnapshotVenta();
+    return await getSalesPublicOverviewWithMonthSeries(ctx.tenantId, display, fx);
   }),    
   {
       detail: {

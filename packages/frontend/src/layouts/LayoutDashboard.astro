@@ -9,7 +9,7 @@ const { title, user } = Astro.props;
 const authRes = await requireAuth(Astro);
 if (!authRes) return Astro.redirect("/login");
 
-const { tenant, tenantSettings } = authRes.auth;
+const { tenant, tenantSettings, roleInTenant } = authRes.auth;
 
 const tenantDisplayName =
   (tenantSettings?.business_name?.trim?.() ? tenantSettings.business_name : null)
@@ -33,7 +33,7 @@ const dolarBlue = await dolarRes.json();
     <title>{title}</title>
   </head>
   <body class="min-h-screen w-full">
-	  <Header user={user} dolarBlue={dolarBlue} tenantDisplayName={tenantDisplayName} tenantLogoUrl={tenantLogoUrl}/>
+	  <Header user={user} dolarBlue={dolarBlue} tenantDisplayName={tenantDisplayName} tenantLogoUrl={tenantLogoUrl} roleInTenant={roleInTenant}/>
     <img id="background" src={background.src} alt="" fetchpriority="high" />
     <!-- Main content container -->
     <main class="min-h-screen w-full pt-[var(--header-height)] p-3">

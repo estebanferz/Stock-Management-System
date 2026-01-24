@@ -9,12 +9,13 @@ type TopClient = {
   name: string;
   sales_count: number;
   total_spent: number;
+  total_spent_formatted: string;
   last_sale_datetime: string | null;
 };
 
 type Metrics = {
   clients_with_debt: number;
-  total_debt: number;
+  total_debt: string;
   top_clients: TopClient[];
 };
 
@@ -63,7 +64,7 @@ export function ClientMetricsOverview() {
 
         <MetricCard
           label="Deuda total"
-          value={`$${Number(data.total_debt).toLocaleString("es-AR")}`}
+          value={data.total_debt}
           icon={DollarSign}
         />
 
@@ -76,7 +77,7 @@ export function ClientMetricsOverview() {
 
       {/* Top list */}
       <div className="my-6 rounded-2xl border bg-white p-4 shadow-md">
-        <div className="mb-3 flex items-center justify-between gap-2">
+        <div className="mb-3 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between sm:gap-2">
           <div className="flex items-center gap-2">
             <Users className="h-5 w-5 text-gray-700" />
             <h3 className="text-base font-semibold text-gray-900">Top clientes</h3>
@@ -85,36 +86,51 @@ export function ClientMetricsOverview() {
           <span className="text-sm text-gray-500">Top {data.top_clients.length}</span>
         </div>
 
-        <div className="mb-2 grid grid-cols-[1fr_420px] gap-6 px-3 text-xs text-gray-400">
-          <span>Cliente</span>
-          <div className="grid grid-cols-3 gap-6 text-right">
-            <span>Compras</span>
-            <span>Total</span>
-            <span>Última</span>
-          </div>
-        </div>
-
         {data.top_clients.length === 0 ? (
           <p className="text-sm text-gray-500">Todavía no hay ventas registradas.</p>
         ) : (
           <div className="grid gap-2">
             {data.top_clients.map((c, idx) => (
-              <div key={c.client_id} className="flex items-center justify-between rounded-xl border p-3">
-                <div className="flex items-center gap-3">
+              <div
+                key={c.client_id}
+                className="
+                  rounded-xl border p-3
+                  flex flex-col gap-3
+                  md:flex-row md:items-center md:justify-between md:gap-4
+                "
+              >
+                {/* Left */}
+                <div className="flex items-center gap-3 min-w-0">
                   <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-gray-700 font-semibold">
                     #{idx + 1}
                   </div>
 
                   <div className="min-w-0">
-                    <div className="truncate font-semibold text-gray-900">{generalStringFormat(c.name)}</div>
+                    <div className="truncate font-semibold text-gray-900">
+                      {generalStringFormat(c.name)}
+                    </div>
                   </div>
                 </div>
 
-                <div className="grid w-[420px] grid-cols-3 gap-6 text-right">
-                  <MetricCol icon={ShoppingCart} value={String(c.sales_count)} />
-                  <MetricCol icon={DollarSign} value={`$${Number(c.total_spent).toLocaleString("es-AR")}`} />
+                {/* Metrics (con label adentro, sin header) */}
+                <div
+                  className="
+                    w-full
+                    grid grid-cols-3 gap-x-6 gap-y-3
+                    md:w-auto md:grid-cols-3
+                    md:text-right
+                  "
+                >
                   <MetricCol
-                    icon={Clock}
+                    label="Compras"
+                    value={String(c.sales_count)}
+                  />
+                  <MetricCol
+                    label="Total"
+                    value={c.total_spent_formatted}
+                  />
+                  <MetricCol
+                    label="Última compra"
                     value={formatDateShort(c.last_sale_datetime)}
                     muted={!c.last_sale_datetime}
                   />
@@ -129,26 +145,26 @@ export function ClientMetricsOverview() {
 }
 
 
-function MetricCol({
-  icon: Icon,
-  value,
-  muted,
-}: {
-  icon: any;
-  value: string;
+type MetricColProps = {
+  label: string;
+  value: React.ReactNode;
+  icon?: React.ComponentType<{ className?: string }>;
   muted?: boolean;
-}) {
+};
+function MetricCol({ label, value, icon: Icon, muted }: MetricColProps) {
   return (
-    <div className="flex flex-col items-end">
-      <span className={`text-sm font-semibold tabular-nums ${muted ? "text-gray-400" : "text-gray-900"}`}>
+    <div className="flex flex-col items-start md:items-end gap-0.5">
+      <div className="flex items-center gap-1 text-xs text-gray-400">
+        {Icon ? <Icon className="h-3.5 w-3.5" /> : null}
+        <span>{label}</span>
+      </div>
+      <div className={muted ? "text-sm text-gray-400" : "text-sm font-semibold text-gray-900"}>
         {value}
-      </span>
-      <div className="mt-1 flex items-center gap-1 text-xs text-gray-400">
-        <Icon className="h-3.5 w-3.5" />
       </div>
     </div>
   );
 }
+
 
 function formatDateShort(iso: string | null) {
   if (!iso) return "—";

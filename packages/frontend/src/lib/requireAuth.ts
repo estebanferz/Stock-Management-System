@@ -16,7 +16,7 @@ export async function requireAuth(Astro: any): Promise<RequireAuthResult | null>
   if (!res.data?.ok) return null;
 
   const data = res.data as any;
-
+  
   const auth: AuthMe = {
     user: data.user,
     tenant: data.tenant,
@@ -24,6 +24,7 @@ export async function requireAuth(Astro: any): Promise<RequireAuthResult | null>
     tenantSettings: data.tenantSettings ?? data.tenant_settings ?? null,
     userSettings: data.userSettings ?? data.user_settings ?? null,
   };
+
 
   return { auth, cookieHeader };
 }

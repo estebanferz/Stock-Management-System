@@ -75,6 +75,7 @@ export function LogoRow({ businessName, logoUrl, canEdit = true, onUpload }: Pro
       <Button
         size="sm"
         variant="outline"
+        className="hover:text-white hover:bg-mainColor"
         type="button"
         disabled={!canEdit || uploading}
         onClick={() => inputRef.current?.click()}

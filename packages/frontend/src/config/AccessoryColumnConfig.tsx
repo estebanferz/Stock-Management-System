@@ -18,9 +18,17 @@ export const accessoryColumns: Column<Accessory>[] = [
         renderKey: "money",
     },
     {
+        accessorKey: "currency_sale",
+        header: "Moneda Venta",
+    },
+    {
         accessorKey: "buy_cost",
         header: "Costo",
         renderKey: "money",
+    },
+    {
+        accessorKey: "currency_buy",
+        header: "Moneda Compra",
     },
     {
         accessorKey: "stock",

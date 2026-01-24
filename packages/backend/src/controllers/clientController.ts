@@ -169,12 +169,14 @@ export const clientController = new Elysia({ prefix: "/client" })
   .get(
     "/metrics/overview",
     protectedController(async (ctx) => {
+      const display: Currency = ctx.tenantSettings.display_currency ?? "ARS";
+      const fx = await getFxSnapshotVenta();
       const tenantId = ctx.tenantId;
       const { limit } = ctx.query as any;
 
       return await getClientOverviewMetrics(tenantId, {
         limit: limit ? Number(limit) : 5,
-      });
+      }, display, fx);
     }),
     {
       detail: {

@@ -26,7 +26,7 @@ const data = Array.isArray(response.data)
     <h1 class="w-full text-3xl text-gray-700 font-bold mt-5">Vendedores</h1>
     <p class="mb-5 text-sm text-gray-600 font-medium">Vendedores asociados a la empresa</p>
 
-    <SellerMetricsOverview client:load />
+    <SellerMetricsOverview role={auth.roleInTenant} client:load />
     <SellerLeaderboard role={auth.roleInTenant} client:load />
     
     <SellerPageManager

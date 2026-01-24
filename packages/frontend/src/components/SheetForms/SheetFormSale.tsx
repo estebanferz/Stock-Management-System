@@ -17,6 +17,7 @@ import { SheetSelector } from './SheetSelector';
 import { SheetFormClient } from './SheetFormClient';
 import { SheetFormPhone } from "./SheetFormPhone"
 import type { Sale } from "@server/db/schema"
+import { currencies } from "../Structures/currencies"
 
 interface SheetFormSaleProps {
   zIndex?: number;
@@ -43,6 +44,7 @@ export function SheetFormSale({zIndex}:SheetFormSaleProps) {
   const [form, setForm] = useState({
     datetime: "",
     total_amount: "",
+    currency: "Moneda",
     payment_method: "Pago",
     debt: false,
     debt_amount: "",
@@ -71,6 +73,7 @@ export function SheetFormSale({zIndex}:SheetFormSaleProps) {
       setForm({
         datetime: row.datetime ? String(row.datetime) : "",
         total_amount: row.total_amount ? String(row.total_amount) : "",
+        currency: row.currency ?? "",
         payment_method: row.payment_method ?? "",
         debt: row.debt ?? false,
         debt_amount: row.debt_amount ? String(row.debt_amount) : "",
@@ -89,6 +92,7 @@ export function SheetFormSale({zIndex}:SheetFormSaleProps) {
       setForm({
         datetime: "",
         total_amount: "",
+        currency: "Moneda",
         payment_method: "Pago",
         debt: false,
         debt_amount: "",
@@ -223,6 +227,7 @@ export function SheetFormSale({zIndex}:SheetFormSaleProps) {
 
       total_amount: form.total_amount,
       payment_method: form.payment_method,
+      currency: form.currency,
 
       gift_accessories: giftLines.map((l) => ({
         accessory_id: l.accessory_id,
@@ -492,6 +497,24 @@ return (
             <DropdownMenuContent align="end">
               {paymentMethods.map((method) => (
                 <DropdownMenuItem key={method.value} onClick={() => setForm({...form, payment_method: method.value})}>
+                  {method.label}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+
+        <div className="grid gap-3">
+          <Label>Tipo de moneda</Label>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="ml-auto w-full justify-between font-normal">
+                {form.currency} <ChevronDown />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              {currencies.map((method) => (
+                <DropdownMenuItem key={method.value} onClick={() => setForm({...form, currency: method.value})}>
                   {method.label}
                 </DropdownMenuItem>
               ))}

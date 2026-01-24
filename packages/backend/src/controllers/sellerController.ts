@@ -7,9 +7,10 @@ import {
   updateSeller,
   softDeleteSeller,
 } from "../services/sellerService";
-import { sellerInsertDTO, sellerUpdateDTO } from "@server/db/types";
+import { sellerInsertDTO, sellerUpdateDTO, type Currency } from "@server/db/types";
 import { protectedController } from "../util/protectedController";
 import { getSalesCountBySeller, getSellerLeaderboard, getSellersOverviewMetrics } from "../services/saleService";
+import { getFxSnapshotVenta } from "../services/currencyService";
 
 export const sellerController = new Elysia({ prefix: "/seller" })
   .get("/", () => ({ message: "Seller endpoint" }))
@@ -168,12 +169,10 @@ export const sellerController = new Elysia({ prefix: "/seller" })
   .get(
     "/metrics/overview",
     protectedController(async (ctx) => {
+      const display: Currency = ctx.tenantSettings.display_currency ?? "ARS";
+      const fx = await getFxSnapshotVenta();
       const tenantId = ctx.tenantId;
-
-      // opcional: YYYY-MM-DD
-      const { from, to } = ctx.query as any;
-
-      const data = await getSellersOverviewMetrics(tenantId, { from, to });
+      const data = await getSellersOverviewMetrics(tenantId, display, fx);
       return data;
     }),
     {
@@ -190,13 +189,12 @@ export const sellerController = new Elysia({ prefix: "/seller" })
         ctx.set.status = 403;
         return { error: "FORBIDDEN" };
       }
-
+      const display: Currency = ctx.tenantSettings.display_currency ?? "ARS";
+      const fx = await getFxSnapshotVenta();
       const tenantId = ctx.tenantId;
-      const { from, to, limit } = ctx.query as any;
+      const { limit } = ctx.query as any;
 
-      const data = await getSellerLeaderboard(tenantId, {
-        from,
-        to,
+      const data = await getSellerLeaderboard(tenantId, display, fx, {
         limit: limit ? Number(limit) : 5,
       });
 

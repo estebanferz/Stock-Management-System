@@ -1,14 +1,18 @@
 import { useEffect, useRef, useState } from "react";
 
+type RoleInTenant = "owner" | "admin" | "staff";
+
 type Props = {
   email: string;
   settingsHref?: string;
+  roleInTenant: RoleInTenant;
 };
 
-export function UserMenu({ email, settingsHref = "/profile" }: Props) {
+export function UserMenu({ email, roleInTenant, settingsHref = "/profile" }: Props) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement | null>(null);
 
+  console.log(roleInTenant)
   // cerrar al click afuera / escape
   useEffect(() => {
     const onClick = (e: MouseEvent) => {
@@ -44,6 +48,8 @@ export function UserMenu({ email, settingsHref = "/profile" }: Props) {
       window.location.href = "/login";
     }
   }
+
+  const canSeeSettings = roleInTenant === "owner"; 
 
   return (
     <div className="relative" ref={ref}>
@@ -82,16 +88,20 @@ export function UserMenu({ email, settingsHref = "/profile" }: Props) {
           role="menu"
           className="absolute right-0 z-50 mt-2 w-48 overflow-hidden rounded-lg border border-black/10 bg-white shadow-lg"
         >
-          <a
-            role="menuitem"
-            href={settingsHref}
-            className="block px-4 py-3 text-xs text-gray-800 hover:bg-gray-50"
-            onClick={() => setOpen(false)}
-          >
-            Configuración
-          </a>
+          {canSeeSettings && (
+            <>
+              <a
+                role="menuitem"
+                href={settingsHref}
+                className="block px-4 py-3 text-xs text-gray-800 hover:bg-gray-50"
+                onClick={() => setOpen(false)}
+              >
+                Configuración
+              </a>
 
-          <div className="h-px bg-black/10" />
+              <div className="h-px bg-black/10" />
+            </>
+          )}
 
           <button
             role="menuitem"
