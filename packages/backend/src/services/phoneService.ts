@@ -170,7 +170,7 @@ export const getStockInvestment = async (
   const rows = await db
     .select({
       buy_cost: sql<number>`COALESCE(${phoneTable.buy_cost}, 0)`,
-      currency: phoneTable.currency,
+      currency: phoneTable.currency_buy,
     })
     .from(phoneTable)
     .where(
@@ -200,7 +200,7 @@ export const getStockInvestmentBreakdown = async (tenantId: number) => {
       device_id: phoneTable.device_id,
       device_name: phoneTable.name,
       buy_cost: sql<number>`COALESCE(${phoneTable.buy_cost}, 0)`,
-      phone_currency: phoneTable.currency,
+      phone_currency: phoneTable.currency_buy,
     })
     .from(phoneTable)
     .where(

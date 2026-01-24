@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { EditableRow } from "./EditableRow";
-import { EditableSwitchRow } from "./EditableSwitchRow";
+// import { EditableSwitchRow } from "./EditableSwitchRow";
 import { CurrencyButtonsRow } from "@/components/CurrencyButtonRow";
 import { clientApp } from "@/lib/clientAPI";
 import { LogoRow } from "./LogoRow";
@@ -70,8 +70,10 @@ export default function ProfileEditor({ initial }: Props) {
   }, [tenantSettings, tenant]);
 
   return (
+    <>
+
     <div className="grid gap-6">
-      <Card className="rounded-2xl shadow-sm">
+      <Card className="rounded-2xl shadow-md">
         <CardHeader>
           <CardTitle>Resumen</CardTitle>
           <CardDescription>Datos rápidos</CardDescription>
@@ -83,7 +85,7 @@ export default function ProfileEditor({ initial }: Props) {
         </CardContent>
       </Card>
 
-      <Card className="rounded-2xl shadow-sm">
+      <Card className="rounded-2xl shadow-md">
         <CardHeader>
           <CardTitle>Cuenta</CardTitle>
           <CardDescription>Datos del usuario</CardDescription>
@@ -105,15 +107,15 @@ export default function ProfileEditor({ initial }: Props) {
             onSave={(v) => patchUserSettings({ phone: v })}
           />
 
-          <EditableSwitchRow
+          {/* <EditableSwitchRow
             label="Notificaciones por email"
             value={userSettings?.email_notifications}
             onSave={(v) => patchUserSettings({ email_notifications: v })}
-          />
+          /> */}
         </CardContent>
       </Card>
 
-      <Card className="rounded-2xl shadow-sm">
+      <Card className="rounded-2xl shadow-md">
         <CardHeader>
           <CardTitle>Empresa</CardTitle>
           <CardDescription>Configuración del tenant</CardDescription>
@@ -126,7 +128,7 @@ export default function ProfileEditor({ initial }: Props) {
                 canEdit={canEditTenant}
                 onUpload={onLogoPick}
             />
-            
+
             <EditableRow
                 label="Nombre comercial"
                 value={tenantSettings?.business_name}
@@ -135,13 +137,13 @@ export default function ProfileEditor({ initial }: Props) {
                 onSave={(v) => patchTenantSettings({ business_name: v })}
             />
 
-            <EditableRow
+            {/* <EditableRow
                 label="CUIT"
                 value={tenantSettings?.cuit}
                 maxLength={32}
                 canEdit={canEditTenant}
                 onSave={(v) => patchTenantSettings({ cuit: v })}
-            />
+            /> */}
 
             <EditableRow
                 label="Dirección"
@@ -158,7 +160,7 @@ export default function ProfileEditor({ initial }: Props) {
                 onSave={(next) => patchTenantSettings({ display_currency: next })}
             />
 
-            <EditableRow
+            {/* <EditableRow
                 label="Stock mínimo"
                 value={String(tenantSettings?.low_stock_threshold_default ?? 3)}
                 canEdit={canEditTenant}
@@ -167,9 +169,10 @@ export default function ProfileEditor({ initial }: Props) {
                 if (!Number.isFinite(n)) throw new Error("Debe ser un número.");
                 return patchTenantSettings({ low_stock_threshold_default: n });
                 }}
-            />
+            /> */}
         </CardContent>
       </Card>
     </div>
+  </>
   );
 }

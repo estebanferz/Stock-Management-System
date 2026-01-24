@@ -74,21 +74,43 @@ async function getSellerCommissionPct(tx: any, tenantId: number, sellerId: numbe
   return Number(r.commission ?? 0); // porcentaje (ej: 5.00)
 }
 
+const generalStringFormat = (v: string) => {
+  if (!v) return "";
+  const parts = v.split("-");
+
+  const formattedParts = parts.map((p) => {
+    if (!p) return "";
+    let word = p.charAt(0).toUpperCase() + p.slice(1);
+
+    if (word === "Iphone") {
+      word = "iPhone";
+    }
+
+    return word;
+  });
+
+  return formattedParts.join(" ");
+};
+
 async function upsertCommissionExpense(
   tx: any,
   tenantId: number,
   saleId: number,
   datetime: Date | undefined,
   paymentMethod: string,
+  currency: string,
   sellerId: number,
   saleTotalAmount: string
 ) {
   const pct = await getSellerCommissionPct(tx, tenantId, sellerId);
+  const seller_data = await db.select().from(sellerTable).where(and(eq(sellerTable.tenant_id, tenantId), eq(sellerTable.seller_id, sellerId))).limit(1);
+  const seller = seller_data[0];
 
+  if (!seller) throw new Error("INVALID_SELLER");
   const total = Number(saleTotalAmount ?? 0);
   const amount = Number(((total * pct) / 100).toFixed(2));
 
-  const description = `Comisión vendedor (${pct.toFixed(2)}%)`;
+  const description = `Comisión vendedor ${generalStringFormat(seller.name)} (${pct.toFixed(2)}%)`;
 
   // buscamos expense existente por sale_id + category
   const existing = await tx
@@ -136,6 +158,7 @@ async function upsertCommissionExpense(
     description,
     amount: String(amount),
     payment_method: paymentMethod,
+    currency: currency,
     receipt_number: null,
     provider_id: null,
     is_deleted: false,
@@ -287,6 +310,7 @@ async function upsertGiftExpense(
   saleId: number,
   datetime: Date | undefined,
   paymentMethod: string,
+  currency: string,
   amount: number,
   description: string
 ) {
@@ -325,7 +349,8 @@ async function upsertGiftExpense(
         datetime: datetime ?? new Date(),
         amount: String(amount),
         payment_method: paymentMethod,
-        description, // ✅ acá va el string “1x ...”
+        currency: currency,
+        description,
       })
       .where(
         and(
@@ -344,6 +369,7 @@ async function upsertGiftExpense(
     description,
     amount: String(amount),
     payment_method: paymentMethod,
+    currency: currency,
     receipt_number: null,
     provider_id: null,
     is_deleted: false,
@@ -443,6 +469,7 @@ export const addSale = async (
   tenantId: number,
   newSale: {
     total_amount: string;
+    currency: string;
     payment_method: string;
     datetime?: Date;
     debt?: boolean;
@@ -461,7 +488,6 @@ export const addSale = async (
     await assertTenantTradeIn(tenantId, newSale.trade_in_device);
   }
 
-  // ✅ separo gifts para NO meterlos en saleTable
   const giftLines = newSale.gift_accessories ?? [];
   
   const { gift_accessories, ...saleOnly } = newSale;
@@ -514,6 +540,7 @@ export const addSale = async (
       saleId,
       normalizedSale.datetime,
       normalizedSale.payment_method,
+      normalizedSale.currency,
       newSale.seller_id,
       newSale.total_amount
     );
@@ -529,6 +556,7 @@ export const addSale = async (
       saleId,
       normalizedSale.datetime,
       normalizedSale.payment_method,
+      normalizedSale.currency,
       giftExpenseTotal,
       giftDescription
     );
@@ -543,6 +571,7 @@ export async function updateSale(
   sale_id: number,
   sale_upd: {
     total_amount?: string;
+    currency?: string;
     payment_method?: string;
     debt?: boolean;
     debt_amount?: string;
@@ -599,6 +628,7 @@ export async function updateSale(
     const nextDatetime = normalizedUpd.datetime ?? (current.datetime as any as Date);
     const nextSellerId = sale_upd.seller_id ?? current.seller_id;
     const nextTotalAmount = sale_upd.total_amount ?? String(current.total_amount ?? "0");
+    const nextCurrency = sale_upd.currency ?? current.currency;
 
     await upsertCommissionExpense(
       tx,
@@ -606,8 +636,9 @@ export async function updateSale(
       sale_id,
       nextDatetime,
       nextPayment,
+      nextCurrency,
       nextSellerId,
-      nextTotalAmount
+      nextTotalAmount,
     );
 
     if (sale_upd.device_id !== undefined && sale_upd.device_id !== current.device_id) {
@@ -685,6 +716,7 @@ export async function updateSale(
         sale_id,
         nextDatetime,
         nextPayment,
+        nextCurrency,
         giftExpenseTotal,
         giftDescription
       );
@@ -896,7 +928,7 @@ export const getNetIncomeBreakdown = async (
       device_name: phoneTable.name,
 
       buy_cost: sql<number>`COALESCE(${phoneTable.buy_cost}, 0)`,
-      phone_currency: phoneTable.currency,
+      phone_currency: phoneTable.currency_buy,
 
       total_amount: sql<number>`COALESCE(${saleTable.total_amount}, 0)`,
       sale_currency: saleTable.currency,
@@ -939,24 +971,20 @@ function nextDayUTC(dateStr: string) {
 
 export async function getSellersOverviewMetrics(
   tenantId: number,
-  filters?: { from?: string; to?: string }
+  display: Currency,
+  fx: any
 ) {
-  const fromDate = filters?.from ? startOfDayUTC(filters.from) : undefined;
-  const toDateExclusive = filters?.to ? nextDayUTC(filters.to) : undefined;
+  const from = new Date();
+  from.setUTCMonth(from.getUTCMonth() - 6);
+  const fromDate = startOfDayUTC(from.toISOString().slice(0, 10));
+  const todayIso = new Date().toISOString().slice(0, 10);
+  const toDateExclusive = nextDayUTC(todayIso);
 
   const rows = await db
     .select({
-      sales_count: sql<number>`CAST(COUNT(${saleTable.sale_id}) AS INTEGER)`,
-      total_sold: sql<string>`COALESCE(SUM(${saleTable.total_amount}), 0)::text`,
-      commission_total: sql<string>`
-        COALESCE(
-          SUM(
-            COALESCE(${saleTable.total_amount}, 0)
-            * (COALESCE(${sellerTable.commission}, 0) / 100)
-          ),
-          0
-        )::text
-      `,
+      amount: sql<number>`COALESCE(${saleTable.total_amount}, 0)`,
+      currency: saleTable.currency,
+      commission_pct: sql<number>`COALESCE(${sellerTable.commission}, 0)`,
     })
     .from(saleTable)
     .innerJoin(
@@ -970,26 +998,54 @@ export async function getSellersOverviewMetrics(
       and(
         eq(saleTable.tenant_id, tenantId),
         eq(saleTable.is_deleted, false),
-        fromDate ? gte(saleTable.datetime, fromDate) : undefined,
-        toDateExclusive ? lt(saleTable.datetime, toDateExclusive) : undefined
+        gte(saleTable.datetime, fromDate),
+        lt(saleTable.datetime, toDateExclusive)
       )
     );
 
-  const r = rows[0] ?? ({} as any);
+  let sales_count = 0;
+  let total_sold_display = 0;
+  let commission_total_display = 0;
 
-  const sales_count = Number(r.sales_count ?? 0);
+  for (const r of rows) {
+    sales_count += 1;
 
-  const total_sold = Number(r.total_sold ?? 0);
-  const commission_total = Number(r.commission_total ?? 0);
+    const amt = Number(r.amount ?? 0);
+    if (!Number.isFinite(amt)) continue;
+
+    const cur: Currency = isCurrency(r.currency) ? r.currency : "ARS";
+    const saleDisplay = convert(amt, cur, display, fx.ratesToARS);
+
+    total_sold_display += saleDisplay;
+
+    const pct = Number(r.commission_pct ?? 0);
+    commission_total_display += saleDisplay * (pct / 100);
+  }
+
+  total_sold_display = round2(total_sold_display);
+  commission_total_display = round2(commission_total_display);
 
   const avg_ticket =
-    sales_count > 0 ? Number((total_sold / sales_count).toFixed(2)) : 0;
+    sales_count > 0 ? round2(total_sold_display / sales_count) : 0;
 
   return {
+    displayCurrency: display,
+
     sales_count,
-    total_sold: Number(total_sold.toFixed(2)),
-    commission_total: Number(commission_total.toFixed(2)),
+
+    total_sold: total_sold_display,
+    total_sold_formatted: fmtMoney(total_sold_display, display),
+
+    commission_total: commission_total_display,
+    commission_total_formatted: fmtMoney(commission_total_display, display),
+
     avg_ticket,
+    avg_ticket_formatted: fmtMoney(avg_ticket, display),
+
+    range: {
+      from: fromDate.toISOString(),
+      toExclusive: toDateExclusive.toISOString(),
+    },
   };
 }
 
@@ -1039,27 +1095,28 @@ export async function getSalesCountBySeller(
 
 export async function getSellerLeaderboard(
   tenantId: number,
-  opts?: { from?: string; to?: string; limit?: number }
+  display: Currency,
+  fx: any,
+  opts?: { limit?: number } // from/to ya no se usan
 ) {
-  const fromDate = opts?.from ? startOfDayUTC(opts.from) : undefined;
-  const toDateExclusive = opts?.to ? nextDayUTC(opts.to) : undefined;
   const limit = Math.min(Math.max(Number(opts?.limit ?? 5), 1), 20);
+
+  const from = new Date();
+  from.setUTCMonth(from.getUTCMonth() - 6);
+  const fromDate = startOfDayUTC(from.toISOString().slice(0, 10));
+
+  // “hasta mañana” para incluir hoy completo
+  const todayIso = new Date().toISOString().slice(0, 10);
+  const toDateExclusive = nextDayUTC(todayIso);
 
   const rows = await db
     .select({
       seller_id: sellerTable.seller_id,
       name: sellerTable.name,
-      sales_count: sql<number>`CAST(COUNT(${saleTable.sale_id}) AS INTEGER)`,
-      total_sold: sql<string>`COALESCE(SUM(${saleTable.total_amount}), 0)::text`,
-      commission_total: sql<string>`
-        COALESCE(
-          SUM(
-            COALESCE(${saleTable.total_amount}, 0)
-            * (COALESCE(${sellerTable.commission}, 0) / 100)
-          ),
-          0
-        )::text
-      `,
+      commission_pct: sql<number>`COALESCE(${sellerTable.commission}, 0)`,
+      amount: sql<number>`COALESCE(${saleTable.total_amount}, 0)`,
+      currency: saleTable.currency,
+      datetime: saleTable.datetime,
     })
     .from(saleTable)
     .innerJoin(
@@ -1074,30 +1131,83 @@ export async function getSellerLeaderboard(
       and(
         eq(saleTable.tenant_id, tenantId),
         eq(saleTable.is_deleted, false),
-        fromDate ? gte(saleTable.datetime, fromDate) : undefined,
-        toDateExclusive ? lt(saleTable.datetime, toDateExclusive) : undefined
+        gte(saleTable.datetime, fromDate),
+        lt(saleTable.datetime, toDateExclusive)
       )
-    )
-    .groupBy(sellerTable.seller_id, sellerTable.name)
-    .orderBy(sql`COALESCE(SUM(${saleTable.total_amount}), 0) DESC`)
-    .limit(limit);
+    );
 
-  return rows.map((r) => {
-    const sales_count = Number(r.sales_count ?? 0);
-    const total_sold = Number(r.total_sold ?? 0);
-    const commission_total = Number(r.commission_total ?? 0);
-    const avg_ticket = sales_count > 0 ? Number((total_sold / sales_count).toFixed(2)) : 0;
+  const bySeller = new Map<
+    number,
+    {
+      seller_id: number;
+      name: string;
+      commission_pct: number;
+      sales_count: number;
+      total_sold_display: number;
+      commission_total_display: number;
+    }
+  >();
 
-    return {
-      seller_id: Number(r.seller_id),
-      name: String(r.name ?? ""),
-      sales_count,
-      total_sold: Number(total_sold.toFixed(2)),
-      commission_total: Number(commission_total.toFixed(2)),
-      avg_ticket,
-    };
-  });
+  for (const r of rows) {
+    const sid = Number(r.seller_id);
+    if (!Number.isFinite(sid)) continue;
+
+    const amt = Number(r.amount ?? 0);
+    if (!Number.isFinite(amt)) continue;
+
+    const cur: Currency = isCurrency(r.currency) ? r.currency : "ARS";
+    const saleDisplay = convert(amt, cur, display, fx.ratesToARS);
+
+    const pct = Number(r.commission_pct ?? 0);
+    const commissionAdd = saleDisplay * (pct / 100);
+
+    const existing =
+      bySeller.get(sid) ?? {
+        seller_id: sid,
+        name: String(r.name ?? ""),
+        commission_pct: pct,
+        sales_count: 0,
+        total_sold_display: 0,
+        commission_total_display: 0,
+      };
+
+    existing.sales_count += 1;
+    existing.total_sold_display += saleDisplay;
+    existing.commission_total_display += commissionAdd;
+
+    existing.name = String(r.name ?? existing.name);
+    existing.commission_pct = pct;
+
+    bySeller.set(sid, existing);
+  }
+
+  return [...bySeller.values()]
+    .map((s) => {
+      const total_sold = round2(s.total_sold_display);
+      const commission_total = round2(s.commission_total_display);
+      const avg_ticket = s.sales_count > 0 ? round2(total_sold / s.sales_count) : 0;
+
+      return {
+        seller_id: s.seller_id,
+        name: s.name,
+        sales_count: s.sales_count,
+
+        total_sold,
+        total_sold_formatted: fmtMoney(total_sold, display),
+
+        commission_total,
+        commission_total_formatted: fmtMoney(commission_total, display),
+
+        avg_ticket,
+        avg_ticket_formatted: fmtMoney(avg_ticket, display),
+
+        displayCurrency: display,
+      };
+    })
+    .sort((a, b) => b.total_sold - a.total_sold)
+    .slice(0, limit);
 }
+
 export async function getSalesOverviewMetrics(
   tenantId: number,
   filters?: { from?: string; to?: string }
@@ -1154,15 +1264,18 @@ function nextMonthUTC(d = new Date()) {
   return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 1));
 }
 
-export async function getSalesPublicOverviewWithMonthSeries(tenantId: number) {
+export async function getSalesPublicOverviewWithMonthSeries(
+  tenantId: number,
+  display: Currency,
+  fx: any,
+) {
   const from = startOfMonthUTC(new Date());
   const to = nextMonthUTC(new Date());
 
-  // 1) Overview público (sin total_sold visible)
+  // 1) Conteos (SQL) + debt_sales_count (SQL)
   const overviewRows = await db
     .select({
       sales_count: sql<number>`CAST(COUNT(${saleTable.sale_id}) AS INTEGER)`,
-      total_sold: sql<string>`COALESCE(SUM(${saleTable.total_amount}), 0)::text`,
       debt_sales_count: sql<number>`
         CAST(
           COUNT(
@@ -1176,21 +1289,34 @@ export async function getSalesPublicOverviewWithMonthSeries(tenantId: number) {
       `,
     })
     .from(saleTable)
-    .where(
-      and(
-        eq(saleTable.tenant_id, tenantId),
-        eq(saleTable.is_deleted, false)
-      )
-    );
+    .where(and(eq(saleTable.tenant_id, tenantId), eq(saleTable.is_deleted, false)));
 
   const o = overviewRows[0] ?? ({} as any);
   const sales_count = Number(o.sales_count ?? 0);
-  const total_sold_all_time = Number(o.total_sold ?? 0);
+
+  // 2) Total vendido all-time convertido a display (fila a fila)
+  const salesMoneyRows = await db
+    .select({
+      amount: sql<number>`COALESCE(${saleTable.total_amount}, 0)`,
+      currency: saleTable.currency,
+    })
+    .from(saleTable)
+    .where(and(eq(saleTable.tenant_id, tenantId), eq(saleTable.is_deleted, false)));
+
+  let total_sold_all_time_display = 0;
+  for (const r of salesMoneyRows) {
+    const amt = Number(r.amount ?? 0);
+    if (!Number.isFinite(amt) || amt === 0) continue;
+
+    const cur: Currency = isCurrency(r.currency) ? r.currency : "ARS";
+    total_sold_all_time_display += convert(amt, cur, display, fx.ratesToARS);
+  }
+  total_sold_all_time_display = round2(total_sold_all_time_display);
 
   const avg_ticket =
-    sales_count > 0 ? Number((total_sold_all_time / sales_count).toFixed(2)) : 0;
+    sales_count > 0 ? round2(total_sold_all_time_display / sales_count) : 0;
 
-  // 2) Serie diaria del mes corriente
+  // 3) Serie diaria del mes corriente (solo conteos) — igual que antes
   const seriesRows = await db
     .select({
       day: sql<string>`to_char(DATE_TRUNC('day', ${saleTable.datetime}), 'YYYY-MM-DD')`,
@@ -1208,11 +1334,8 @@ export async function getSalesPublicOverviewWithMonthSeries(tenantId: number) {
     .groupBy(sql`DATE_TRUNC('day', ${saleTable.datetime})`)
     .orderBy(sql`DATE_TRUNC('day', ${saleTable.datetime}) ASC`);
 
-  // Rellenar días faltantes (para que el gráfico no “salte”)
   const map = new Map<string, number>();
-  for (const r of seriesRows as any[]) {
-    map.set(String(r.day), Number(r.sold_count ?? 0));
-  }
+  for (const r of seriesRows as any[]) map.set(String(r.day), Number(r.sold_count ?? 0));
 
   const points: { day: string; sold_count: number }[] = [];
   const cursor = new Date(from);
@@ -1223,9 +1346,10 @@ export async function getSalesPublicOverviewWithMonthSeries(tenantId: number) {
   }
 
   return {
-    avg_ticket,
+    displayCurrency: display,
+    total_sold_all_time: total_sold_all_time_display, // ✅ opcional, pero útil
+    avg_ticket: fmtMoney(avg_ticket, display),
     debt_sales_count: Number(o.debt_sales_count ?? 0),
     month_series: points,
   };
 }
-

@@ -19,6 +19,7 @@ import {
   type AuthUser,
   type UserSettings,
 } from "@server/db/types";
+import { PgRole } from "drizzle-orm/pg-core";
 
 function normalizeEmail(email: string) {
   return email.trim().toLowerCase();

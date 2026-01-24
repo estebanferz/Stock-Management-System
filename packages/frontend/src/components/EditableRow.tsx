@@ -76,7 +76,7 @@ export function EditableRow({ label, value, placeholder, maxLength, canEdit = tr
       </div>
 
       {!isEditing && (
-        <Button size="sm" variant="outline" onClick={() => canEdit && setIsEditing(true)} disabled={!canEdit}>
+        <Button size="sm" variant="outline" className="hover:text-white hover:bg-mainColor" onClick={() => canEdit && setIsEditing(true)} disabled={!canEdit}>
           Editar
         </Button>
       )}

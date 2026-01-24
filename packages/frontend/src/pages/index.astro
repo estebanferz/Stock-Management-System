@@ -96,8 +96,8 @@ const topExpenseTotal = top_expense_rows.reduce((acc: number, r: any) => acc + N
 <LayoutDashboard title="StockManagement" user={auth.user}>
 	<h1 class="px-3 w-full text-left text-4xl text-gray-700 font-bold mt-5 mb-2">Bienvenido{auth.userSettings ? `, ${auth.userSettings.display_name?.split(" ")[0]}` : ""}</h1>
 	<p class="px-3 mb-8 text-sm text-gray-600 font-medium">Resumen completo de tu negocio con métricas clave</p>
-	<div class="px-3 grid grid-cols-1 md:grid-cols-3 gap-3 mb-4 items-start">
-		<div class="col-span-2 grid grid-rows-4 gap-1 p-4 bg-white rounded-2xl shadow-lg">
+	<div class="px-3 grid grid-cols-1 lg:grid-cols-3 gap-3 mb-4 items-start">
+		<div class="lg:col-span-2 grid grid-rows-4 gap-1 p-4 bg-white rounded-2xl shadow-lg">
 			<CustomCard title="Unidades Vendidas" description="Total de unidades vendidas" amount={String(units_sold_count)} icon={devicesIcon}/>
 			<NetIncomeCard netIncome={fmtMoney(net_income)} rows={net_income_rows} client:load/>
 			<InvestmentCard totalInvestment={fmtMoney(stock_investment_total)} rows={stock_rows} client:load />
@@ -130,7 +130,7 @@ const topExpenseTotal = top_expense_rows.reduce((acc: number, r: any) => acc + N
   				description="Top 5 productos más vendidos"
 				client:load/>
 		</div>
-		<div class="w-1/2">
+		<div class="w-full md:w-1/2">
 			<DebtorsCard
 				client:load
 				count={deudoresCountFormatted}

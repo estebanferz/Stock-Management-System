@@ -9,7 +9,7 @@ type MonthPoint = {
 };
 
 type SalePublicMetrics = {
-  avg_ticket: number;
+  avg_ticket: string;
   debt_sales_count: number;
   month_series: MonthPoint[];
 };
@@ -82,7 +82,7 @@ export function SaleMetricsOverview() {
       <div className="flex flex-col gap-4 align-stretch">
         <MetricCard
           label="Ticket promedio"
-          value={moneyAR(data.avg_ticket)}
+          value={data.avg_ticket}
           icon={TrendingUp}
         />
 

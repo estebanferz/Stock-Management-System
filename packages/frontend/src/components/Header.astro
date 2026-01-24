@@ -1,8 +1,9 @@
 ---
+import { CurrencyConverterCard } from "./CurrencyConverterCard";
 import { UserMenu } from "./UserMenu";
 
 //import SearchBar from "../components/SearchBar.astro";
-const { user, dolarBlue, tenantDisplayName, tenantLogoUrl } = Astro.props;
+const { user, dolarBlue, tenantDisplayName, tenantLogoUrl, roleInTenant } = Astro.props;
 
 const compra = dolarBlue?.compra;
 const venta = dolarBlue?.venta;
@@ -58,7 +59,7 @@ const fecha = dolarBlue?.fechaActualizacion
   </div>
     <!-- <SearchBar /> -->
 
-    <UserMenu client:load email={user.email} settingsHref="/profile" />
+    <UserMenu client:load email={user.email} roleInTenant={roleInTenant} settingsHref="/profile" />
   </div>
 </header>
 
@@ -83,7 +84,7 @@ const fecha = dolarBlue?.fechaActualizacion
               : "Mi Empresa"}
           </span>
         </h2>
-        <p class="font-thin text-xs">Suma</p>
+        <p class="font-thin text-xs">Zuma+</p>
       </div>
     </div>
     <div class="text-gray-600 font-base">Menu</div>
@@ -106,7 +107,7 @@ const fecha = dolarBlue?.fechaActualizacion
     </div>
   </div>
 
-  <nav class="flex flex-col space-y-4 p-4 text-gray-500">
+  <nav class="flex flex-col space-y-4 p-4 pb-6 text-gray-500">
     <div class="my-3">
       <a href="/" class="flex text-sm font-medium hover:text-gray-800 hover:bg-gray-100 rounded-md p-3 pl-5 w-full items-center">
         <span class="opacity-65">
@@ -195,6 +196,10 @@ const fecha = dolarBlue?.fechaActualizacion
         </span>
         <div class="w-full pl-4">Proveedores</div>
       </a>
+    </div>
+    <p class="text-slate-400 text-xs"> Conversor de moneda </p>
+    <div class="mt-5">
+      <CurrencyConverterCard client:load/>
     </div>
   </nav>
 </aside>

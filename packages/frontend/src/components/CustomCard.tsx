@@ -38,7 +38,7 @@ export default function CustomCard({
               {description}
             </p>
           </div>
-          <span className="text-2xl font-semibold text-gray-800 leading-tight">
+          <span className="text-lg md:text-xl font-semibold text-gray-800 leading-tight">
             {amount}
           </span>
           {secondaryData && (

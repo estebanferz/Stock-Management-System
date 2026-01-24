@@ -197,6 +197,13 @@
       "when": 1769020084726,
       "tag": "0027_calm_otto_octavius",
       "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "7",
+      "when": 1769128102083,
+      "tag": "0028_amazing_vengeance",
+      "breakpoints": true
     }
   ]
 }
