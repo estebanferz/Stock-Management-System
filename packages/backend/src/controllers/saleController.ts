@@ -70,7 +70,10 @@ export const saleController = new Elysia({ prefix: "/sale" })
       const tenantId = ctx.tenantId;
       const body = ctx.body;
 
-      console.log("BODY:", ctx.body);
+      if (body.trade_in_device && body.trade_in_phone) {
+        ctx.set.status = 400;
+        return { error: "TRADE_IN_CONFLICT" };
+      }
 
       const newSale = {
         datetime: body.datetime ? new Date(body.datetime) : undefined,
@@ -82,6 +85,7 @@ export const saleController = new Elysia({ prefix: "/sale" })
         client_id: body.client_id,
         seller_id: body.seller_id,
         device_id: body.device_id,
+        trade_in_phone: body.trade_in_phone ?? undefined,
         ...(body.trade_in_device && { trade_in_device: body.trade_in_device }),
         gift_accessories: body.gift_accessories ?? [],
 

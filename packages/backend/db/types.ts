@@ -35,18 +35,36 @@ export const giftAccessoryDTO = t.Object({
   qty: t.Number({ minimum: 1 }),
 });
 
+export const tradeInPhoneDTO = t.Object({
+  datetime: t.Optional(t.String({ format: "date-time" })),
+  name: t.String(),
+  brand: t.String(),
+  imei: t.String(),
+  device_type: t.String(),
+  battery_health: t.Optional(t.Number()),
+  storage_capacity: t.Optional(t.Number()),
+  color: t.Optional(t.String()),
+  category: t.String(),
+  price: t.String(),
+  buy_cost: t.String(),
+  currency_buy: t.Optional(t.String()),
+  currency_sale: t.Optional(t.String()),
+  deposit: t.String(),
+});
 export const saleSchema = createInsertSchema(saleTable);
 
 export const saleInsertDTO = t.Object({
   ...t.Omit(saleSchema, ["sale_id", "tenant_id"]).properties,
   datetime: t.Optional(t.String({ format: "date-time" })),
   gift_accessories: t.Optional(t.Array(giftAccessoryDTO)),
+  trade_in_phone: t.Optional(tradeInPhoneDTO),
 });
 
 export const saleUpdateDTO = t.Object({
   ...t.Omit(saleSchema, ["sale_id", "tenant_id"]).properties,
   datetime: t.Optional(t.String({ format: "date-time" })),
   gift_accessories: t.Optional(t.Array(giftAccessoryDTO)),
+  trade_in_phone: t.Optional(tradeInPhoneDTO),
 });
 
 export const accessorySchema = createInsertSchema(accessoryTable);

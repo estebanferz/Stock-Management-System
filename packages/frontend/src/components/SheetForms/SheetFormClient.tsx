@@ -12,7 +12,7 @@ interface SheetFormClientProps {
   isOpen?: boolean;
   onClose?: (newClientId?: string) => void;
   zIndex?: number;
-  depth?: number; // ✅ NUEVO
+  depth?: number;
 }
 
 function normalizePhoneE164(raw: string): string | null {
@@ -34,6 +34,7 @@ export function SheetFormClient({
   const controlledOpen = isOpen !== undefined ? isOpen : internalOpen;
 
   const handleOpenChange = (open: boolean) => {
+    if (isSubmitting) return;
     if (onClose) {
       if (!open) onClose();
       return;
@@ -41,6 +42,7 @@ export function SheetFormClient({
     setInternalOpen(open);
   };
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingClient, setEditingClient] = useState<Client | null>(null);
   const [form, setForm] = useState({
     name: "",
@@ -93,6 +95,8 @@ export function SheetFormClient({
     e.preventDefault();
     e.stopPropagation();
 
+    if (isSubmitting) return;
+
     const phoneE164 = normalizePhoneE164(form.phone_number);
     if (!phoneE164) {
       alert("El número de teléfono es inválido.");
@@ -102,6 +106,7 @@ export function SheetFormClient({
     const clientData = { ...form, phone_number: phoneE164 };
 
     try {
+      setIsSubmitting(true);
       let response;
 
       if (editingClient) {
@@ -123,6 +128,8 @@ export function SheetFormClient({
     } catch (err) {
       console.error(err);
       onClose?.();
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -143,11 +150,21 @@ export function SheetFormClient({
         showTrigger={false}
         footer={
           <>
-            <Button type="submit" form="form-client">
-              {editingClient ? "Guardar" : "Agregar"}
+            <Button type="submit" form="form-client" disabled={isSubmitting}>
+              {isSubmitting
+                ? "Guardando..."
+                : editingClient
+                  ? "Guardar"
+                  : "Agregar"}
             </Button>
+
             <SheetClose asChild>
-              <Button variant="outline" onClick={() => handleOpenChange(false)}>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => handleOpenChange(false)}
+                disabled={isSubmitting}
+              >
                 Cancelar
               </Button>
             </SheetClose>

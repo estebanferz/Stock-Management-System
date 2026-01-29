@@ -12,8 +12,10 @@ export type NewAccessoryInput = {
   stock?: number;
   color?: string | null;
   category: string;
-  price: string; // numeric suele venir como string en drizzle
+  price: string;
+  currency_sale: string;
   buy_cost: string;
+  currency_buy: string;
   deposit: string;
   gift?: boolean;
 };
@@ -26,7 +28,9 @@ export type UpdateAccessoryInput = {
   color?: string | null;
   category: string;
   price: string;
+  currency_sale: string;
   buy_cost: string;
+  currency_buy: string;
   deposit: string;
   gift: boolean;
 };
@@ -102,7 +106,9 @@ export async function addAccessory(data: NewAccessoryInput) {
       color: data.color ? normalizeShortString(data.color) : null,
       category: data.category,
       price: data.price,
+      currency_sale: data.currency_sale,
       buy_cost: data.buy_cost,
+      currency_buy: data.currency_buy,
       deposit: data.deposit,
       gift: data.gift ?? false,
     })
@@ -126,7 +132,9 @@ export async function updateAccessory(
       color: data.color ? normalizeShortString(data.color) : null,
       category: data.category,
       price: data.price,
+      currency_sale: data.currency_sale,
       buy_cost: data.buy_cost,
+      currency_buy: data.currency_buy,
       deposit: data.deposit,
       gift: data.gift,
     })

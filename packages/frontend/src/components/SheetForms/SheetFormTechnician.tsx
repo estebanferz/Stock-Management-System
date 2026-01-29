@@ -25,7 +25,7 @@ function normalizePhoneE164(raw: string): string | null {
 
 
 export function SheetFormTechnician({zIndex}:SheetFormTechnicianProps) {
-  
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [internalOpen, setInternalOpen] = useState(false);
   const [editingTechnician, setEditingTechnician] = useState<Technician | null>(null);
   const [form, setForm] = useState({
@@ -78,6 +78,9 @@ export function SheetFormTechnician({zIndex}:SheetFormTechnicianProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     e.stopPropagation()
+    
+    if (isSubmitting) return;
+
 
     let active
     if (form.state){active = "activo"}
@@ -92,6 +95,8 @@ export function SheetFormTechnician({zIndex}:SheetFormTechnicianProps) {
     }
 
     try {
+      setIsSubmitting(true);
+
       let response;
 
       if (editingTechnician) {
@@ -107,6 +112,8 @@ export function SheetFormTechnician({zIndex}:SheetFormTechnicianProps) {
     } catch (err) {
       console.error("Error al cargar tecnico:", err);
       alert("Error al cargar tecnico");
+    } finally {
+      setIsSubmitting(false);
     }
   }
 
@@ -122,10 +129,22 @@ return (
         showTrigger={false}
         footer={
           <>
-            <Button type="submit" form="form-technician">Agregar</Button>
-            <SheetClose asChild>
-              <Button variant="outline">Cancelar</Button>
-            </SheetClose>
+            <Button type="submit" form="form-technician" disabled={isSubmitting}>
+              {isSubmitting
+                ? "Guardando..."
+                : editingTechnician
+                  ? "Guardar"
+                  : "Agregar"}
+            </Button>
+
+            <Button
+              variant="outline"
+              type="button"
+              onClick={() => setInternalOpen(false)}
+              disabled={isSubmitting}
+            >
+              Cancelar
+            </Button>
           </>
         }
       >

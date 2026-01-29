@@ -29,13 +29,14 @@ export function SheetFormProvider({ isOpen, onClose, zIndex }: SheetFormProvider
   const [internalOpen, setInternalOpen] = useState(false);
   const controlledOpen = isOpen !== undefined ? isOpen : internalOpen;
   const handleOpenChange = (open: boolean) => {
+    if (isSubmitting) return;
     if (onClose) {
         if (!open) onClose(); 
     } else {
         setInternalOpen(open); 
     }
   };
-  
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingProvider, setEditingProvider] = useState<Provider | null>(null);
   const [form, setForm] = useState({
     name: "",
@@ -90,6 +91,8 @@ const handleSubmitProvider = async (e: React.FormEvent) => {
     e.preventDefault();
     e.stopPropagation();
 
+    if (isSubmitting) return;
+
     const phoneE164 = normalizePhoneE164(form.phone_number);
     if (!phoneE164) {
         alert("El número de teléfono es inválido.");
@@ -104,6 +107,8 @@ const handleSubmitProvider = async (e: React.FormEvent) => {
     };
 
   try {
+    setIsSubmitting(true);
+
     let response;
 
     if (editingProvider) {
@@ -122,6 +127,8 @@ const handleSubmitProvider = async (e: React.FormEvent) => {
   } catch (err) {
     console.error(err);
     onClose?.();
+  } finally {
+    setIsSubmitting(false);
   }
 };
   const isNested = onClose !== undefined;
@@ -142,9 +149,23 @@ return (
         showTrigger={false}
         footer={
           <>
-            <Button type="submit" form="form-provider">{editingProvider ? "Guardar" : "Agregar"}</Button>
+            <Button type="submit" form="form-provider" disabled={isSubmitting}>
+              {isSubmitting
+                ? "Guardando..."
+                : editingProvider
+                  ? "Guardar"
+                  : "Agregar"}
+            </Button>
+
             <SheetClose asChild>
-              <Button variant="outline" onClick={() => handleOpenChange(false)}>Cancelar</Button> 
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => handleOpenChange(false)}
+                disabled={isSubmitting}
+              >
+                Cancelar
+              </Button>
             </SheetClose>
           </>
         }

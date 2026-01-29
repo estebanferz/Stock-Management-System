@@ -99,11 +99,8 @@ export function CustomSheet({
         style={{
           ...(style ?? {}),
           zIndex: computedZIndex,
-
-          // ✅ md+: deck hacia la izquierda con right offset
           right: rightOffset ? `${rightOffset}px` : (style as any)?.right,
 
-          // ✅ sm: stack vertical sin empujar horizontalmente
           transform:
             stackTranslateY !== 0
               ? `translateY(${stackTranslateY}px)`

@@ -14,26 +14,24 @@
   </head>
   <body class="">
     <div class="flex h-screen w-screen md:grid md:grid-cols-5">
-      <div class="relative flex h-full w-full flex-col items-center justify-center md:col-span-3 overflow-hidden">
-        <div class="absolute inset-0 bg-cover bg-center bg-[url('../assets/background.svg')] blur-md scale-110"></div>
-        <div class="relative z-10 w-full h-full">
+      <div class="relative flex h-full w-full flex-col items-center justify-center md:col-span-5 overflow-hidden">
+        <div class="absolute inset-0 bg-cover bg-center bg-[url('../assets/background.svg')] blur-md md:blur-3xl scale-110"></div>
+        <div class="relative z-20 w-full h-full">
           <slot name="body" />
         </div>
       </div>
 
       <div
-        class="hidden md:col-span-2 md:flex md:items-center md:justify-center"
+        class="hidden md:fixed md:right-0 md:h-full md:flex md:items-center md:justify-center"
       >
         <div
           class="h-full w-full items-center justify-center backdrop-grayscale-[.35]"
         >
-            <a href="/" class="w-full">
               <img
-                src="/login-background.png"
+                src="/login-zuma-background.png"
                 alt="Logo"
                 class="h-full w-full object-cover drop-shadow-4xl"
               />
-            </a>
         </div>
       </div>
     </div>

@@ -241,6 +241,8 @@ export const repairTable = pgTable("repair", {
   diagnostic: varchar({ length: 255 }),
   client_cost: numeric({ precision: 12, scale: 2 }).notNull(),
   internal_cost: numeric({ precision: 12, scale: 2 }).notNull(),
+  currency_buy: varchar({ length: 8 }).notNull().default("USD"), 
+  currency_sale: varchar({ length: 8 }).notNull().default("USD"), 
 
   client_id: integer().references(() => clientTable.client_id).notNull(),
   technician_id: integer().references(() => technicianTable.technician_id).notNull(),

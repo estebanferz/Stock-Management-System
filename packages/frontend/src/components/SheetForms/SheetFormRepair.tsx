@@ -16,18 +16,49 @@ import { priorities } from "../Structures/priorities"
 import { ChevronDown} from "lucide-react"
 import { clientApp } from "@/lib/clientAPI";
 import type { Repair } from "@server/db/schema"
+import { DeviceSheetSelector, type DeviceRow, type DeviceSearchParams } from "@/components/SheetForms/DeviceSheetSelector";
+import { generalStringFormat, normalizeShortString } from "@/utils/formatters"
+import { currencies } from "../Structures/currencies"
 
 const getLocalTime = () => {
   const today = new Date();
   return new Date(today.getTime() - today.getTimezoneOffset() * 60000);
 };
 
+async function searchDevices(params: DeviceSearchParams): Promise<DeviceRow[]> {
+  const res = await clientApp.phone.all.get({
+    query: {
+      device: params.device?.trim() ? normalizeShortString(params.device.trim()) : undefined,
+      imei: params.imei?.trim() ? normalizeShortString(params.imei.trim()) : undefined,
+      color: params.color === "any" ? undefined : normalizeShortString(params.color),
+      storage_capacity:
+        params.storage_capacity === "any" ? undefined : params.storage_capacity,
+      battery_health:
+        params.battery_min === "any" ? undefined : params.battery_min,
+      is_deleted: false,
+    },
+  });
+
+  if (res.error) throw res.error.value;
+
+  return (res.data ?? []).map((d: any) => ({
+    id: String(d.device_id),
+    title: `${generalStringFormat(d.brand) ?? ""} ${generalStringFormat(d.name) ?? ""}`.trim(),
+    imei: d.imei ?? null,
+    color: d.color ?? null,
+    storage: d.storage_capacity ?? null,
+    battery_health: d.battery_health ?? null,
+    subtitle: d.sold ? "Vendido" : null,
+  }));
+}
+
+
 export function SheetFormRepair() {
 
   const initialLocalTime = getLocalTime();
   const [date, setDate] = useState(initialLocalTime.toISOString().split("T")[0])
   const [time, setTime] = useState(initialLocalTime.toISOString().slice(11, 16))
-
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [internalOpen, setInternalOpen] = useState(false);
   const [editingRepair, setEditingRepair] = useState<Repair | null>(null);
   const [form, setForm] = useState({
@@ -37,7 +68,9 @@ export function SheetFormRepair() {
     description: "",
     diagnostic: "",
     client_cost: "",
+    currency_sale: "USD",
     internal_cost: "",
+    currency_buy: "USD",
     client_id: "",
     technician_id: "",
     device_id: "",
@@ -66,7 +99,9 @@ export function SheetFormRepair() {
         description: row.description ?? "",
         diagnostic: row.diagnostic ?? "",
         client_cost: row.client_cost ?? "",
+        currency_sale: row.currency_sale ?? "",
         internal_cost: row.internal_cost ?? "",
+        currency_buy: row.currency_buy ?? "",
         client_id: row.client_id ? row.client_id.toString() : "",
         technician_id: row.technician_id ? row.technician_id.toString() : "",
         device_id: row.device_id ? row.device_id.toString() : "",
@@ -85,7 +120,9 @@ export function SheetFormRepair() {
         description: "",
         diagnostic: "",
         client_cost: "",
+        currency_sale: "USD",
         internal_cost: "",
+        currency_buy: "USD",
         client_id: "",
         technician_id: "",
         device_id: "",
@@ -106,6 +143,8 @@ export function SheetFormRepair() {
     e.preventDefault()
     e.stopPropagation()
 
+    if (isSubmitting) return;
+
     const datetime = `${date}T${time}:00Z`;
 
     if (!form.client_id || !form.technician_id || !form.device_id) {
@@ -122,6 +161,7 @@ export function SheetFormRepair() {
     }
 
     try {
+      setIsSubmitting(true);
       let response;
 
       const isEditing = !!editingRepair;
@@ -140,6 +180,8 @@ export function SheetFormRepair() {
     } catch (err) {
       console.error("❌ Error al cargar reparación:", err);
       alert("Error al cargar reparación");
+    } finally {
+      setIsSubmitting(false);
     }
   }
 
@@ -157,10 +199,22 @@ return (
         showTrigger={false}
         footer={
           <>
-            <Button type="submit" form="form-repair">Agregar</Button>
-            <SheetClose asChild>
-              <Button variant="outline">Cancelar</Button>
-            </SheetClose>
+            <Button type="submit" form="form-repair" disabled={isSubmitting}>
+              {isSubmitting
+                ? "Guardando..."
+                : editingRepair
+                  ? "Guardar"
+                  : "Agregar"}
+            </Button>
+
+            <Button
+              variant="outline"
+              type="button"
+              onClick={() => setInternalOpen(false)}
+              disabled={isSubmitting}
+            >
+              Cancelar
+            </Button>
           </>
         }
       >
@@ -174,11 +228,12 @@ return (
 
         <div className="grid gap-3">
           <Label>Dispositivo</Label>
-          <SheetSelector 
+          <DeviceSheetSelector
             parentZIndex={baseZ}
-            type="device" 
-            currentId={form.device_id} 
-            onSelect={(id) => setForm({...form, device_id: id})} />
+            currentId={form.device_id}
+            searchDevices={searchDevices}
+            onSelect={(id) => setForm({ ...form, device_id: id })}
+          />
         </div>
 
         <div className="grid gap-3">
@@ -254,14 +309,35 @@ return (
         </div>
 
         <div className="grid gap-3">
-            <Label>Costo al cliente</Label>
-            <Input
-              id="client_cost"
-              form="form-repair" 
-              type="number" 
-              placeholder="0.00" 
-              value={form.client_cost} 
-              onChange={(e) => setForm({...form, client_cost: e.target.value})} />
+        <Label>Costo al cliente</Label>
+          <div className="grid grid-cols-3 gap-2">
+            <div className="col-span-2">
+              <Input
+                id="client_cost"
+                form="form-repair" 
+                type="number" 
+                value={form.client_cost} 
+                onChange={(e) => setForm({...form, client_cost: e.target.value})} 
+                required />
+            </div>
+
+            <div className="col-span-1">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" className="ml-auto w-full justify-between font-normal bg-black text-white">
+                    {form.currency_sale} <ChevronDown />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  {currencies.map((method) => (
+                    <DropdownMenuItem key={method.value} onClick={() => setForm({...form, currency_sale: method.value})}>
+                      {method.label}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          </div>
         </div>
 
         <div className="grid gap-3">

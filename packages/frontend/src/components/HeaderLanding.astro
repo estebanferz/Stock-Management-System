@@ -1,0 +1,79 @@
+---
+
+---
+
+<header
+  id="header"
+  class="fixed left-0 right-0 top-0 z-30 flex h-[var(--header-height)] bg-white shadow-lg transition-transform duration-300"
+>
+    <div class="relative flex w-full items-center justify-between md:justify-around p-5">
+      <div class="flex justify-center items-center gap-3h-10 w-10 opacity-90">
+        <img src="../../public/Suma-logo.png" class="rounded-md"/>
+        <p class="font-semibold text-md">Zuma+</p>
+      </div>
+    </div>
+
+</header>
+
+<script>
+  let lastScrollTop = 0;
+  const header = document.getElementById("header");
+  const slider = document.getElementById("slider");
+
+  window.addEventListener("scroll", () => {
+    const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+
+    const scrollingDown = scrollTop > lastScrollTop;
+    const pastTop = scrollTop > 100;
+
+    if (scrollingDown && pastTop) {
+      // esconder header hacia arriba
+      header?.classList.add("-translate-y-full");
+
+      // esconder slider hacia la izquierda
+      slider?.classList.add("-translate-x-full");
+      slider?.classList.remove("translate-x-0");
+    } else {
+      // mostrar header
+      header?.classList.remove("-translate-y-full");
+
+    }
+
+    lastScrollTop = scrollTop;
+  });
+</script>
+
+
+<script>
+  const slider = document.getElementById("slider");
+  const toggleButton = document.getElementById("menu-toggle");
+  const closeButton = document.getElementById("close-slider");
+
+  const mdUp = () => window.matchMedia("(min-width: 768px)").matches;
+
+  function open() {
+    slider?.classList.remove("-translate-x-full");
+    slider?.classList.add("translate-x-0");
+  }
+
+  function close() {
+    slider?.classList.add("-translate-x-full");
+    slider?.classList.remove("translate-x-0");
+  }
+
+  if (mdUp()) open();
+  else close();
+
+  toggleButton?.addEventListener("click", () => {
+    slider?.classList.toggle("-translate-x-full");
+    slider?.classList.toggle("translate-x-0");
+  });
+
+  closeButton?.addEventListener("click", close);
+
+  // Si cambia el tamaño, lo dejamos consistente
+  window.addEventListener("resize", () => {
+    if (mdUp()) open();
+    else close();
+  });
+</script>

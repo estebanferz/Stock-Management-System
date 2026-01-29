@@ -14,6 +14,7 @@ import { paymentMethods } from "../Structures/paymentMethods";
 import { ChevronDown } from "lucide-react";
 import { clientApp } from "@/lib/clientAPI";
 import type { Expense } from "@server/db/schema";
+import { SheetClose } from "../ui/sheet";
 
 const getLocalTime = () => {
   const today = new Date();
@@ -41,7 +42,7 @@ export function SheetFormExpense({
   const [date, setDate] = useState(initialLocalTime.toISOString().split("T")[0]);
   const [time, setTime] = useState(initialLocalTime.toISOString().slice(11, 16));
   const [receiptFile, setReceiptFile] = useState<File | undefined>(undefined);
-
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [internalOpen, setInternalOpen] = useState(false); // Only used when not nested
   const isNested = onClose !== undefined;
   const controlledOpen = isOpen !== undefined ? isOpen : internalOpen;
@@ -120,6 +121,7 @@ export function SheetFormExpense({
   }, [injectedDescription]);
 
   const handleOpenChange = (open: boolean) => {
+    if (isSubmitting) return;
     if (onClose) {
       if (!open) onClose();
       return;
@@ -147,6 +149,8 @@ export function SheetFormExpense({
     e.preventDefault();
     e.stopPropagation();
 
+    if (isSubmitting) return;
+
     const datetime = `${date}T${time}:00Z`;
     const expenseData = {
       ...form,
@@ -156,6 +160,7 @@ export function SheetFormExpense({
     };
 
     try {
+      setIsSubmitting(true);
       let response;
 
       if (editingExpense) {
@@ -178,6 +183,8 @@ export function SheetFormExpense({
       console.error("❌ Error al cargar gasto:", err);
       alert("Error al cargar gasto");
       if (isNested) onClose!();
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -200,12 +207,24 @@ export function SheetFormExpense({
         showTrigger={false}
         footer={
           <>
-            <Button type="submit" form="form-expense" onClick={handlePropagationStop}>
-              {editingExpense ? "Guardar" : "Agregar"}
+            <Button type="submit" form="form-expense" disabled={isSubmitting}>
+              {isSubmitting
+                ? "Guardando..."
+                : editingExpense
+                  ? "Guardar"
+                  : "Agregar"}
             </Button>
-            <Button variant="outline" onClick={() => handleOpenChange(false)}>
-              Cancelar
-            </Button>
+
+            <SheetClose asChild>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => handleOpenChange(false)}
+                disabled={isSubmitting}
+              >
+                Cancelar
+              </Button>
+            </SheetClose>
           </>
         }
       >

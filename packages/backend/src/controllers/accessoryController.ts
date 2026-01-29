@@ -83,7 +83,9 @@ export const accessoryController = new Elysia({ prefix: "/accessory" })
         ...(body.color && { color: body.color }),
         category: body.category,
         price: body.price,
+        currency_sale: body.currency_sale,
         buy_cost: body.buy_cost,
+        currency_buy: body.currency_buy,
         deposit: body.deposit,
         gift: body.gift ?? false,
       };
@@ -119,7 +121,9 @@ export const accessoryController = new Elysia({ prefix: "/accessory" })
         ...(body.color !== undefined && { color: body.color }),
         category: body.category,
         price: body.price,
+        currency_sale: body.currency_sale,
         buy_cost: body.buy_cost,
+        currency_buy: body.currency_buy,
         deposit: body.deposit,
         gift: body.gift,
       };

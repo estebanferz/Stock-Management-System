@@ -18,9 +18,42 @@ import { SheetFormClient } from './SheetFormClient';
 import { SheetFormPhone } from "./SheetFormPhone"
 import type { Sale } from "@server/db/schema"
 import { currencies } from "../Structures/currencies"
+import { generalStringFormat, normalizeShortString } from "@/utils/formatters"
+import { DeviceSheetSelector, type DeviceRow, type DeviceSearchParams } from "@/components/SheetForms/DeviceSheetSelector";
 
 interface SheetFormSaleProps {
   zIndex?: number;
+}
+type OnCloseResult = { newPhoneId?: string; draft?: any };
+
+
+async function searchDevices(params: DeviceSearchParams): Promise<DeviceRow[]> {
+  const res = await clientApp.phone.all.get({
+    query: {
+      device: params.device?.trim() ? normalizeShortString(params.device.trim()) : undefined,
+      imei: params.imei?.trim() ? normalizeShortString(params.imei.trim()) : undefined,
+      color: params.color === "any" ? undefined : normalizeShortString(params.color),
+      storage_capacity:
+        params.storage_capacity === "any" ? undefined : params.storage_capacity,
+      battery_health:
+        params.battery_min === "any" ? undefined : params.battery_min,
+      is_deleted: false,
+      sold: false,
+    },
+  });
+
+  if (res.error) throw res.error.value;
+
+  return (res.data ?? []).map((d: any) => ({
+    id: String(d.device_id),
+    title: `${generalStringFormat(d.brand) ?? ""} ${generalStringFormat(d.name) ?? ""}`.trim(),
+    imei: d.imei ?? null,
+    color: d.color ?? null,
+    storage: d.storage_capacity ?? null,
+    battery_health: d.battery_health ?? null,
+    subtitle: d.sold ? "Vendido" : null,
+    price: d.price ?? null,
+  }));
 }
 
 const getLocalTime = () => {
@@ -33,7 +66,10 @@ export function SheetFormSale({zIndex}:SheetFormSaleProps) {
   const initialLocalTime = getLocalTime();
   const [date, setDate] = useState(initialLocalTime.toISOString().split("T")[0])
   const [time, setTime] = useState(initialLocalTime.toISOString().slice(11, 16))
-  
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [tradeInDraft, setTradeInDraft] = useState<any | null>(null);
+  const [tradeInLabel, setTradeInLabel] = useState<string>("");
+
   // Control opening of SheetFormClient
   const [isClientSheetOpen, setIsClientSheetOpen] = useState(false);
   // Control opening of SheetFormPhone
@@ -134,7 +170,7 @@ export function SheetFormSale({zIndex}:SheetFormSaleProps) {
     (async () => {
       try {
         const res = await clientApp.accessory.all.get({
-          query: { is_deleted: "false" },
+          query: { is_deleted: "false", gift: true },
         });
 
         const rows = (res.data ?? []) as any[];
@@ -184,18 +220,40 @@ export function SheetFormSale({zIndex}:SheetFormSaleProps) {
   const handleAddTradeInPhone = () => {
     setIsPhoneSheetOpen(true);
   };
-  const handlePhoneFormClose = (newPhoneId?: string) => {
+  const handlePhoneFormClose = (arg?: string | OnCloseResult) => {
     setIsPhoneSheetOpen(false);
-    
-    if (newPhoneId) {
-      setForm({...form, trade_in_device: newPhoneId});
+
+    // modo viejo: string
+    if (typeof arg === "string") {
+      // si por algún motivo persististe y te devolvió id
+      setForm((prev) => ({ ...prev, trade_in_device: arg }));
+      return;
+    }
+
+    // modo nuevo: objeto
+    if (arg?.draft) {
+      setTradeInDraft(arg.draft);
+      setForm((prev) => ({ ...prev, trade_in_device: "" }));
+
+      const brand = arg.draft.brand ? generalStringFormat(arg.draft.brand) : "";
+      const name = arg.draft.name ? generalStringFormat(arg.draft.name) : "";
+      const imei = arg.draft.imei ? String(arg.draft.imei) : "";
+
+      const label = `${brand} ${name}`.trim();
+      setTradeInLabel(label);
+    }
+
+    if (!arg || (typeof arg !== "string" && !arg.draft)) {
+      setTradeInDraft(null);
+      setTradeInLabel("");
     }
   };
-
 
   const handleSubmitSale = async (e: React.FormEvent) => {
     e.preventDefault();
     e.stopPropagation();
+
+    if (isSubmitting) return;
 
     const datetime = `${date}T${time}:00Z`;
 
@@ -224,6 +282,12 @@ export function SheetFormSale({zIndex}:SheetFormSaleProps) {
       seller_id: Number(form.seller_id),
       device_id: Number(form.device_id),
       trade_in_device: form.trade_in_device ? Number(form.trade_in_device) : null,
+      trade_in_phone: tradeInDraft
+        ? (() => {
+            const { datetime, ...rest } = tradeInDraft;
+            return rest;
+          })()
+        : undefined,
 
       total_amount: form.total_amount,
       payment_method: form.payment_method,
@@ -236,6 +300,7 @@ export function SheetFormSale({zIndex}:SheetFormSaleProps) {
     };
 
     try {
+      setIsSubmitting(true);
       const isEditing = !!editingSale;
 
       console.log("payload sale:", payload);
@@ -244,6 +309,10 @@ export function SheetFormSale({zIndex}:SheetFormSaleProps) {
         seller_id: typeof payload.seller_id,
         device_id: typeof payload.device_id,
       });
+
+      console.log("trade_in_phone.datetime typeof:", typeof payload.trade_in_phone?.datetime);
+      console.log("trade_in_phone.datetime value:", payload.trade_in_phone?.datetime);
+      console.log("is Date:", payload.trade_in_phone?.datetime instanceof Date);
 
       const res = isEditing
         ? await clientApp.sale({ id: editingSale!.sale_id }).put(payload)
@@ -256,6 +325,8 @@ export function SheetFormSale({zIndex}:SheetFormSaleProps) {
     } catch (err) {
       console.error("Error al cargar venta:", err);
       alert("Error al cargar venta");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -268,7 +339,6 @@ export function SheetFormSale({zIndex}:SheetFormSaleProps) {
   const handleClientFormClose = (newClientId?: string) => {
       setIsClientSheetOpen(false); // Closes Sheet
       
-      // If ID provided, updates state of clientId
       if (newClientId) {
           setForm({...form, client_id: newClientId}); 
       }
@@ -283,14 +353,29 @@ return (
         title="Agregar Venta"
         zIndex={zIndex}
         isOpen={internalOpen}
-        onOpenChange={setInternalOpen}
+        onOpenChange={(open) => {
+          if (isSubmitting) return;
+          setInternalOpen(open);
+        }}
         description="Agregar venta de dispositivo al sistema"
         isModal={true}
         showTrigger={false}
         footer={
           <>
-            <Button type="submit" form="form-sale">Agregar</Button>
-            <Button variant="outline" onClick={() => setInternalOpen(false)}>
+            <Button
+              type="submit"
+              form="form-sale"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? "Guardando..." : "Agregar"}
+            </Button>
+
+            <Button
+              variant="outline"
+              type="button"
+              onClick={() => setInternalOpen(false)}
+              disabled={isSubmitting}
+            >
               Cancelar
             </Button>
           </>
@@ -345,11 +430,18 @@ return (
 
         <div className="grid gap-3">
           <Label>Dispositivo</Label>
-          <SheetSelector 
-            parentZIndex={baseZ} 
-            type="device" 
-            currentId={form.device_id} 
-            onSelect={handleDeviceSelect} />
+          <DeviceSheetSelector
+            parentZIndex={baseZ}
+            currentId={form.device_id}
+            searchDevices={searchDevices}
+            onSelect={(id, row) => {
+              setForm((prev) => ({
+                ...prev,
+                device_id: id,
+                total_amount: row?.price ? String(row.price) : prev.total_amount,
+              }));
+            }}
+          />
         </div>
 
         <div className="grid gap-3">
@@ -368,9 +460,41 @@ return (
 
         <div className="grid gap-3">
           <Label>Trade-In</Label>
-          <Button type="button" onClick={handleAddTradeInPhone}>
-            Agregar Trade-In
-          </Button>
+
+          <div className="grid grid-cols-3 gap-2">
+            <div className="col-span-2">
+              <Input
+                value={tradeInLabel}
+                placeholder="Sin trade-in"
+                disabled
+              />
+            </div>
+
+            <Button
+              className="col-span-1"
+              type="button"
+              onClick={handleAddTradeInPhone}
+            >
+              {tradeInLabel ? "Cambiar" : "Agregar"}
+            </Button>
+          </div>
+
+          {tradeInLabel && (
+            <div className="flex justify-end">
+              <Button
+                type="button"
+                variant="ghost"
+                className="text-red-600 hover:text-red-700"
+                onClick={() => {
+                  setTradeInDraft(null);
+                  setTradeInLabel("");
+                  setForm((prev) => ({ ...prev, trade_in_device: "" }));
+                }}
+              >
+                Quitar trade-in
+              </Button>
+            </div>
+          )}
         </div>
         
         {isPhoneSheetOpen && (
@@ -379,6 +503,7 @@ return (
             onClose={handlePhoneFormClose}
             zIndex={baseZ + 2}
             depth={1}
+            mode="draft"
           />
         )}
 
@@ -487,39 +612,42 @@ return (
         </div>
 
         <div className="grid gap-3">
-          <Label>Método de pago</Label>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="ml-auto w-full justify-between font-normal">
-                {form.payment_method} <ChevronDown />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              {paymentMethods.map((method) => (
-                <DropdownMenuItem key={method.value} onClick={() => setForm({...form, payment_method: method.value})}>
-                  {method.label}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
+        <Label>Método de pago</Label>
+          <div className="grid grid-cols-3 gap-2">
+            <div className="col-span-2">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" className="ml-auto w-full justify-between font-normal">
+                    {form.payment_method} <ChevronDown />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  {paymentMethods.map((method) => (
+                    <DropdownMenuItem key={method.value} onClick={() => setForm({...form, payment_method: method.value})}>
+                      {method.label}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
 
-        <div className="grid gap-3">
-          <Label>Tipo de moneda</Label>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="ml-auto w-full justify-between font-normal">
-                {form.currency} <ChevronDown />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              {currencies.map((method) => (
-                <DropdownMenuItem key={method.value} onClick={() => setForm({...form, currency: method.value})}>
-                  {method.label}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
+            <div className="col-span-1">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" className="ml-auto w-full justify-between font-normal bg-black text-white">
+                    {form.currency} <ChevronDown />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  {currencies.map((method) => (
+                    <DropdownMenuItem key={method.value} onClick={() => setForm({...form, currency: method.value})}>
+                      {method.label}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          </div>
         </div>
 
         <div className="flex items-center justify-between gap-3">

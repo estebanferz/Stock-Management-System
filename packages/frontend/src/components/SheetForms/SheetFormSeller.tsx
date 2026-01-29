@@ -32,6 +32,7 @@ export function SheetFormSeller({zIndex}: SheetFormSellerProps) {
   const initialLocalTime = getLocalTime();
   const [hireDate, setHireDate] = useState(initialLocalTime.toISOString().split("T")[0]);
   const [payDate, setPayDate] = useState(initialLocalTime.toISOString().split("T")[0]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   const [internalOpen, setInternalOpen] = useState(false);
   const [editingSeller, setEditingSeller] = useState<Seller | null>(null);
@@ -91,9 +92,11 @@ export function SheetFormSeller({zIndex}: SheetFormSellerProps) {
     };
   }, []);
   
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmitSeller = async (e: React.FormEvent) => {
     e.preventDefault()
     e.stopPropagation()
+
+    if (isSubmitting) return;
 
     console.log(hireDate.toString().split("T")[0])
     const sellerData = {
@@ -107,6 +110,8 @@ export function SheetFormSeller({zIndex}: SheetFormSellerProps) {
     }
 
     try {
+      setIsSubmitting(true);
+
       let response;
 
       if (editingSeller) {
@@ -123,12 +128,14 @@ export function SheetFormSeller({zIndex}: SheetFormSellerProps) {
     } catch (err) {
       console.error("Error al cargar vendedor:", err);
       alert("Error al cargar vendedor");
+    } finally {
+      setIsSubmitting(false);
     }
   }
 
 
 return (
-    <form id="form-seller" onSubmit={handleSubmit}>
+    <form id="form-seller" onSubmit={handleSubmitSeller}>
       <CustomSheet
         title="Agregar Vendedor"
         zIndex={zIndex}
@@ -138,10 +145,22 @@ return (
         showTrigger={false}
         footer={
           <>
-            <Button type="submit" form="form-seller">Agregar</Button>
-            <SheetClose asChild>
-              <Button variant="outline">Cancelar</Button>
-            </SheetClose>
+            <Button type="submit" form="form-seller" disabled={isSubmitting}>
+              {isSubmitting
+                ? "Guardando..."
+                : editingSeller
+                  ? "Guardar"
+                  : "Agregar"}
+            </Button>
+
+            <Button
+              variant="outline"
+              type="button"
+              onClick={() => setInternalOpen(false)}
+              disabled={isSubmitting}
+            >
+              Cancelar
+            </Button>
           </>
         }
       >
@@ -158,7 +177,7 @@ return (
         <div className="grid gap-3">
           <Label>Edad</Label>
           <Input
-            id="name"
+            id="age"
             form="form-seller"
             type="number"
             value={form.age}

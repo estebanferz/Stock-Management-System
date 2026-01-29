@@ -1,0 +1,54 @@
+---
+import '../styles/tailwind.css';
+import background from '../assets/background.svg';
+---
+
+<!doctype html>
+<html class="scroll-smooth" lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="generator" content={Astro.generator} />
+    <meta
+      name="description"
+      content="Control total de ventas, clientes, inventario y caja. Todo en un solo lugar, simple y profesional."
+      />
+    <title>Zuma+ — Gestión simple para tu negocio</title>
+  </head>
+  <body class="min-h-screen w-full">
+    <img id="background" src={background.src} alt="" fetchpriority="high" />
+    <!-- Main content container -->
+    <main class="min-h-screen w-full">
+      <!-- Header container slot -->
+      <slot name="header-container" />
+
+      <!-- Main content area with column structure -->
+      <div
+        class="flex min-h-[calc(100vh-var(--header-height))]"
+      >
+        <!-- Main content column -->
+        <div class="relative w-full">
+          <slot>
+            <!-- Contenido principal -->
+          </slot>
+        </div>
+      </div>
+    </main>
+  </body>
+</html>
+
+
+<style>
+    :root {
+      --header-height: 64px; /* ajustá según tu header real */
+    }
+	  #background {
+		  position: fixed;
+		  top: 0;
+		  left: 0;
+		  width: 100%;
+		  height: 100%;
+		  z-index: -1;
+		  filter: blur(100px);
+	  } 
+</style>

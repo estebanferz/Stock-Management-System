@@ -50,7 +50,7 @@ export const accessoryColumns: Column<Accessory>[] = [
     },
        {
         accessorKey: "gift",
-        header: "Vendido",
+        header: "Regalo",
         renderKey: "yesno",
     },
 

@@ -17,6 +17,8 @@ import {
 import { ChevronDown } from "lucide-react";
 import { accessoryCategories } from "../Structures/accessoryCategories";
 import { deposits } from "../Structures/deposits";
+import { currencies } from "../Structures/currencies";
+import { SheetClose } from "../ui/sheet";
 
 interface SheetFormAccessoryProps {
   isOpen?: boolean;
@@ -37,6 +39,7 @@ export function SheetFormAccessory({
   depth = 0,
 }: SheetFormAccessoryProps) {
   const [internalOpen, setInternalOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const controlledOpen = isOpen !== undefined ? isOpen : internalOpen;
 
   const handleOpenChange = (open: boolean) => {
@@ -59,7 +62,9 @@ export function SheetFormAccessory({
     color: "",
     category: "Categoria",
     price: "",
+    currency_sale: "USD",
     buy_cost: "",
+    currency_buy: "USD",
     deposit: "Deposito",
     gift: false,
   });
@@ -79,7 +84,6 @@ export function SheetFormAccessory({
     setIsExpenseSheetOpen(true);
   }
 
-  // ✅ Listener para editar (igual patrón que phone)
   useEffect(() => {
     const onEdit = (e: CustomEvent<Accessory>) => {
       const row = e.detail;
@@ -99,7 +103,9 @@ export function SheetFormAccessory({
         color: row.color ?? "",
         category: row.category ?? "",
         price: row.price ?? "",
+        currency_sale: row.currency_sale ?? "USD",
         buy_cost: row.buy_cost ?? "",
+        currency_buy: row.currency_buy ?? "USD",
         deposit: row.deposit ?? "",
         gift: row.gift ?? false,
       });
@@ -124,7 +130,9 @@ export function SheetFormAccessory({
         color: "",
         category: "Categoria",
         price: "",
+        currency_sale: "USD",
         buy_cost: "",
+        currency_buy: "USD",
         deposit: "",
         gift: false,
       });
@@ -149,6 +157,9 @@ export function SheetFormAccessory({
     e.preventDefault();
     e.stopPropagation();
 
+    if (isSubmitting) return;
+
+
     const datetime = `${date}T${time}:00Z`;
 
     // stock: integer
@@ -163,6 +174,8 @@ export function SheetFormAccessory({
     };
 
     try {
+      setIsSubmitting(true);
+
       let response;
 
       if (editingAccessory) {
@@ -187,6 +200,8 @@ export function SheetFormAccessory({
     } catch (err) {
       console.error("Error al cargar accesorio:", err);
       alert("Error al cargar accesorio");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -212,12 +227,24 @@ export function SheetFormAccessory({
           showTrigger={false}
           footer={
             <>
-              <Button type="submit" form="form-accessory">
-                {isEditMode ? "Guardar" : "Agregar"}
+              <Button type="submit" form="form-accessory" disabled={isSubmitting}>
+                {isSubmitting
+                  ? "Guardando..."
+                  : editingAccessory
+                    ? "Guardar"
+                    : "Agregar"}
               </Button>
-              <Button variant="outline" onClick={() => handleOpenChange(false)} type="button">
-                Cancelar
-              </Button>
+
+              <SheetClose asChild>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => handleOpenChange(false)}
+                  disabled={isSubmitting}
+                >
+                  Cancelar
+                </Button>
+              </SheetClose>
             </>
           }
         >
@@ -319,43 +346,79 @@ export function SheetFormAccessory({
             )}
           </div>
 
-          {/* Precio */}
           <div className="grid gap-3">
-            <Label>Precio de venta</Label>
-            <Input
-              id="price"
-              form="form-accessory"
-              type="number"
-              value={form.price}
-              onChange={(e) => setForm({ ...form, price: e.target.value })}
-              required
-            />
-          </div>
+          <Label>Precio de venta</Label>
+            <div className="grid grid-cols-3 gap-2">
+              <div className="col-span-2">
+                <Input
+                  id="price"
+                  form="form-accessory" 
+                  type="number" 
+                  value={form.price} 
+                  onChange={(e) => setForm({...form, price: e.target.value})} 
+                  required />
+              </div>
 
-          {/* Costo + gasto asociado */}
-          <div className="grid gap-3">
-            <Label>Costo de compra</Label>
-            <div className="flex-col space-y-3">
-              <Input
-                id="buy_cost"
-                form="form-accessory"
-                type="number"
-                value={form.buy_cost}
-                onChange={(e) => setForm({ ...form, buy_cost: e.target.value })}
-                required
-              />
-              <Button
-                className="w-full"
-                type="button"
-                disabled={!form.buy_cost || Number(form.buy_cost) <= 0}
-                onClick={handleOpenExpenseSheet}
-              >
-                Agregar gasto asociado
-              </Button>
+              <div className="col-span-1">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" className="ml-auto w-full justify-between font-normal bg-black text-white">
+                      {form.currency_sale} <ChevronDown />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    {currencies.map((method) => (
+                      <DropdownMenuItem key={method.value} onClick={() => setForm({...form, currency_sale: method.value})}>
+                        {method.label}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
             </div>
           </div>
 
-          {/* Depósito (dropdown si tenés array, si no input) */}
+          <div className="grid gap-3">
+          <Label>Costo de compra</Label>
+            <div className="grid grid-cols-3 gap-2">
+              <div className="col-span-2">
+                  <Input
+                    id="cost"
+                    form="form-accessory"
+                    type="number" 
+                    value={form.buy_cost} 
+                    onChange={(e) => setForm({...form, buy_cost: e.target.value})}
+                    required 
+                  />
+              </div>
+
+              <div className="col-span-1">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" className="ml-auto w-full justify-between font-normal bg-black text-white">
+                      {form.currency_buy} <ChevronDown />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    {currencies.map((method) => (
+                      <DropdownMenuItem key={method.value} onClick={() => setForm({...form, currency_buy: method.value})}>
+                        {method.label}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            </div>
+            <Button 
+                className="w-full" 
+                type="button"
+                disabled={!form.buy_cost || Number(form.buy_cost) <= 0}
+                onClick={(e) => { handleOpenExpenseSheet(); }}
+            >
+              Agregar gasto asociado
+            </Button>
+          </div>
+
           <div className="grid gap-3">
             <Label>Depósito</Label>
 
@@ -393,7 +456,6 @@ export function SheetFormAccessory({
             )}
           </div>
 
-          {/* Gift */}
           <div className="flex items-center justify-between gap-3">
             <Label>Es regalo</Label>
             <Checkbox

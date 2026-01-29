@@ -18,12 +18,14 @@ import { phoneStorage } from "../Structures/phoneStorage"
 import { ChevronDown} from "lucide-react"
 import { Checkbox } from "@/components/ui/checkbox"
 import type { Phone } from "@server/db/schema"
+import { currencies } from "../Structures/currencies"
 
 interface SheetFormPhoneProps {
   isOpen?: boolean;
-  onClose?: (newPhoneId?: string) => void;
+  onClose?: SheetFormPhoneOnClose;
   zIndex?: number;
   depth?: number;
+  mode?: "persist" | "draft";
 }
 
 const getLocalTime = () => {
@@ -31,11 +33,32 @@ const getLocalTime = () => {
   return new Date(today.getTime() - today.getTimezoneOffset() * 60000);
 };
 
-export function SheetFormPhone({isOpen, onClose, zIndex, depth=0}: SheetFormPhoneProps) {
+type PhoneDraft = {
+  datetime: string;
+  name: string;
+  brand: string;
+  imei: string;
+  device_type: string;
+  battery_health: number | null;
+  storage_capacity: number | null;
+  color: string | null;
+  category: string;
+  price: string;
+  currency_sale: string;
+  buy_cost: string;
+  currency_buy: string;
+  deposit: string;
+};
+
+type OnCloseResult = { newPhoneId?: string; draft?: PhoneDraft };
+type SheetFormPhoneOnClose = ((newPhoneId?: string) => void) | ((result?: OnCloseResult) => void);
+
+export function SheetFormPhone({isOpen, onClose, zIndex, depth=0, mode="persist"}: SheetFormPhoneProps) {
 
   const [internalOpen, setInternalOpen] = useState(false);
   const controlledOpen = isOpen !== undefined ? isOpen : internalOpen;
   const handleOpenChange = (open: boolean) => {
+    if (isSubmitting) return;
     if (onClose) {
         if (!open) onClose(); 
         return;
@@ -44,6 +67,7 @@ export function SheetFormPhone({isOpen, onClose, zIndex, depth=0}: SheetFormPhon
     }
   };
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingPhone, setEditingPhone] = useState<Phone | null>(null);
   const [form, setForm] = useState({
     datetime: "",
@@ -56,7 +80,9 @@ export function SheetFormPhone({isOpen, onClose, zIndex, depth=0}: SheetFormPhon
     color: "",
     category: "Categoria",
     price: "",
+    currency_sale: "USD",
     buy_cost: "",
+    currency_buy: "USD",
     deposit: "",
     sold: false,
     trade_in: false,
@@ -89,7 +115,9 @@ export function SheetFormPhone({isOpen, onClose, zIndex, depth=0}: SheetFormPhon
         color: row.color ?? "",
         category: row.category ?? "",
         price: row.price ?? "",
+        currency_sale: row.currency_sale ?? "USD",
         buy_cost: row.buy_cost ?? "",
+        currency_buy: row.currency_buy ?? "USD",
         deposit: row.deposit ?? "",
         sold: row.sold ?? false,
         trade_in: row.trade_in ?? false,
@@ -118,7 +146,9 @@ export function SheetFormPhone({isOpen, onClose, zIndex, depth=0}: SheetFormPhon
         color: "",
         category: "Categoria",
         price: "",
+        currency_sale: "USD",
         buy_cost: "",
+        currency_buy: "USD",
         deposit: "",
         sold: false,
         trade_in: false,
@@ -160,6 +190,9 @@ export function SheetFormPhone({isOpen, onClose, zIndex, depth=0}: SheetFormPhon
     e.preventDefault()
     e.stopPropagation()
 
+    if (isSubmitting) return;
+
+
     const datetime = `${date}T${time}:00Z`;
     const phoneData = {
       ...form,
@@ -169,7 +202,31 @@ export function SheetFormPhone({isOpen, onClose, zIndex, depth=0}: SheetFormPhon
       trade_in: isNested,
     }
 
+    if (mode === "draft") {
+      const draft: PhoneDraft = {
+        datetime: datetime,
+        name: form.name,
+        brand: form.brand,
+        imei: form.imei,
+        device_type: form.device_type,
+        battery_health: form.battery_health ? Number(form.battery_health) : null,
+        storage_capacity: form.storage_capacity ? Number(form.storage_capacity) : null,
+        color: form.color?.trim() ? form.color : null,
+        category: form.category,
+        price: form.price,
+        currency_sale: form.currency_sale ?? "USD",
+        buy_cost: form.buy_cost,
+        currency_buy: form.currency_buy ?? "USD",
+        deposit: form.deposit,
+      };
+
+      (onClose as ((result?: OnCloseResult) => void) | undefined)?.({ draft });
+      return;
+    }
+
     try {
+      setIsSubmitting(true);
+
       let response;
 
       if (editingPhone) {
@@ -184,17 +241,16 @@ export function SheetFormPhone({isOpen, onClose, zIndex, depth=0}: SheetFormPhon
       const newPhoneId = data?.[0]?.device_id;
 
       if (onClose) {
-        if (newPhoneId) {
-            onClose(String(newPhoneId)); 
-        } else {
-            onClose();
-        }
+        (onClose as ((newPhoneId?: string) => void))(newPhoneId ? String(newPhoneId) : undefined);
+
       }else{
         window.location.reload(); 
       }
     } catch (err) {
       console.error("Error al cargar celular:", err);
       alert("Error al cargar celular");
+    } finally {
+      setIsSubmitting(false);
     }
   }
 
@@ -221,10 +277,24 @@ return (
         showTrigger={false}
         footer={
           <>
-            <Button type="submit" form="form-phone">Agregar</Button>
-            <Button variant="outline" onClick={() => handleOpenChange(false)}>
-              Cancelar
+            <Button type="submit" form="form-phone" disabled={isSubmitting}>
+              {isSubmitting
+                ? "Guardando..."
+                : editingPhone
+                  ? "Guardar"
+                  : "Agregar"}
             </Button>
+
+            <SheetClose asChild>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => handleOpenChange(false)}
+                disabled={isSubmitting}
+              >
+                Cancelar
+              </Button>
+            </SheetClose>
           </>
         }
       >
@@ -365,36 +435,76 @@ return (
         </div>
 
         <div className="grid gap-3">
-          <Label>Precio de venta</Label>
-          <Input
-            id="price"
-            form="form-phone" 
-            type="number" 
-            value={form.price} 
-            onChange={(e) => setForm({...form, price: e.target.value})} 
-            required />
-        </div>
-
-        <div className="grid gap-3">
-            <Label>Costo de compra</Label>
-            <div className="flex-col space-y-3">
+        <Label>Precio de venta</Label>
+          <div className="grid grid-cols-3 gap-2">
+            <div className="col-span-2">
               <Input
-                id="cost"
-                form="form-phone"
+                id="price"
+                form="form-phone" 
                 type="number" 
-                value={form.buy_cost} 
-                onChange={(e) => setForm({...form, buy_cost: e.target.value})}
-                required 
-              />
-              <Button 
-                  className="w-full" 
-                  type="button"
-                  disabled={!form.buy_cost || Number(form.buy_cost) <= 0}
-                  onClick={(e) => { handleOpenExpenseSheet(); }}
-              >
-                Agregar gasto asociado
-              </Button>
+                value={form.price} 
+                onChange={(e) => setForm({...form, price: e.target.value})} 
+                required />
             </div>
+
+            <div className="col-span-1">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" className="ml-auto w-full justify-between font-normal bg-black text-white">
+                    {form.currency_sale} <ChevronDown />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  {currencies.map((method) => (
+                    <DropdownMenuItem key={method.value} onClick={() => setForm({...form, currency_sale: method.value})}>
+                      {method.label}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          </div>
+        </div>
+        
+        <div className="grid gap-3">
+        <Label>Costo de compra</Label>
+          <div className="grid grid-cols-3 gap-2">
+            <div className="col-span-2">
+                <Input
+                  id="cost"
+                  form="form-phone"
+                  type="number" 
+                  value={form.buy_cost} 
+                  onChange={(e) => setForm({...form, buy_cost: e.target.value})}
+                  required 
+                />
+            </div>
+
+            <div className="col-span-1">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" className="ml-auto w-full justify-between font-normal bg-black text-white">
+                    {form.currency_buy} <ChevronDown />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  {currencies.map((method) => (
+                    <DropdownMenuItem key={method.value} onClick={() => setForm({...form, currency_buy: method.value})}>
+                      {method.label}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          </div>
+          <Button 
+              className="w-full" 
+              type="button"
+              disabled={!form.buy_cost || Number(form.buy_cost) <= 0}
+              onClick={(e) => { handleOpenExpenseSheet(); }}
+          >
+            Agregar gasto asociado
+          </Button>
         </div>
 
         <div className="grid gap-3">

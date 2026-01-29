@@ -4,10 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Search, ChevronRight } from "lucide-react";
 import { CustomSheet } from "@/components/CustomSheet";
 import { Input } from "@/components/ui/input";
-import { generalStringFormat } from "@/utils/formatters";
+import { generalStringFormat, translateType } from "@/utils/formatters";
 
 interface SheetSelectorProps {
-  type: "client" | "seller" | "device" | "technician" | "provider";
+  type: "client" | "seller" | "device" | "technician" | "provider" | "device_repair";
   currentId: string;
   onSelect: (id: string, price?: string) => void;
   depth?: number;
@@ -30,6 +30,7 @@ const DataSearchSheet: React.FC<DataSearchSheetProps> = ({ type, onSelect, setIs
     client: { endpoint: clientApp.client, nameKey: "name", key: "client_id" },
     seller: { endpoint: clientApp.seller, nameKey: "name", key: "seller_id" },
     device: { endpoint: clientApp.phone, nameKey: "name", key: "device_id" },
+    device_repair: { endpoint: clientApp.phone, nameKey: "name", key: "device_id" },
     technician: { endpoint: clientApp.technician, nameKey: "name", key: "technician_id" },
     provider: { endpoint: clientApp.provider, nameKey: "name", key: "provider_id" },
   } as const;
@@ -44,6 +45,8 @@ const DataSearchSheet: React.FC<DataSearchSheetProps> = ({ type, onSelect, setIs
       let result;
       if (type === "device") {
         result = await endpoint.all.get({ query: { sold: "false", is_deleted: false } });
+      } else if (type == "device_repair"){
+        result = await endpoint.all.get({ query: { is_deleted: false } });
       } else {
         result = await endpoint.all.get({ query: { is_deleted: false } });
       }
@@ -81,7 +84,7 @@ const DataSearchSheet: React.FC<DataSearchSheetProps> = ({ type, onSelect, setIs
 
   return (
     <div className="p-4">
-      <h2 className="text-xl font-semibold mb-4">Buscar {type}</h2>
+      <h2 className="text-xl font-semibold mb-4">Buscar {translateType(type)}</h2>
 
       <div className="flex gap-2 mb-4">
         <Input
@@ -141,6 +144,7 @@ export function SheetSelector({
     client: { endpoint: clientApp.client, nameKey: "name" },
     seller: { endpoint: clientApp.seller, nameKey: "name" },
     device: { endpoint: clientApp.phone, nameKey: "name" },
+    device_repair: { endpoint: clientApp.phone, nameKey: "name" },
     technician: { endpoint: clientApp.technician, nameKey: "name" },
     provider: { endpoint: clientApp.provider, nameKey: "name" },
   } as const;
@@ -150,7 +154,7 @@ export function SheetSelector({
   const fetchNameById = useCallback(
     async (id: string) => {
       if (!id || id === "0") {
-        setDisplayName(`Seleccionar ${type}`);
+        setDisplayName(`Seleccionar ${translateType(type)}`);
         return;
       }
       try {
@@ -191,9 +195,9 @@ export function SheetSelector({
       side="right"
       isOpen={isOpen}
       onOpenChange={setIsOpen}
-      title={`Seleccionar ${type}`}
+      title={`Seleccionar ${translateType(type)}`}
       trigger={triggerButton}
-      description={`Busca y selecciona el ${type}`}
+      description={`Busca y selecciona el ${translateType(type)}`}
       isNested={true}
       depth={depth}
       isModal={false}

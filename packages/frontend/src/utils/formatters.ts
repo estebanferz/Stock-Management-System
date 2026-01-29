@@ -122,3 +122,12 @@ export function normalizeShortString(str: string): string {
     .replace(/\s+/g, "-")
     .replace(/[^a-z0-9-]/g, "");   
 }
+
+export function translateType(str: string): string {
+  if (str == "technician") return "técnico"
+  if (str == "device") return "dispoitivo"
+  if (str == "client") return "cliente"
+  if (str == "seller") return "vendedor"
+
+  return ""
+}

@@ -478,6 +478,7 @@ export const addSale = async (
     seller_id: number;
     device_id: number;
     trade_in_device?: number;
+    trade_in_phone?: any;
     gift_accessories?: { accessory_id: number; qty: number }[];
   }
 ) => {
@@ -490,7 +491,7 @@ export const addSale = async (
 
   const giftLines = newSale.gift_accessories ?? [];
   
-  const { gift_accessories, ...saleOnly } = newSale;
+  const { gift_accessories, trade_in_phone, trade_in_device, ...saleOnly } = newSale;
 
   const normalizedSale = {
     ...saleOnly,
@@ -499,8 +500,39 @@ export const addSale = async (
   };
 
   return await db.transaction(async (tx) => {
+    let tradeInId: number | null = trade_in_device ?? null;
+    if (!tradeInId && trade_in_phone) {
+      console.log(trade_in_phone)
+      const values = {
+        ...trade_in_phone,
+        tenant_id: tenantId,
+        trade_in: true,
+        sold: false,
+        brand: normalizeShortString(trade_in_phone.brand),
+        name: normalizeShortString(trade_in_phone.name),
+        device_type: normalizeShortString(trade_in_phone.device_type),
+        color: trade_in_phone.color ? normalizeShortString(trade_in_phone.color) : trade_in_phone.color,
+        category: trade_in_phone.category ? normalizeShortString(trade_in_phone.category) : trade_in_phone.category,
+        imei: trade_in_phone.imei.trim(),
+      };
+
+      const insertedTradeIn = await tx
+        .insert(phoneTable)
+        .values(values)
+        .returning({ device_id: phoneTable.device_id });
+
+      tradeInId = insertedTradeIn[0]?.device_id ?? null;
+      if (!tradeInId) throw new Error("TRADE_IN_CREATE_FAILED");
+    }
+
     // 1) Insert sale (sin gift_accessories)
-    const inserted = await tx.insert(saleTable).values(normalizedSale).returning();
+    const inserted = await tx
+      .insert(saleTable)
+      .values({
+        ...normalizedSale,
+        trade_in_device: tradeInId,
+      })
+      .returning();
 
     const saleId = inserted[0]?.sale_id;
     if (!saleId) throw new Error("SALE_NOT_FOUND");

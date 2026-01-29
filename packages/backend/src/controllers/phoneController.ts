@@ -90,7 +90,9 @@ export const phoneController = new Elysia({ prefix: "/phone" })
         ...(body.color && { color: body.color }),
         category: body.category,
         price: body.price,
+        currency_sale: body.currency_sale,
         buy_cost: body.buy_cost,
+        currency_buy: body.currency_buy,
         deposit: body.deposit,
         ...(body.sold !== undefined && { sold: body.sold }),
         ...(body.trade_in !== undefined && { trade_in: body.trade_in }),
@@ -120,7 +122,6 @@ export const phoneController = new Elysia({ prefix: "/phone" })
       const body = ctx.body;
 
       const updPhone = {
-        // ✅ no tenant_id acá, se decide por ctx.tenantId
         datetime: new Date(body.datetime),
         name: body.name,
         brand: body.brand,
@@ -131,7 +132,9 @@ export const phoneController = new Elysia({ prefix: "/phone" })
         ...(body.color && { color: body.color }),
         category: body.category,
         price: body.price,
+        currency_sale: body.currency_sale,
         buy_cost: body.buy_cost,
+        currency_buy: body.currency_buy,
         deposit: body.deposit,
         ...(body.sold !== undefined && { sold: body.sold }),
         ...(body.trade_in !== undefined && { trade_in: body.trade_in }),

@@ -86,7 +86,7 @@ export default function LoginForm() {
         const data = response.data;
 
         if (data?.ok) {
-          window.location.assign("/");
+          window.location.assign("/dashboard");
           return undefined;
         }
 
@@ -103,7 +103,7 @@ export default function LoginForm() {
   return (
     <div className="mx-auto w-full max-w-md space-y-6">
       <div className="space-y-2 text-center">
-        <h1 className="text-2xl font-bold tracking-tight">Iniciar sesión</h1>
+        <h1 className="text-xl font-base tracking-tight">Iniciar sesión en <span className="text-2xl font-bold">Zuma+</span></h1>
         <p className="text-muted-foreground text-sm">
           Accede a tu cuenta para continuar
         </p>
