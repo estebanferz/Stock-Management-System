@@ -17,7 +17,7 @@ const tenantDisplayName =
 
 const tenantLogoUrl =
   (tenantSettings?.logo_url?.trim?.() ? tenantSettings.logo_url : null)
-  ?? "/Suma-secondary.png"; // default
+  ?? "/zuma-secondary.png"; // default
 
 const dolarRes = await fetch("https://dolarapi.com/v1/dolares/blue");
 const dolarBlue = await dolarRes.json();
