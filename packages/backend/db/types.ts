@@ -99,6 +99,8 @@ export type TenantSettings = {
   timezone?: string | null;
   low_stock_threshold_default?: number | null;
   updated_at?: string | Date | null;
+  trial_ends_at?: Date | null;
+  subscription_status?: string | null;
 };
 
 export type UserSettings = {

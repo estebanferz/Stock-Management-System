@@ -1,9 +1,75 @@
-import { index, integer, pgTable, varchar, date, bigint, numeric, timestamp, boolean, text, pgEnum, serial, uniqueIndex, unique } from "drizzle-orm/pg-core";
+import { index, integer, pgTable, varchar, date, bigint, numeric, timestamp, boolean, text, pgEnum, serial, uniqueIndex, unique, jsonb } from "drizzle-orm/pg-core";
 import { type InferSelectModel, sql } from "drizzle-orm"
 
 export const userRoleEnum = pgEnum("user_role", ["admin", "user"]);
 
 export const tenantRoleEnum = pgEnum("tenant_role", ["owner", "admin", "staff"]);
+
+export const subscriptionStatusEnum = pgEnum("subscription_status", [
+  "inactive",
+  "pending",
+  "active",
+  "trial",  
+  "past_due",
+  "canceled",
+]);
+
+export const signupIntentStatusEnum = pgEnum("signup_intent_status", [
+  "created",     // se generó link de pago
+  "pending",     // usuario entró a MP / en proceso
+  "approved",    // pago/autorización OK (listo para crear cuenta)
+  "rejected",    // rechazado / falló
+  "expired",     // expiró / abandonado
+  "consumed",    // ya se creo user+tenant
+]);
+
+export const subscriptionPlanTable = pgTable("subscription_plans", {
+  plan_id: serial().primaryKey(),
+
+  key: varchar({ length: 64 }).notNull().unique(), // "starter", "pro"
+  name: varchar({ length: 255 }).notNull(),
+
+  price_amount: numeric({ precision: 12, scale: 2 }).notNull(),
+  currency: varchar({ length: 8 }).notNull().default("ARS"),
+
+  mp_preapproval_plan_id: varchar({ length: 128 }).notNull(), // MercadoPago ID
+
+  is_active: boolean().notNull().default(true),
+
+  created_at: timestamp({ withTimezone: true }).notNull().defaultNow(),
+});
+
+export const signupIntentTable = pgTable("signup_intents", {
+  intent_id: text("intent_id").primaryKey(),
+
+  email: varchar({ length: 255 }).notNull(),
+  password_hash: text("password_hash").notNull(),
+  plan_id: integer("plan_id")
+    .notNull()
+    .references(() => subscriptionPlanTable.plan_id),
+
+  status: signupIntentStatusEnum().notNull().default("created"),
+
+  // Mercado Pago: suscripción creada (preapproval)
+  mp_preapproval_id: varchar({ length: 128 }),
+
+  // URL que redirige al usuario para pagar/autorizar
+  mp_init_point: text("mp_init_point"),
+
+  // para correlacionar webhooks sin usuario
+  external_reference: varchar({ length: 128 }).notNull(), // ej: "signup:<intent_id>"
+
+  // opcional: cuando MP confirma, guardás timestamps
+  approved_at: timestamp({ withTimezone: true }),
+  consumed_at: timestamp({ withTimezone: true }),
+
+  created_at: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  updated_at: timestamp({ withTimezone: true }).notNull().defaultNow(),
+}, (t) => ({
+  emailIdx: index("signup_intents_email_idx").on(t.email),
+  statusIdx: index("signup_intents_status_idx").on(t.status),
+  extRefUnique: uniqueIndex("signup_intents_external_reference_unique").on(t.external_reference),
+}));
 
 export const userTable = pgTable("users", {
   user_id: serial().primaryKey(),
@@ -65,14 +131,47 @@ export const tenantSettingsTable = pgTable("tenant_settings", {
   logo_url: varchar({ length: 1024 }),
   cuit: varchar({ length: 32 }),
   address: varchar({ length: 255 }),
-
   display_currency: varchar({ length: 8 }).notNull().default("ARS"),
   timezone: varchar({ length: 64 }).notNull().default("America/Argentina/Buenos_Aires"),
-
   low_stock_threshold_default: integer().notNull().default(3),
 
   updated_at: timestamp({ withTimezone: true }).notNull().defaultNow(),
+
+  //billing
+  subscription_status: subscriptionStatusEnum()
+    .notNull()
+    .default("inactive"),
+
+  subscription_plan_id: integer("subscription_plan_id")
+    .references(() => subscriptionPlanTable.plan_id),
+  trial_ends_at: timestamp({ withTimezone: true }),
+
+  mp_preapproval_id: varchar({ length: 128 }), // suscripción del tenant
+  subscription_started_at: timestamp({ withTimezone: true }),
+  current_period_end: timestamp({ withTimezone: true }),
+
+  last_mp_event_at: timestamp({ withTimezone: true }),
+
 });
+
+export const mpEventTable = pgTable("mp_events", {
+  mp_event_id: text().primaryKey(), // id del evento MP
+
+  intent_id: text("intent_id")
+    .references(() => signupIntentTable.intent_id, { onDelete: "set null" }),
+
+  topic: varchar({ length: 64 }).notNull(), // preapproval, payment, etc
+  resource_id: varchar({ length: 128 }).notNull(),
+
+  tenant_id: integer("tenant_id")
+    .references(() => tenantTable.tenant_id, { onDelete: "cascade" }),
+
+  payload: jsonb().notNull(),
+
+  received_at: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  processed_at: timestamp({ withTimezone: true }),
+});
+
 
 export const sessionTable = pgTable("sessions", {
     session_id: text().primaryKey(),

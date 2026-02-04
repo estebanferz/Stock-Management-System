@@ -12,11 +12,16 @@ import { requireAuth } from "@/lib/requireAuth";
 import { NetIncomeCard } from '@/components/Dashboard/NetIncomeCard';
 import { InvestmentCard } from "@/components/Dashboard/InvestmentCard";
 import { DebtorsCard } from "@/components/Dashboard/DebtorsCard";
+import { BillingBanner } from "@/components/Billing/BillingBanner";
+
 
 const session = await requireAuth(Astro);
 if (!session) return Astro.redirect("/login");
 const { auth, cookieHeader } = session;
 const authed = { headers: { cookie: cookieHeader } };
+
+const subStatus = auth?.tenantSettings?.subscription_status ?? null;
+const trialEndsAt = auth?.tenantSettings?.trial_ends_at ?? null;
 
 type Currency = "ARS" | "USD" | "EUR" | "BRL";
 
@@ -94,6 +99,16 @@ const topExpenseTotal = top_expense_rows.reduce((acc: number, r: any) => acc + N
 ---
 
 <LayoutDashboard title="Zuma+" user={auth.user}>
+	<div class="px-3">
+		<BillingBanner
+			client:load
+			subscriptionStatus={subStatus}
+			trialEndsAt={trialEndsAt}
+			billingHref="/dashboard/billing"
+			appName="Zuma+"
+		/>
+	</div>
+
 	<h1 class="px-3 w-full text-left text-4xl text-gray-700 font-bold mt-5 mb-2">Bienvenido{auth.userSettings ? `, ${auth.userSettings.display_name?.split(" ")[0]}` : ""}</h1>
 	<p class="px-3 mb-8 text-sm text-gray-600 font-medium">Resumen completo de tu negocio con métricas clave</p>
 	<div class="px-3 grid grid-cols-1 lg:grid-cols-3 gap-3 mb-4 items-start">

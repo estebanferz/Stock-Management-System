@@ -81,6 +81,7 @@ export async function register(emailRaw: string, password: string): Promise<Serv
   const now = new Date();
   const expiresAt = addDays(now, SESSION_DAYS);
   const sessionId = makeSessionId();
+  const trialEndsAt = addDays(now, 7);
 
   const result = await db.transaction(async (tx) => {
     const insertedUser = await tx
@@ -125,6 +126,8 @@ export async function register(emailRaw: string, password: string): Promise<Serv
       display_currency: "ARS",
       timezone: "America/Argentina/Buenos_Aires",
       low_stock_threshold_default: 3,
+      subscription_status: "trial",
+      trial_ends_at: trialEndsAt,
     });
 
     // Session con tenant_id (OBLIGATORIO)
@@ -281,6 +284,10 @@ export async function me(sessionId?: string | null): Promise<MeOk | MeFail> {
       user_created_at: userTable.created_at,
       user_last_login: userTable.last_login,
 
+      //suscription
+      ts_subscription_status: tenantSettingsTable.subscription_status,
+      ts_trial_ends_at: tenantSettingsTable.trial_ends_at,
+
       // tenant base
       tenant_id: tenantTable.tenant_id,
       tenant_name: tenantTable.name,
@@ -348,6 +355,8 @@ export async function me(sessionId?: string | null): Promise<MeOk | MeFail> {
         timezone: r.ts_timezone ?? "America/Argentina/Buenos_Aires",
         low_stock_threshold_default: r.ts_low_stock ?? 3,
         updated_at: r.ts_updated_at ?? null,
+        trial_ends_at: r.ts_trial_ends_at ?? null,
+        subscription_status: r.ts_subscription_status ?? null,
       }
     : null;
   
