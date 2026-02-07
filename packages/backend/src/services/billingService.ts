@@ -2,6 +2,32 @@ import { db } from "@server/db/db";
 import { subscriptionPlanTable, tenantSettingsTable } from "@server/db/schema";
 import { eq } from "drizzle-orm";
 
+type MpMe = {
+  id: number;
+  site_id: string;
+  email?: string;
+};
+type MpPreapprovalPlan = {
+  id: string;
+  collector_id: number;
+  site_id: string;
+  auto_recurring?: {
+    currency_id?: string;
+  };
+};
+
+async function mpGetRaw<T = any>(path: string): Promise<{
+  ok: boolean;
+  status: number;
+  json: any;
+}> {
+  const r = await fetch(`https://api.mercadopago.com${path}`, {
+    headers: { Authorization: `Bearer ${MP_ACCESS_TOKEN}` },
+  });
+  const json = await r.json().catch(() => ({} as T));
+  return { ok: r.ok, status: r.status, json };
+}
+
 export async function getBillingStatus(tenantId: number) {
   const [ts] = await db
     .select({
@@ -135,6 +161,26 @@ export async function createSubscriptionForTenant(
     redirect_url: backUrl,
     return_url: backUrl,
   };
+
+  const me = await mpGetRaw<MpMe>("/users/me");
+
+  console.log(
+    "[MP][ME]",
+    me.json.id,
+    me.json.site_id,
+    me.json.email
+  );
+  const planInfo = await mpGetRaw<MpPreapprovalPlan>(
+  `/preapproval_plan/${plan.mp_preapproval_plan_id}`
+);  
+
+  console.log(
+    "[MP][PLAN]",
+    planInfo.json.id,
+    planInfo.json.collector_id,
+    planInfo.json.site_id,
+    planInfo.json.auto_recurring?.currency_id
+  );
 
   let mp: MpPreapprovalCreateResp;
   try {
