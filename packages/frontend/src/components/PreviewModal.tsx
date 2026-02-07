@@ -16,7 +16,7 @@ export function PreviewModal({
     mime,
 }: PreviewModalProps) {
     
-    const src = `/expense/${expenseId}/receipt`;
+    const src = `/api/expense/${expenseId}/receipt`;
 
     const isPdf = mime === "application/pdf" || (fileName?.toLowerCase().endsWith(".pdf") ?? false);
     const isImage = (mime?.startsWith("image/") ?? false);
