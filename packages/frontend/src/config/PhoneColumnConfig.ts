@@ -56,9 +56,14 @@ export const phoneColumns: Column<Phone>[] = [
         header: "Depósito",
         renderKey: "general",
     },
-       {
+    {
         accessorKey: "sold",
         header: "Vendido",
+        renderKey: "yesno",
+    },
+    {
+        accessorKey: "in_repair",
+        header: "Reparando",
         renderKey: "yesno",
     },
 

@@ -294,6 +294,7 @@ export const phoneTable = pgTable("phone", {
   sold: boolean().default(false).notNull(),
   trade_in: boolean().default(false),
   is_deleted: boolean().default(false),
+  in_repair: boolean().default(false),
 
   tenant_id: integer("tenant_id")
     .notNull()

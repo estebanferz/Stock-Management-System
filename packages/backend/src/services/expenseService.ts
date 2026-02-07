@@ -66,6 +66,7 @@ type AddExpenseInput = {
   category: string;
   description?: string | null;
   amount: string;
+  currency: string;
   payment_method: string;
   provider_id?: string | number | null;
   receipt?: File;
@@ -93,6 +94,7 @@ export async function addExpenseWithReceipt(
       category: normalizeShortString(input.category),
       description: input.description?.trim() ?? null,
       amount: input.amount,
+      currency: input.currency,
       payment_method: normalizeShortString(input.payment_method),
       provider_id,
       ...receiptData,
@@ -108,6 +110,7 @@ export async function updateExpenseWithReceipt(
     category?: string;
     description?: string | null;
     amount?: string;
+    currency?: string;
     payment_method?: string;
     provider_id?: string | number | null;
     receipt?: File;
@@ -137,10 +140,9 @@ export async function updateExpenseWithReceipt(
     category: body.category ? normalizeShortString(body.category) : undefined,
     description: body.description !== undefined ? body.description?.trim() ?? null : undefined,
     amount: body.amount,
+    currency: body.currency,
     payment_method: body.payment_method ? normalizeShortString(body.payment_method) : undefined,
     provider_id,
-    // auditoría opcional: si querés guardar el último editor
-    // updated_by_user_id: actorUserId,
   };
 
   if (body.receipt) {

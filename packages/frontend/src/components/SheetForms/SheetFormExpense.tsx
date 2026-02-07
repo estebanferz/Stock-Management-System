@@ -15,6 +15,7 @@ import { ChevronDown } from "lucide-react";
 import { clientApp } from "@/lib/clientAPI";
 import type { Expense } from "@server/db/schema";
 import { SheetClose } from "../ui/sheet";
+import { currencies } from "../Structures/currencies";
 
 const getLocalTime = () => {
   const today = new Date();
@@ -52,6 +53,7 @@ export function SheetFormExpense({
     category: isNested ? "Producto" : "",
     description: "",
     amount: `${injectedAmount || ""}`,
+    currency: "USD",
     payment_method: "Pago",
     provider_id: "",
   });
@@ -73,6 +75,7 @@ export function SheetFormExpense({
         category: row.category ?? "",
         description: row.description ?? "",
         amount: row.amount ?? "",
+        currency: row.currency ?? "USD",
         payment_method: row.payment_method ?? "",
         provider_id: String(row.provider_id) ?? "",
       });
@@ -93,6 +96,7 @@ export function SheetFormExpense({
         category: isNested ? "Producto" : "",
         description: "",
         amount: `${injectedAmount || ""}`,
+        currency: "USD",
         payment_method: "Pago",
         provider_id: "",
       });
@@ -136,6 +140,7 @@ export function SheetFormExpense({
         category: isNested ? "Producto" : "",
         description: "",
         amount: "",
+        currency: "USD",
         payment_method: "Pago",
         provider_id: "",
       });
@@ -258,16 +263,35 @@ export function SheetFormExpense({
         </div>
 
         <div className="grid gap-3">
-          <Label>Monto</Label>
-          <Input
-            id="amount"
-            form="form-expense"
-            type="number"
-            value={form.amount}
-            onChange={(e) => setForm({ ...form, amount: e.target.value })}
-            placeholder="0.00"
-            required
-          />
+        <Label>Monto</Label>
+          <div className="grid grid-cols-3 gap-2">
+            <div className="col-span-2">
+              <Input
+                id="amount"
+                form="form-expense" 
+                type="number" 
+                value={form.amount} 
+                onChange={(e) => setForm({...form, amount: e.target.value})} 
+                required />
+            </div>
+
+            <div className="col-span-1">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" className="ml-auto w-full justify-between font-normal bg-black text-white">
+                    {form.currency} <ChevronDown />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  {currencies.map((method) => (
+                    <DropdownMenuItem key={method.value} onClick={() => setForm({...form, currency: method.value})}>
+                      {method.label}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          </div>
         </div>
 
         <div className="grid gap-3">

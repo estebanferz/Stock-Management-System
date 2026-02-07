@@ -1,0 +1,1 @@
+ALTER TABLE "phone" ADD COLUMN "in_repair" boolean DEFAULT false;

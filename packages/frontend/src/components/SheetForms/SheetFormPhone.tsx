@@ -19,6 +19,7 @@ import { ChevronDown} from "lucide-react"
 import { Checkbox } from "@/components/ui/checkbox"
 import type { Phone } from "@server/db/schema"
 import { currencies } from "../Structures/currencies"
+import { generalStringFormat } from "@/utils/formatters"
 
 interface SheetFormPhoneProps {
   isOpen?: boolean;
@@ -344,7 +345,9 @@ return (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" className="ml-auto w-full justify-between font-normal">
-                {form.device_type} <ChevronDown />
+                {form.device_type == "just-one" 
+                  ? "Unitario"
+                  : "Con stock" } <ChevronDown />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
@@ -393,7 +396,7 @@ return (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" className="ml-auto w-full justify-between font-normal">
-                {form.storage_capacity} <ChevronDown />
+                {`${form.storage_capacity} GB`} <ChevronDown />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
@@ -421,7 +424,7 @@ return (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" className="ml-auto w-full justify-between font-normal">
-                {form.category} <ChevronDown />
+                {generalStringFormat(form.category)} <ChevronDown />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">

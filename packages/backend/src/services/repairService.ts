@@ -115,7 +115,29 @@ export const addRepair = async (
     internal_cost: newRepair.internal_cost,
   };
 
-  return await db.insert(repairTable).values(normalizedRepair).returning();
+  return await db.transaction(async (tx) => {
+    const inserted = await tx
+      .insert(repairTable)
+      .values(normalizedRepair)
+      .returning();
+
+    const upd = await tx
+      .update(phoneTable)
+      .set({ in_repair: true })
+      .where(
+        and(
+          eq(phoneTable.tenant_id, tenantId),
+          eq(phoneTable.device_id, newRepair.device_id),
+        )
+      )
+      .returning({ device_id: phoneTable.device_id });
+
+    if (upd.length === 0) {
+      throw new Error("DEVICE_UPDATE_FAILED");
+    }
+
+    return inserted;
+  });
 };
 
 export const updateRepair = async (
@@ -152,11 +174,46 @@ export const updateRepair = async (
     diagnostic: repair_upd.diagnostic ? repair_upd.diagnostic.trim() : undefined,
   };
 
-  return await db
-    .update(repairTable)
-    .set(normalizedUpd)
-    .where(and(eq(repairTable.tenant_id, tenantId), eq(repairTable.repair_id, repair_id)))
-    .returning();
+  return await db.transaction(async (tx) => {
+    // 1) Traigo el registro actual para saber device_id y estado previo
+    const prev = await tx
+      .select({
+        device_id: repairTable.device_id,
+        repair_state: repairTable.repair_state,
+      })
+      .from(repairTable)
+      .where(and(eq(repairTable.tenant_id, tenantId), eq(repairTable.repair_id, repair_id)))
+      .limit(1);
+
+    if (!prev[0]) throw new Error("REPAIR_NOT_FOUND");
+
+    const prevState = normalizeShortString(String(prev[0].repair_state ?? ""));
+    const nextState =
+      normalizedUpd.repair_state !== undefined ? normalizedUpd.repair_state : prevState;
+
+    // Si cambian el device_id en el update, usamos el nuevo; si no, el anterior
+    const targetDeviceId = normalizedUpd.device_id ?? prev[0].device_id;
+
+    // 2) Update repair
+    const updated = await tx
+      .update(repairTable)
+      .set(normalizedUpd)
+      .where(and(eq(repairTable.tenant_id, tenantId), eq(repairTable.repair_id, repair_id)))
+      .returning();
+
+    // 3) Si pasa a "listo" (y antes no lo estaba), liberar el dispositivo
+    if (nextState === "entregado" && prevState !== "entregado") {
+      const updPhone = await tx
+        .update(phoneTable)
+        .set({ in_repair: false })
+        .where(and(eq(phoneTable.tenant_id, tenantId), eq(phoneTable.device_id, targetDeviceId)))
+        .returning({ device_id: phoneTable.device_id });
+
+      if (updPhone.length === 0) throw new Error("DEVICE_UPDATE_FAILED");
+    }
+
+    return updated;
+  });
 };
 
 export async function softDeleteRepair(tenantId: number, id: number) {

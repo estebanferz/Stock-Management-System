@@ -218,6 +218,13 @@
       "when": 1770146493375,
       "tag": "0030_milky_vance_astro",
       "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1770484177204,
+      "tag": "0031_perpetual_caretaker",
+      "breakpoints": true
     }
   ]
 }
