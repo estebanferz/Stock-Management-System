@@ -1,6 +1,6 @@
 import { Elysia, t } from "elysia";
 import { protectedController } from "../util/protectedController";
-import { getBillingStatus, createSubscriptionForTenant } from "../services/billingService";
+import { getBillingStatus, createSubscriptionForTenant, cancelSubscriptionForTenant } from "../services/billingService";
 
 const DEFAULT_PLAN_KEY = "pro";
 
@@ -48,4 +48,22 @@ export const billingController = new Elysia({ prefix: "/billing" })
       }),
       detail: { summary: "Create MP subscription (card token)", tags: ["billing"] },
     }
+  )
+  .post(
+    "/cancel",
+    protectedController(async (ctx) => {
+      const role = ctx.roleInTenant;
+      if (role !== "owner" && role !== "admin") {
+        ctx.set.status = 403;
+        return { ok: false, message: "No autorizado para cancelar la suscripción." };
+      }
+
+      const result = await cancelSubscriptionForTenant(ctx.tenantId);
+      if (!result.ok) {
+        ctx.set.status = result.status;
+        return { ok: false, message: result.message };
+      }
+      return result;
+    }),
+    { detail: { summary: "Cancel MP subscription", tags: ["billing"] } }
   );

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { EditableRow } from "./EditableRow";
@@ -6,6 +6,7 @@ import { EditableRow } from "./EditableRow";
 import { CurrencyButtonsRow } from "@/components/CurrencyButtonRow";
 import { clientApp } from "@/lib/clientAPI";
 import { LogoRow } from "./LogoRow";
+import { Button } from "./ui/button";
 
 type Props = {
   initial: {
@@ -17,16 +18,120 @@ type Props = {
   };
 };
 
+function fmtDateAR(iso?: string | null) {
+  if (!iso) return "—";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "—";
+  return d.toLocaleString("es-AR", { dateStyle: "medium", timeStyle: "short" });
+}
+
+type BillingPlan = {
+  plan_id: number;
+  key: string;
+  name: string;
+  price_amount: string | number;
+  currency: string;
+  is_active: boolean;
+};
+
+type IsoDateLike = string | Date;
+
+type BillingStatusResp = {
+  ok: boolean;
+  tenant: {
+    subscription_status: string | null;
+    trial_ends_at: IsoDateLike | null;
+    subscription_plan_id: number | null;
+    mp_preapproval_id: string | null;
+    current_period_end: IsoDateLike | null;
+  } | null;
+  plans: BillingPlan[];
+  now: string;
+};
+
+function statusLabel(s?: string | null) {
+  switch (s) {
+    case "active": return "Activa";
+    case "pending": return "Pendiente";
+    case "past_due": return "Pago rechazado";
+    case "canceled": return "Cancelada";
+    case "trial": return "Trial";
+    case "inactive":
+    default: return "Inactiva";
+  }
+}
+
+function statusBadgeVariant(s?: string | null): "default" | "secondary" | "destructive" | "outline" {
+  switch (s) {
+    case "active": return "default";
+    case "pending": return "secondary";
+    case "past_due": return "destructive";
+    case "canceled": return "outline";
+    case "trial": return "secondary";
+    default: return "outline";
+  }
+}
+
 export default function ProfileEditor({ initial }: Props) {
     const [userSettings, setUserSettings] = useState(initial.userSettings ?? null);
 
     const [tenant, setTenant] = useState(initial.tenant);
     const [tenantSettings, setTenantSettings] = useState(initial.tenantSettings);
+    const [billingLoading, setBillingLoading] = useState(false);
+    const [billingError, setBillingError] = useState<string | null>(null);
+    const [billing, setBilling] = useState<BillingStatusResp | null>(null);
+    const [cancelLoading, setCancelLoading] = useState(false);
 
     const canEditTenant = initial.roleInTenant === "owner" || initial.roleInTenant === "admin";
+    
+    async function refreshBilling() {
+      setBillingError(null);
+      setBillingLoading(true);
+      try {
+        const res = await clientApp.billing.status.get();
+        setBilling(res.data);
+      } catch (e: any) {
+        setBillingError(e?.message ?? "No se pudo cargar el estado de suscripción.");
+      } finally {
+        setBillingLoading(false);
+      }
+    }
+
+    useEffect(() => {
+      refreshBilling();
+    }, []);
+
+    const sub = billing?.tenant;
+    const subStatus = (sub?.subscription_status ?? "inactive") as string;
+
+    const plan = useMemo(() => {
+      if (!billing?.tenant?.subscription_plan_id) return null;
+      return (
+        billing.plans.find(
+          p => p.plan_id === billing.tenant!.subscription_plan_id
+        ) ?? null
+      );
+    }, [billing]);
+    
+    const canCancel =
+      canEditTenant &&
+      (subStatus === "active" || subStatus === "pending" || subStatus === "past_due") &&
+      !!sub?.mp_preapproval_id;
+
+    async function onCancelSubscription() {
+      if (!canCancel) return;
+      setCancelLoading(true);
+      try {
+        const r = await clientApp.billing.cancel.post();
+        if (!(r.data as any)?.ok) throw new Error((r.data as any)?.message ?? "No se pudo cancelar");
+        await refreshBilling();
+      } finally {
+        setCancelLoading(false);
+      }
+    }
 
     async function patchUserSettings(patch: any) {
-        const res = await clientApp.user.me["settings"].patch(patch); // ajusta path según tu client
+        const res = await clientApp.user.me["settings"].patch(patch);
         setUserSettings(res.data);
     }
 
@@ -170,6 +275,70 @@ export default function ProfileEditor({ initial }: Props) {
                 return patchTenantSettings({ low_stock_threshold_default: n });
                 }}
             /> */}
+        </CardContent>
+      </Card>
+      <Card className="rounded-2xl shadow-md">
+        <CardHeader>
+          <CardTitle>Suscripción</CardTitle>
+          <CardDescription>Estado de MercadoPago para esta empresa</CardDescription>
+        </CardHeader>
+
+        <CardContent className="space-y-3">
+          {!billing && billingLoading ? (
+            <div className="text-sm text-muted-foreground">Cargando...</div>
+          ) : (
+            <>
+              <div className="flex flex-wrap items-center gap-2 flex-row">
+                <div className="w-1/3 flex items-center justify-center text-slate-800 font-bold ">
+                    {statusLabel(subStatus)}
+                </div>
+
+                <div className="border border-r-neutral-700 h-12" />
+
+                <div className="flex flex-col text-sm font-semibold text-slate-700">
+                  {plan ? (
+                      `Plan: ${plan.name} (${String(plan.price_amount)} ${String(plan.currency)})`
+                  ) : (
+                      "Plan: —"
+                  )}
+
+                  <div className="text-xs text-slate-500">
+                    Próximo período: {sub?.current_period_end ? new Date(sub.current_period_end).toLocaleDateString("es-AR") : "—"}
+                  </div>
+                </div>
+              </div>
+
+
+              <div className="flex flex-wrap gap-2 justify-end">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={refreshBilling}
+                  disabled={billingLoading}
+                >
+                  Recargar
+                </Button>
+
+                <Button
+                  type="button"
+                  variant="destructive"
+                  size="sm"
+                  onClick={onCancelSubscription}
+                  disabled={!canCancel || cancelLoading}
+                  title={!canEditTenant ? "Solo owner/admin" : undefined}
+                >
+                  {cancelLoading ? "Cancelando..." : "Cancelar suscripción"}
+                </Button>
+              </div>
+
+              {!canEditTenant && (
+                <div className="text-xs text-muted-foreground">
+                  Solo owner/admin puede cancelar la suscripción.
+                </div>
+              )}
+            </>
+          )}
         </CardContent>
       </Card>
     </div>

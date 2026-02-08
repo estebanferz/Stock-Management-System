@@ -164,24 +164,6 @@ export async function createSubscriptionForTenant(
 
   const me = await mpGetRaw<MpMe>("/users/me");
 
-  console.log(
-    "[MP][ME]",
-    me.json.id,
-    me.json.site_id,
-    me.json.email
-  );
-  const planInfo = await mpGetRaw<MpPreapprovalPlan>(
-  `/preapproval_plan/${plan.mp_preapproval_plan_id}`
-);  
-
-  console.log(
-    "[MP][PLAN]",
-    planInfo.json.id,
-    planInfo.json.collector_id,
-    planInfo.json.site_id,
-    planInfo.json.auto_recurring?.currency_id
-  );
-
   let mp: MpPreapprovalCreateResp;
   try {
     mp = await mpPost<MpPreapprovalCreateResp>("/preapproval", mpBody);
@@ -225,5 +207,86 @@ export async function createSubscriptionForTenant(
     init_point: initPoint,
     preapproval_id: mp.id,
     subscription_status: "pending",
+  };
+}
+
+async function mpPut<T>(path: string, body: any): Promise<T> {
+  const r = await fetch(`https://api.mercadopago.com${path}`, {
+    method: "PUT",
+    headers: {
+      Authorization: `Bearer ${MP_ACCESS_TOKEN}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(body),
+  });
+
+  const json = await r.json().catch(() => ({}));
+  if (!r.ok) {
+    console.error("[MP] PUT failed", { path, status: r.status, json });
+    throw new Error(`MP PUT ${path} failed (${r.status}): ${JSON.stringify(json)}`);
+  }
+  return json as T;
+}
+
+type MpPreapprovalGet = {
+  id: string;
+  status?: string; // authorized / pending / cancelled / paused, etc.
+  next_payment_date?: string | null;
+  payer_email?: string;
+  preapproval_plan_id?: string;
+  external_reference?: string;
+};
+
+export async function cancelSubscriptionForTenant(
+  tenantId: number
+): Promise<
+  | { ok: true; status: 200; mp_preapproval_id: string; mp_status: string | null }
+  | { ok: false; status: number; message: string }
+> {
+  // 1) buscar preapproval_id actual
+  const [ts] = await db
+    .select({
+      subscription_status: tenantSettingsTable.subscription_status,
+      mp_preapproval_id: tenantSettingsTable.mp_preapproval_id,
+    })
+    .from(tenantSettingsTable)
+    .where(eq(tenantSettingsTable.tenant_id, tenantId))
+    .limit(1);
+
+  const preapprovalId = ts?.mp_preapproval_id;
+  if (!preapprovalId) {
+    return { ok: false, status: 404, message: "No hay suscripción asociada a este tenant." };
+  }
+
+  // 2) cancelar en MP
+  let mpUpdated: { id: string; status?: string };
+  try {
+    mpUpdated = await mpPut<{ id: string; status?: string }>(`/preapproval/${preapprovalId}`, {
+      status: "cancelled",
+    });
+  } catch (e: any) {
+    return { ok: false, status: 502, message: e?.message ?? "MercadoPago error" };
+  }
+
+  // (opcional pero recomendado) 3) traer “source of truth” para guardar next_payment_date / status final
+  const mpTruth = await mpGetRaw<MpPreapprovalGet>(`/preapproval/${preapprovalId}`);
+  const mpStatus = (mpTruth?.json?.status ?? mpUpdated?.status ?? null) as string | null;
+  const nextPaymentDate = (mpTruth?.json?.next_payment_date ?? null) as string | null;
+
+  // 4) reflejar en DB (el webhook después también lo va a reconfirmar)
+  await db
+    .update(tenantSettingsTable)
+    .set({
+      subscription_status: "canceled" as any,
+      current_period_end: nextPaymentDate ? new Date(nextPaymentDate) : null,
+      last_mp_event_at: new Date(),
+    })
+    .where(eq(tenantSettingsTable.tenant_id, tenantId));
+
+  return {
+    ok: true,
+    status: 200,
+    mp_preapproval_id: preapprovalId,
+    mp_status: mpStatus,
   };
 }

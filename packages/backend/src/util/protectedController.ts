@@ -57,7 +57,6 @@ export function protectedController<TResult>(
     ctx.tenantId = result.tenant.id;
     ctx.roleInTenant = result.roleInTenant;
 
-    // ✅ defaults seguros para no bloquear por “null join”
     ctx.tenantSettings = (result.tenantSettings ?? {
       display_currency: "ARS",
       subscription_status: "inactive",
@@ -91,7 +90,6 @@ export function protectedController<TResult>(
 
       const isActive = status === "active";
 
-      // ✅ IMPORTANTE: pending NO habilita el acceso total
       if (!(isActive || trialValid)) {
         ctx.set.status = 402;
         return {
