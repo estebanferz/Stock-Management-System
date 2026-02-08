@@ -17,6 +17,7 @@ export async function getPhonesByFilter(
     trade_in?: string;
     sold?: string;
     is_deleted?: boolean;
+    in_repair?: string;
   }
 ) {
   return await db
@@ -54,6 +55,7 @@ export async function getPhonesByFilter(
           : undefined,
 
         filters.sold !== undefined ? eq(phoneTable.sold, filters.sold === "true") : undefined,
+        filters.in_repair !== undefined ? eq(phoneTable.in_repair, filters.in_repair === "true") : undefined,
 
         filters.is_deleted !== undefined ? eq(phoneTable.is_deleted, filters.is_deleted) : undefined
       )

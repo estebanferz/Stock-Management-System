@@ -32,7 +32,8 @@ export const phoneController = new Elysia({ prefix: "/phone" })
         query.device_type ||
         query.trade_in ||
         query.sold ||
-        query.is_deleted
+        query.is_deleted ||
+        query.in_repair
       ) {
         return await getPhonesByFilter(tenantId, {
           device: query.device,
@@ -44,6 +45,7 @@ export const phoneController = new Elysia({ prefix: "/phone" })
           device_type: query.device_type,
           trade_in: query.trade_in,
           sold: query.sold,
+          in_repair: query.in_repair,
           is_deleted: query.is_deleted === undefined ? undefined : query.is_deleted === "true",
         });
       }

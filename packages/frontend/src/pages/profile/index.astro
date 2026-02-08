@@ -7,12 +7,10 @@ import ProfileEditor from "@/components/ProfileEditor";
 const auth = await requireAuth(Astro);
 if (!auth) return Astro.redirect("/login");
 
-console.log("AUTH FROM REQUIREAUTH:", auth.auth);
-
 const { user, tenant, roleInTenant, tenantSettings, userSettings } = auth.auth;
 ---
 
-<LayoutProfile>
+<LayoutProfile title="Zuma+ - Perfil" topic="Configuración">
   <Fragment slot="content">
     <ProfileEditor
       initial={{

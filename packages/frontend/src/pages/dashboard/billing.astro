@@ -1,8 +1,8 @@
 ---
-import LayoutDashboard from "@/layouts/LayoutDashboard.astro";
 import { requireAuth } from "@/lib/requireAuth";
 import { serverApp } from "@/lib/serverAPI";
 import { SubscribeCard } from "@/components/Billing/SubscribeCard";
+import LayoutProfile from "@/layouts/LayoutProfile.astro";
 
 const session = await requireAuth(Astro);
 if (!session) return Astro.redirect("/login");
@@ -54,17 +54,12 @@ const fmtMoney = (amount: any, currency: any) =>
   }).format(Number(amount ?? 0));
 ---
 
-<LayoutDashboard title="Zuma+ Billing" user={auth.user}>
-  <div class="px-3 mt-6">
-    <h1 class="text-3xl font-bold text-gray-700">Facturación</h1>
-    <p class="text-sm text-gray-600 mt-1">
-      Gestioná tu suscripción y el estado de tu cuenta.
-    </p>
-  </div>
+<LayoutProfile title="Zuma+ - Subscripción" topic="Facturación">
+    <Fragment slot="content">
 
-  <div class="px-3 mt-6 grid grid-cols-1 lg:grid-cols-3 gap-3 items-start">
+  <div class="mt-6 space-y-3 items-start">
     <!-- Estado actual -->
-    <div class="bg-white rounded-2xl shadow-lg p-5 lg:col-span-1">
+    <div class="bg-white rounded-2xl shadow-lg p-5">
       <div class="flex items-start justify-between gap-3">
         <div>
           <div class="text-sm font-semibold text-gray-900">Estado de la cuenta</div>
@@ -79,7 +74,7 @@ const fmtMoney = (amount: any, currency: any) =>
         </div>
 
         <div class="rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-xs text-gray-600">
-          Tenant #{String(auth.tenant?.id ?? "")}
+          {String(auth.tenant?.name ?? "")}
         </div>
       </div>
 
@@ -140,36 +135,20 @@ const fmtMoney = (amount: any, currency: any) =>
     </div>
 
     <!-- Planes disponibles -->
-    <div class="bg-white rounded-2xl shadow-lg p-5 lg:col-span-2">
-      <div class="flex items-center justify-between">
-        <div>
-          <div class="text-sm font-semibold text-gray-900">Planes</div>
-          <div class="text-xs text-gray-600 mt-1">Elegí un plan para continuar usando Zuma+.</div>
-        </div>
-      </div>
-
-      <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
-        {plans
-          .filter((p: any) => p.is_active)
-          .map((p: any) => (
-            <SubscribeCard
-              client:load
-              planKey={String(p.key)}
-              planName={String(p.name)}
-              priceLabel={`${fmtMoney(p.price_amount, p.currency)} / mes`}
-              isCurrent={Boolean(currentPlanId && p.plan_id === currentPlanId)}
-              subscriptionStatus={subscriptionStatus}
-              trialDaysLeft={trialDaysLeft}
-            />
-          ))}
-      </div>
-
-      <div class="mt-4 text-xs text-gray-500">
-        * La activación puede demorar unos minutos en reflejarse (webhook).
-      </div>
+    <div class="bg-white rounded-2xl shadow-lg p-5">
+      <SubscribeCard
+        client:load
+        plans={plans}
+        currentPlanId={currentPlanId}
+        subscriptionStatus={subscriptionStatus}
+        trialDaysLeft={trialDaysLeft}
+        nowIso={nowIso}
+        tenantName={String(auth.tenant?.name ?? "")}
+      />
     </div>
   </div>
-</LayoutDashboard>
+    </Fragment>
+</LayoutProfile>
 
 
 <script is:inline src="https://sdk.mercadopago.com/js/v2"></script>

@@ -39,6 +39,7 @@ async function searchDevices(params: DeviceSearchParams): Promise<DeviceRow[]> {
         params.battery_min === "any" ? undefined : params.battery_min,
       is_deleted: false,
       sold: false,
+      in_repair: false,
     },
   });
 
