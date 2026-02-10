@@ -8,10 +8,11 @@
     "dev": "bun run --watch src/index.ts",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "migrate": "bun drizzle-kit generate && bun drizzle-kit migrate",
+    "generate": "bun drizzle-kit generate",
+    "migrate": "bun drizzle-kit migrate",
+    "docker:prod": "bun install && bun run build && ./build/server",
     "docker:dev": "bun install && bun dev",
-    "build": "bun build src/index.ts --minify-whitespace --minify-syntax --target bun --compile --outfile ./build/server",
-    "docker:prod": "bun install && bun run build && ./build/server"
+    "build": "bun build src/index.ts --minify-whitespace --minify-syntax --target bun --compile --outfile ./build/server"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.17",
