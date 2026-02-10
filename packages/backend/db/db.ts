@@ -4,6 +4,6 @@ import postgres from 'postgres';
 import * as schema from "./schema";
 
 
-export const connection = await postgres(Bun.env.DB_URL as string);
+export const connection = await postgres(process.env.DB_URL as string);
 
 export const db = drizzle(connection, { schema });
