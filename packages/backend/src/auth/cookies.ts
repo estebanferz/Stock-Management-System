@@ -1,7 +1,19 @@
-export function buildSessionCookie(name: string, value: string, maxAgeSec: number) {
-  return `${name}=${encodeURIComponent(value)}; Max-Age=${maxAgeSec}; Path=/; HttpOnly; Secure; SameSite=None`;
+export function buildSessionCookie(
+  name: string,
+  value: string,
+  maxAgeSeconds: number,
+) {
+  const isProd = process.env.NODE_ENV === "production";
+
+  return `${name}=${value}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${maxAgeSeconds}${
+    isProd ? "; Secure" : ""
+  }`;
 }
 
 export function clearSessionCookie(name: string) {
-  return `${name}=; Max-Age=0; Path=/; HttpOnly; Secure; SameSite=None`;
+  const isProd = process.env.NODE_ENV === "production";
+
+  return `${name}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0${
+    isProd ? "; Secure" : ""
+  }`;
 }

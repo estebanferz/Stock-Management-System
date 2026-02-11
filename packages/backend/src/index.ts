@@ -23,8 +23,7 @@ const port = Number(process.env.PORT ?? 3000);
 const app = new Elysia({prefix: '/api'})
   .use(cors({ origin: [
     process.env.PUBLIC_FRONTEND_URL,
-  ].filter(Boolean) as (string | RegExp)[],
-    credentials: true, }))
+  ].filter(Boolean) as (string | RegExp)[]}))
   .get("/", () => {
     return { message: "app" };
   })
