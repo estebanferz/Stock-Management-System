@@ -1,5 +1,5 @@
 import { and, eq } from "drizzle-orm";
-import { db } from "@server/db/db"; // ajustá si tu import es distinto
+import { db } from "@server/db/db";
 import {
   tenantTable,
   tenantSettingsTable,
@@ -7,6 +7,8 @@ import {
   tenantMembershipTable,
 } from "@server/db/schema";
 import type { TenantRole } from "../util/protectedController";
+import { presignPut, presignGet } from "../lib/s3";
+import { sql } from "drizzle-orm";
 
 function assertOwnerOrAdmin(role: TenantRole) {
   if (role !== "owner" && role !== "admin") {
@@ -46,10 +48,11 @@ export async function getCurrentTenant(tenantId: number) {
 
 export type TenantSettingsUpsert = Partial<{
   business_name: string | null;
-  logo_url: string | null;
+  logo_key: string | null;
+  logo_mime: string | null;
   cuit: string | null;
   address: string | null;
-  default_currency: string;
+  display_currency: string;
   timezone: string;
   low_stock_threshold_default: number;
 }>;
@@ -148,7 +151,8 @@ export async function patchMyTenantSettings(
   userId: number,
   patch: Partial<{
     business_name: string | null;
-    logo_url: string | null;
+    logo_key: string | null;
+    logo_mime: string | null;
     cuit: string | null;
     address: string | null;
     display_currency: string;
@@ -176,4 +180,94 @@ export async function patchMyTenantSettings(
     .returning();
 
   return row;
+}
+
+const LOGO_ALLOWED_TYPES = ["image/png", "image/jpeg", "image/webp"] as const;
+const LOGO_MAX_SIZE = 5 * 1024 * 1024;
+
+function isAllowedLogoType(v: string): v is (typeof LOGO_ALLOWED_TYPES)[number] {
+  return (LOGO_ALLOWED_TYPES as readonly string[]).includes(v);
+}
+
+function makeLogoKey(tenantId: number, filename: string) {
+  const ext = (filename.split(".").pop() || "bin").toLowerCase().replace(/[^a-z0-9]/g, "");
+  const ts = Date.now();
+  const rand = crypto.randomUUID();
+  return `tenants/${tenantId}/logo/${ts}-${rand}.${ext}`;
+}
+
+export async function presignTenantLogoUpload(
+  tenantId: number,
+  roleInTenant: TenantRole,
+  input: { contentType: string; filename: string; size: number }
+): Promise<{ ok: true; key: string; putUrl: string } | { ok: false; status: number; message: string }> {
+  assertOwnerOrAdmin(roleInTenant);
+
+  if (!isAllowedLogoType(input.contentType)) {
+    return { ok: false, status: 400, message: "INVALID_LOGO_TYPE" };
+  }
+  if (input.size > LOGO_MAX_SIZE) {
+    return { ok: false, status: 400, message: "LOGO_TOO_LARGE" };
+  }
+
+  const key = makeLogoKey(tenantId, input.filename);
+  const putUrl = await presignPut({ key, contentType: input.contentType, expiresInSec: 60 * 5 });
+  return { ok: true, key, putUrl };
+}
+
+export async function linkTenantLogo(
+  tenantId: number,
+  roleInTenant: TenantRole,
+  input: { key: string; contentType: string }
+): Promise<{ ok: true } | { ok: false; status: number; message: string }> {
+  assertOwnerOrAdmin(roleInTenant);
+
+  if (!isAllowedLogoType(input.contentType)) {
+    return { ok: false, status: 400, message: "INVALID_LOGO_TYPE" };
+  }
+
+  const now = new Date();
+
+  await db
+    .insert(tenantSettingsTable)
+    .values({
+      tenant_id: tenantId,
+      logo_key: input.key,
+      logo_mime: input.contentType,
+      logo_updated_at: now,
+      updated_at: now,
+    })
+    .onConflictDoUpdate({
+      target: tenantSettingsTable.tenant_id,
+      set: {
+        logo_key: input.key,
+        logo_mime: input.contentType,
+        logo_updated_at: now,
+        updated_at: now,
+      },
+    });
+
+  return { ok: true };
+}
+
+export async function getTenantLogoSignedUrl(tenantId: number) {
+  const [s] = await db
+    .select({
+      logo_key: tenantSettingsTable.logo_key,
+      logo_mime: tenantSettingsTable.logo_mime,
+    })
+    .from(tenantSettingsTable)
+    .where(eq(tenantSettingsTable.tenant_id, tenantId))
+    .limit(1);
+
+  if (!s?.logo_key) return null;
+
+  // inline, con filename fijo (si querés)
+  const disposition = `inline; filename="logo"`;
+
+  return presignGet({
+    key: s.logo_key,
+    expiresInSec: 60 * 10,
+    responseContentDisposition: disposition,
+  });
 }

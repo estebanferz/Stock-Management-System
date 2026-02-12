@@ -28,9 +28,9 @@ async function mpCreatePlan(body: any): Promise<MpCreatePlanRes> {
 }
 
 async function main() {
-  const key = "test_15ars";
-  const name = "Zuma+ TEST PROD";
-  const price_amount = "15.00";
+  const key = "zuma_pro";
+  const name = "Zuma+ Pro";
+  const price_amount = "45000.00";
   const currency = "ARS";
 
   const existing = await db
@@ -81,9 +81,19 @@ async function main() {
       transaction_amount: Number(price_amount),
       currency_id: currency,
     },
-    back_url: process.env.APP_BILLING_RETURN_URL ?? "https://stock-management-system-5ids.onrender.com/dashboard/billing",
+    back_url: "https://zumaplus.com.ar/dashboard/billing",
     status: "active",
   };
+
+  const raw = process.env.APP_BILLING_RETURN_URL ?? "https://zumaplus.com.ar/dashboard/billing";
+console.log("back_url raw:", JSON.stringify(raw));
+
+const back_url = raw.trim();
+new URL(back_url);
+
+console.log("back_url final:", back_url);
+console.log("mpPayload:", JSON.stringify({ ...mpPayload, back_url }, null, 2));
+
 
   const mp = await mpCreatePlan(mpPayload);
 

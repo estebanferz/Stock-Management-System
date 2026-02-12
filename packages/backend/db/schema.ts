@@ -128,7 +128,11 @@ export const tenantSettingsTable = pgTable("tenant_settings", {
     .references(() => tenantTable.tenant_id, { onDelete: "cascade" }),
 
   business_name: varchar({ length: 255 }),
-  logo_url: varchar({ length: 1024 }),
+
+  logo_key: varchar({ length: 1024 }),          // tenants/12/logo/170...-abcd.png
+  logo_mime: varchar({ length: 100 }),          // image/png, image/jpeg, image/webp
+  logo_updated_at: timestamp({ withTimezone: true }),
+
   cuit: varchar({ length: 32 }),
   address: varchar({ length: 255 }),
   display_currency: varchar({ length: 8 }).notNull().default("ARS"),
@@ -137,21 +141,18 @@ export const tenantSettingsTable = pgTable("tenant_settings", {
 
   updated_at: timestamp({ withTimezone: true }).notNull().defaultNow(),
 
-  //billing
-  subscription_status: subscriptionStatusEnum()
-    .notNull()
-    .default("inactive"),
+  // billing
+  subscription_status: subscriptionStatusEnum().notNull().default("inactive"),
 
   subscription_plan_id: integer("subscription_plan_id")
     .references(() => subscriptionPlanTable.plan_id),
   trial_ends_at: timestamp({ withTimezone: true }),
 
-  mp_preapproval_id: varchar({ length: 128 }), // suscripción del tenant
+  mp_preapproval_id: varchar({ length: 128 }),
   subscription_started_at: timestamp({ withTimezone: true }),
   current_period_end: timestamp({ withTimezone: true }),
 
   last_mp_event_at: timestamp({ withTimezone: true }),
-
 });
 
 export const mpEventTable = pgTable("mp_events", {
@@ -255,10 +256,13 @@ export const expenseTable = pgTable("expense", {
   amount: numeric({ precision: 12, scale: 2 }).notNull(),
   currency: varchar({ length: 8 }).notNull().default("USD"),
   payment_method: varchar({ length: 50 }).notNull(),
-  receipt_path: varchar({ length: 255 }),
+
+  receipt_key: varchar({ length: 1024 }),          // ej: tenants/12/expenses/99/170...-abcd.pdf
   receipt_original_name: varchar({ length: 255 }),
   receipt_mime: varchar({ length: 100 }),
   receipt_size: integer(),
+  receipt_uploaded_at: timestamp(),
+
   provider_id: integer().references(() => providerTable.provider_id),
   is_deleted: boolean().default(false),
   sale_id: integer().references(() => saleTable.sale_id),
@@ -274,6 +278,7 @@ export const expenseTable = pgTable("expense", {
   tenantDatetimeIdx: index("expense_tenant_datetime_idx").on(t.tenant_id, t.datetime),
 }));
 export type Expense = InferSelectModel<typeof expenseTable>;
+
 
 export const phoneTable = pgTable("phone", {
   device_id: integer().primaryKey().generatedAlwaysAsIdentity(),

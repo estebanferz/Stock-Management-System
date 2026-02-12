@@ -1,0 +1,1 @@
+ALTER TABLE "expense" ALTER COLUMN "receipt_uploaded_at" SET DATA TYPE timestamp;

@@ -92,13 +92,17 @@ export type AuthTenant = {
 
 export type TenantSettings = {
   business_name?: string | null;
-  logo_url?: string | null;
+  logo_key?: string | null;
+  logo_mime?: string | null;
+  logo_updated_at?: string | Date | null;
   display_currency?: string | null;
   cuit?: string | null;
   address?: string | null;
   timezone?: string | null;
   low_stock_threshold_default?: number | null;
   updated_at?: string | Date | null;
+
+  // billing
   trial_ends_at?: Date | null;
   subscription_status?: string | null;
 };

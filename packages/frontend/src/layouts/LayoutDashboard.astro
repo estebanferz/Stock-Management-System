@@ -16,9 +16,16 @@ const tenantDisplayName =
   ?? (tenant?.name?.trim?.() ? tenant.name : null)
   ?? "Empresa"; //default
 
+const logoV =
+  tenantSettings?.logo_updated_at
+    ? new Date(tenantSettings.logo_updated_at as any).getTime()
+    : Date.now();
+
 const tenantLogoUrl =
-  (tenantSettings?.logo_url?.trim?.() ? tenantSettings.logo_url : null)
-  ?? "/zuma-secondary.png"; // default
+  tenantSettings?.logo_key
+    ? `/api/tenant/logo?v=${logoV}`
+    : "/zuma-secondary.png"; // default
+
 
 const dolarRes = await fetch("https://dolarapi.com/v1/dolares/blue");
 const dolarBlue = await dolarRes.json();

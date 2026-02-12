@@ -301,7 +301,11 @@ export async function me(sessionId?: string | null): Promise<MeOk | MeFail> {
 
       // tenant_settings (LEFT JOIN)
       ts_business_name: tenantSettingsTable.business_name,
-      ts_logo_url: tenantSettingsTable.logo_url,
+
+      ts_logo_key: tenantSettingsTable.logo_key,
+      ts_logo_mime: tenantSettingsTable.logo_mime,
+      ts_logo_updated_at: tenantSettingsTable.logo_updated_at,
+
       ts_cuit: tenantSettingsTable.cuit,
       ts_address: tenantSettingsTable.address,
       ts_display_currency: tenantSettingsTable.display_currency,
@@ -341,14 +345,16 @@ export async function me(sessionId?: string | null): Promise<MeOk | MeFail> {
   const hasTenantSettingsRow =
     r.ts_updated_at !== null ||
     r.ts_business_name !== null ||
-    r.ts_logo_url !== null ||
+    r.ts_logo_key !== null ||
     r.ts_cuit !== null ||
     r.ts_address !== null;
 
   const tenantSettings: TenantSettings | null = hasTenantSettingsRow
     ? {
         business_name: r.ts_business_name ?? null,
-        logo_url: r.ts_logo_url ?? null,
+        logo_key: r.ts_logo_key ?? null,
+        logo_mime: r.ts_logo_mime ?? null,
+        logo_updated_at: r.ts_logo_updated_at ?? null,
         cuit: r.ts_cuit ?? null,
         address: r.ts_address ?? null,
         display_currency: r.ts_display_currency ?? "ARS",

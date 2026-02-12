@@ -2,15 +2,16 @@ import { Elysia, t } from "elysia";
 import {
   getAllExpenses,
   getExpensesByFilter,
-  addExpenseWithReceipt,
-  updateExpenseWithReceipt,
   softDeleteExpense,
   getTotalExpenses,
-  getExpenseReceiptFile,
   getTopExpensesByCategory,
+  linkExpenseReceipt,
+  presignExpenseReceiptUpload,
+  addExpense,
+  getExpenseReceiptSignedUrl,
+  updateExpense,
 } from "../services/expenseService";
 import { expenseInsertDTO, expenseUpdateDTO, type Currency } from "@server/db/types";
-import { safeFilename } from "../util/formattersBackend";
 import { protectedController } from "../util/protectedController";
 import { getFxSnapshotVenta } from "../services/currencyService";
 
@@ -54,25 +55,20 @@ export const expenseController = new Elysia({ prefix: "/expense" })
       },
     }
   )
-
   .get(
     "/:id/receipt",
     protectedController(async (ctx) => {
       const expenseId = Number(ctx.params.id);
 
-      const receipt = await getExpenseReceiptFile(ctx.tenantId, expenseId);
+      const url = await getExpenseReceiptSignedUrl(ctx.tenantId, expenseId);
 
-      if (!receipt) {
+      if (!url) {
         ctx.set.status = 404;
         return;
       }
-
-      const filename = safeFilename(receipt.originalName);
-
-      ctx.set.headers["Content-Type"] = receipt.mime;
-      ctx.set.headers["Content-Disposition"] = `inline; filename="${filename}"`;
-
-      return receipt.file;
+      ctx.set.status = 302;
+      ctx.set.headers["Location"] = url;
+      return;
     })
   )
 
@@ -80,48 +76,21 @@ export const expenseController = new Elysia({ prefix: "/expense" })
     "/",
     protectedController(async (ctx) => {
       const { body, set } = ctx;
-
-      try {
-        const result = await addExpenseWithReceipt(
-          ctx.tenantId,
-          ctx.user.id,
-          body
-        );
-        set.status = 201;
-        return result;
-      } catch (err: any) {
-        switch (err.message) {
-          case "INVALID_RECEIPT_TYPE":
-            set.status = 400;
-            return { error: "Tipo de archivo no permitido" };
-
-          case "RECEIPT_TOO_LARGE":
-            set.status = 400;
-            return { error: "El archivo supera los 5MB" };
-
-          case "PROVIDER_NOT_FOUND":
-            set.status = 400;
-            return { error: "Proveedor inválido" };
-
-          default:
-            throw err;
-        }
-      }
+      const result = await addExpense(ctx.tenantId, ctx.user.id, {
+        ...body,
+        datetime: body.datetime ? new Date(body.datetime) : undefined,
+      });
+      set.status = 201;
+      return result;
     }),
     {
       body: t.Object({
         ...expenseInsertDTO.properties,
         datetime: t.Optional(t.String({ format: "date-time" })),
-        receipt: t.Optional(t.File()),
         provider_id: t.Optional(t.Union([t.Integer(), t.Null(), t.String()])),
       }),
-      detail: {
-        summary: "Insert a new expense (with optional receipt) (scoped by tenant)",
-        tags: ["expenses"],
-      },
     }
   )
-
   .put(
     "/:id",
     protectedController(async (ctx) => {
@@ -129,28 +98,29 @@ export const expenseController = new Elysia({ prefix: "/expense" })
       const expenseId = Number(ctx.params.id);
 
       try {
-        const result = await updateExpenseWithReceipt(
+        const result = await updateExpense(
           ctx.tenantId,
-          ctx.user.id,
           expenseId,
-          body
+          {
+            datetime: body.datetime ? new Date(body.datetime) : undefined,
+            category: body.category,
+            description: body.description,
+            amount: body.amount,
+            currency: body.currency,
+            payment_method: body.payment_method,
+            provider_id: body.provider_id,
+          }
         );
+
+        if (!result.length) {
+          set.status = 404;
+          return { error: "Gasto no encontrado" };
+        }
+
         set.status = 200;
-        return result;
+        return result[0];
       } catch (err: any) {
         switch (err.message) {
-          case "INVALID_RECEIPT_TYPE":
-            set.status = 400;
-            return { error: "Tipo de archivo no permitido" };
-
-          case "RECEIPT_TOO_LARGE":
-            set.status = 400;
-            return { error: "El archivo supera los 5MB" };
-
-          case "EXPENSE_NOT_FOUND":
-            set.status = 404;
-            return { error: "Gasto no encontrado" };
-
           case "PROVIDER_NOT_FOUND":
             set.status = 400;
             return { error: "Proveedor inválido" };
@@ -164,13 +134,68 @@ export const expenseController = new Elysia({ prefix: "/expense" })
       body: t.Object({
         ...expenseUpdateDTO.properties,
         datetime: t.Optional(t.String({ format: "date-time" })),
-        receipt: t.Optional(t.File()),
         provider_id: t.Optional(t.Union([t.Integer(), t.Null(), t.String()])),
       }),
       detail: {
-        summary: "Update an expense (with optional receipt) (scoped by tenant)",
+        summary: "Update an expense (without receipt, bucket-based storage)",
         tags: ["expenses"],
       },
+    }
+  )
+  .post(
+    "/:id/receipt/presign",
+    protectedController(async (ctx) => {
+      const expenseId = Number(ctx.params.id);
+      const { contentType, filename, size } = ctx.body;
+
+      const result = await presignExpenseReceiptUpload(ctx.tenantId, expenseId, {
+        contentType,
+        filename,
+        size,
+      });
+
+      if (!result.ok) {
+        ctx.set.status = result.status;
+        return { ok: false, message: result.message };
+      }
+
+      return { ok: true, key: result.key, putUrl: result.putUrl };
+    }),
+    {
+      body: t.Object({
+        contentType: t.String({ minLength: 1, maxLength: 100 }),
+        filename: t.String({ minLength: 1, maxLength: 255 }),
+        size: t.Integer({ minimum: 1 }),
+      }),
+    }
+  )
+  .post(
+    "/:id/receipt/link",
+    protectedController(async (ctx) => {
+      const expenseId = Number(ctx.params.id);
+      const { key, contentType, filename, size } = ctx.body;
+
+      const result = await linkExpenseReceipt(ctx.tenantId, expenseId, {
+        key,
+        contentType,
+        filename,
+        size,
+      });
+
+      if (!result.ok) {
+        ctx.set.status = result.status;
+        return { ok: false, message: result.message };
+      }
+
+      return { ok: true };
+    }),
+    {
+      body: t.Object({
+        key: t.String({ minLength: 1, maxLength: 1024 }),
+        contentType: t.String({ minLength: 1, maxLength: 100 }),
+        filename: t.String({ minLength: 1, maxLength: 255 }),
+        size: t.Integer({ minimum: 1 }),
+      }),
     }
   )
 

@@ -136,37 +136,74 @@ export default function ProfileEditor({ initial }: Props) {
     }
 
     async function onLogoPick(file: File): Promise<string> {
-    if (!canEditTenant) {
+      if (!canEditTenant) {
         throw new Error("No autorizado para cambiar el logo.");
-    }
+      }
 
-    const fd = new FormData();
-    fd.append("file", file);
-
-    const res = await fetch("/api/tenant/logo", {
+      // 1) Pedir presign
+      const presignRes = await fetch("/api/tenant/logo/presign", {
         method: "POST",
-        body: fd,
         credentials: "include",
-    });
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contentType: file.type,
+          filename: file.name,
+          size: file.size,
+        }),
+      });
 
-    const data: any = await res.json().catch(() => ({}));
+      const presignData: any = await presignRes.json().catch(() => ({}));
+      if (!presignRes.ok || !presignData?.ok) {
+        throw new Error(presignData?.message || presignData?.error || `Presign failed (${presignRes.status})`);
+      }
 
-    if (!res.ok || !data?.ok) {
-        throw new Error(data?.detail || data?.error || `Upload failed (${res.status})`);
-    }
+      const { putUrl, key } = presignData;
+      if (typeof putUrl !== "string" || typeof key !== "string") {
+        throw new Error("El backend no devolvió putUrl/key.");
+      }
 
-    const nextUrl = data.logo_url;
-    if (typeof nextUrl !== "string" || !nextUrl.trim()) {
-        throw new Error("El backend no devolvió logo_url.");
-    }
+      // 2) Subir directo al bucket
+      const putRes = await fetch(putUrl, {
+        method: "PUT",
+        headers: { "Content-Type": file.type },
+        body: file,
+      });
 
-    setTenantSettings((p: any) => ({ ...(p ?? {}), logo_url: nextUrl }));
+      if (!putRes.ok) {
+        throw new Error(`Upload to bucket failed (${putRes.status})`);
+      }
 
-    return nextUrl;
+      // 3) Linkear en DB
+      const linkRes = await fetch("/api/tenant/logo/link", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          key,
+          contentType: file.type,
+        }),
+      });
+
+      const linkData: any = await linkRes.json().catch(() => ({}));
+      if (!linkRes.ok || !linkData?.ok) {
+        throw new Error(linkData?.message || linkData?.error || `Link failed (${linkRes.status})`);
+      }
+
+      // 4) URL estable para mostrar (redirige a presigned GET)
+      const stableUrl = `/api/tenant/logo?v=${Date.now()}`;
+
+      // actualizá estado local
+      setTenantSettings((p: any) => ({
+        ...(p ?? {}),
+        logo_key: key,
+        logo_mime: file.type,
+      }));
+
+      return stableUrl;
     }
 
     async function patchTenantSettings(patch: any) {
-        const res = await clientApp.tenant.me["settings"].patch(patch); // idem
+        const res = await clientApp.tenant.me["settings"].patch(patch);
         setTenantSettings(res.data);
     }
 
@@ -229,7 +266,7 @@ export default function ProfileEditor({ initial }: Props) {
         <CardContent className="divide-y">
             <LogoRow
                 businessName={businessName}
-                logoUrl={tenantSettings?.logo_url}
+                logoUrl={tenantSettings?.logo_key ? `/api/tenant/logo?v=${tenantSettings?.logo_updated_at ? new Date(tenantSettings.logo_updated_at).getTime() : Date.now()}` : null}
                 canEdit={canEditTenant}
                 onUpload={onLogoPick}
             />

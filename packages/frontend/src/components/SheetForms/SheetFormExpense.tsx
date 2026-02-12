@@ -31,6 +31,41 @@ interface SheetFormExpenseProps {
   depth?: number;
 }
 
+async function uploadAndLinkReceipt(expenseId: number, file: File) {
+  const presign = await clientApp.expense({ id: expenseId }).receipt.presign.post({
+    contentType: file.type,
+    filename: file.name,
+    size: file.size,
+  });
+
+  if (presign.error) throw presign.error.value;
+
+  const presignData: any = presign.data;
+  if (!presignData?.ok) throw new Error(presignData?.message ?? "Presign failed");
+
+  const { putUrl, key } = presignData;
+
+  const putRes = await fetch(putUrl, {
+    method: "PUT",
+    headers: { "Content-Type": file.type },
+    body: file,
+  });
+  if (!putRes.ok) throw new Error(`Upload to bucket failed (${putRes.status})`);
+
+  const link = await clientApp.expense({ id: expenseId }).receipt.link.post({
+    key,
+    contentType: file.type,
+    filename: file.name,
+    size: file.size,
+  });
+
+  if (link.error) throw link.error.value;
+
+  const linkData: any = link.data;
+  if (!linkData?.ok) throw new Error(linkData?.message ?? "Link failed");
+}
+
+
 export function SheetFormExpense({
   isOpen,
   onClose,
@@ -161,23 +196,31 @@ export function SheetFormExpense({
       ...form,
       datetime,
       provider_id: form.provider_id ? Number(form.provider_id) : null,
-      receipt: receiptFile,
     };
 
     try {
       setIsSubmitting(true);
-      let response;
+
+      let expenseId: number;
 
       if (editingExpense) {
-        response = await clientApp.expense({ id: editingExpense.expense_id }).put(
-          expenseData as any
-        );
+        const r = await clientApp.expense({ id: editingExpense.expense_id }).put(expenseData as any);
+        if (r.error) throw r.error.value;
+
+        // tu PUT devuelve result[0]
+        expenseId = (r.data as any)?.expense_id ?? editingExpense.expense_id;
       } else {
-        response = await clientApp.expense.post(expenseData as any);
+        const r = await clientApp.expense.post(expenseData as any);
+        if (r.error) throw r.error.value;
+
+        // tu POST devuelve returning() => array
+        expenseId = (r.data as any)?.[0]?.expense_id;
+        if (!expenseId) throw new Error("No pude obtener expense_id del backend.");
       }
 
-      const { error } = response;
-      if (error) throw error.value;
+      if (receiptFile) {
+        await uploadAndLinkReceipt(expenseId, receiptFile);
+      }
 
       if (isNested) {
         onClose!();

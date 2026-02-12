@@ -66,7 +66,7 @@ export function LogoRow({ businessName, logoUrl, canEdit = true, onUpload }: Pro
         <input
           ref={inputRef}
           type="file"
-          accept="image/*"
+          accept="image/png,image/jpeg,image/webp"
           className="hidden"
           onChange={handleChange}
         />
