@@ -12,7 +12,8 @@
     "migrate": "bun drizzle-kit migrate",
     "docker:prod": "bun install && bun run build && ./build/server",
     "docker:dev": "bun install && bun dev",
-    "build": "bun build src/index.ts --minify-whitespace --minify-syntax --target bun --compile --outfile ./build/server"
+    "build": "bun build src/index.ts --minify-whitespace --minify-syntax --target bun --outfile ./build/server",
+    "start": "bun build/index.js"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.17",

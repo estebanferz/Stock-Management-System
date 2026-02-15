@@ -4,7 +4,6 @@ import { UserMenu } from "./UserMenu";
 
 //import SearchBar from "../components/SearchBar.astro";
 const { user, dolarBlue, tenantDisplayName, tenantLogoUrl, roleInTenant } = Astro.props;
-console.log(tenantLogoUrl)
 const compra = dolarBlue?.compra;
 const venta = dolarBlue?.venta;
 const fecha = dolarBlue?.fechaActualizacion
@@ -32,11 +31,9 @@ const fecha = dolarBlue?.fechaActualizacion
     </svg>
   </button>
   <div class="flex items-center space-x-4">
-    <a href="/dashboard" class="translate-y-4 translate-x-10 md:translate-x-6 h-20 w-20 text-xl z-20 font-bold text-gray-800 border-[5px] border-white bg-white rounded-full shadow-md">
+    <a href="/dashboard" class="translate-y-[28px] translate-x-10 md:translate-x-6 h-24 w-24 text-xl z-20 font-bold text-gray-800">
     <img
-      src={tenantLogoUrl}
-      alt={`Logo ${tenantDisplayName}`}
-      class="h-full w-full object-cover rounded-full"
+      src="/zumaplus-logo-borde.png"
     />
     </a>
   </div>
@@ -59,7 +56,7 @@ const fecha = dolarBlue?.fechaActualizacion
   </div>
     <!-- <SearchBar /> -->
 
-    <UserMenu client:load email={user.email} roleInTenant={roleInTenant} settingsHref="/profile" />
+    <UserMenu client:load name={user.name} email={user.email} roleInTenant={roleInTenant} settingsHref="/profile" />
   </div>
 </header>
 
@@ -71,11 +68,15 @@ const fecha = dolarBlue?.fechaActualizacion
 
   <div class="flex flex-col gap-8 items-left justify-between px-4 pt-12 pb-5 md:pb-0">
     <div class="flex flex-row items-center gap-2">
-      <div class="flex justify-center items-center h-10 w-10 opacity-90">
-        <img src="/zuma-logo.png" class="rounded-md"/>
+      <div class="flex justify-center items-center h-12 w-12 opacity-90">
+        <img
+          src={tenantLogoUrl}
+          alt={`Logo ${tenantDisplayName}`}
+          class="h-full w-full object-cover rounded-full border border-secondColor"
+        />
       </div>
-      <div class="flex flex-col ">
-        <h2 class="text-md font-medium text-gray-700">
+      <div class="flex flex-col">
+        <h2 class="text-lg font-medium text-gray-700">
           <span class="font-bold">
             {tenantDisplayName
               ? tenantDisplayName.length > 20

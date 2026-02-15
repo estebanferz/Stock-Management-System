@@ -312,6 +312,36 @@ export const phoneTable = pgTable("phone", {
 ]);
 export type Phone = InferSelectModel<typeof phoneTable>
 
+export const headphoneTable = pgTable("headphone", {
+  device_id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  datetime: timestamp().notNull().defaultNow(),
+  name: varchar({ length: 255 }).notNull(),
+  brand: varchar({ length: 100 }).notNull(),
+  imei: varchar({ length: 100 }),
+  device_type: varchar({ length: 100 }).notNull(),
+  color: varchar({ length: 50 }),
+  category: varchar({ length: 100 }).notNull(),
+  price: numeric({ precision: 12, scale: 2 }).notNull(),
+  buy_cost: numeric({ precision: 12, scale: 2 }).notNull(),
+  currency_buy: varchar({ length: 8 }).notNull().default("USD"), 
+  currency_sale: varchar({ length: 8 }).notNull().default("USD"), 
+  deposit: varchar({ length: 255 }).notNull(),
+  sold: boolean().default(false).notNull(),
+  trade_in: boolean().default(false),
+  is_deleted: boolean().default(false),
+  in_repair: boolean().default(false),
+
+  tenant_id: integer("tenant_id")
+    .notNull()
+    .references(() => tenantTable.tenant_id, { onDelete: "cascade" }),
+}, (t) => [
+  index("headphone_tenant_deleted_idx").on(t.tenant_id, t.is_deleted),
+  index("headphone_tenant_sold_idx").on(t.tenant_id, t.sold),
+  index("headphone_tenant_datetime_idx").on(t.tenant_id, t.datetime),
+  uniqueIndex("headphone_tenant_imei_unique").on(t.tenant_id, t.imei),
+]);
+export type Headphone = InferSelectModel<typeof headphoneTable>
+
 export const accessoryTable = pgTable("accessory", {
   accessory_id: integer().primaryKey().generatedAlwaysAsIdentity(),
   datetime: timestamp().notNull().defaultNow(),

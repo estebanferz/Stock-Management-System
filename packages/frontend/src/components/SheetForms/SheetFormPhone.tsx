@@ -29,6 +29,23 @@ interface SheetFormPhoneProps {
   mode?: "persist" | "draft";
 }
 
+const deviceTypeString = (device_type: string) => {
+  switch(device_type){
+    case "phone":
+      return "Celular";
+    case "computer":
+      return "Computadora";
+    case "tablet":
+      return "Tablet";
+    case "watch":
+      return "Reloj";
+    case "headphone":
+      return "Audio";
+    default:
+      return generalStringFormat(device_type);
+  }
+}
+
 const getLocalTime = () => {
   const today = new Date();
   return new Date(today.getTime() - today.getTimezoneOffset() * 60000);
@@ -328,7 +345,7 @@ return (
         </div>
 
         <div className="grid gap-3">
-          <Label>IMEI</Label>
+          <Label>IMEI / Nro Serie</Label>
           <Input 
             id="imei"
             form="form-phone"
@@ -345,9 +362,7 @@ return (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" className="ml-auto w-full justify-between font-normal">
-                {form.device_type == "just-one" 
-                  ? "Unitario"
-                  : "Con stock" } <ChevronDown />
+                {deviceTypeString(form.device_type)} <ChevronDown />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
@@ -361,7 +376,11 @@ return (
         </div>
 
         <div className="grid gap-3">
-          <Label>Condición Batería</Label>
+          <div className="flex flex-col">
+            <Label className="mb-1">Condición Batería</Label>
+            <Label className="font-light text-xs">Computadoras: Ciclos</Label>
+            <Label className="font-light text-xs">Celulares, Relojes, Tablets: % de condición</Label>
+          </div>
           <Input 
             id="battery"
             form="form-phone"

@@ -67,7 +67,7 @@ console.log("Ventas:", data);
 
 <Layout title="Ventas" user={auth.user}>
     <h1 class="w-full text-3xl text-gray-700 font-bold mt-5">Ventas</h1>
-    <p class="mb-5 text-sm text-gray-600 font-medium">Ventas registradas de {auth.tenant.name}</p>
+    <p class="mb-5 text-sm text-gray-600 font-medium">Ventas registradas de {auth.tenantSettings ? auth.tenantSettings.business_name : auth.tenant.name}</p>
 
     <SaleMetricsOverview client:load/>
 

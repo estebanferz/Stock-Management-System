@@ -4,16 +4,15 @@ type RoleInTenant = "owner" | "admin" | "staff";
 
 type Props = {
   email: string;
+  name?: string | null
   settingsHref?: string;
   roleInTenant: RoleInTenant;
 };
 
-export function UserMenu({ email, roleInTenant, settingsHref = "/profile" }: Props) {
+export function UserMenu({ email, name, roleInTenant, settingsHref = "/profile" }: Props) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement | null>(null);
 
-  console.log(roleInTenant)
-  // cerrar al click afuera / escape
   useEffect(() => {
     const onClick = (e: MouseEvent) => {
       if (!ref.current) return;
@@ -60,7 +59,7 @@ export function UserMenu({ email, roleInTenant, settingsHref = "/profile" }: Pro
         aria-haspopup="menu"
         aria-expanded={open}
       >
-        <span className="max-w-[220px] truncate text-xs lg:text-sm font-light text-gray-600">
+        <span className="max-w-[120px] lg:max-w-[220px] truncate text-xs lg:text-sm font-light text-gray-600">
           {email}
         </span>
         <svg fill="currentColor" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24" width="20" height="20">

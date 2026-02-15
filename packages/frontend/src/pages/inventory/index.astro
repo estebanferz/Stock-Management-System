@@ -4,20 +4,23 @@ import Layout from "../../layouts/Layout.astro";
 import { SheetFormPhone } from "@/components/SheetForms/SheetFormPhone";
 import { serverApp } from "@/lib/serverAPI";
 import { phoneColumns } from "@/config/PhoneColumnConfig";
+import { computerColumns } from "@/config/ComputerColumnConfig";
+import { tabletColumns } from "@/config/TabletColumnConfig";
+import { watchColumns } from "@/config/WatchColumnConfig";
+import { headphoneColumns } from "@/config/HeadphoneColumnConfig";
 import { accessoryColumns } from "@/config/AccessoryColumnConfig";
 import ActionPanel from "@/components/ActionPanel";
 import { PhonesPageManager } from "@/components/PageManager/PhonePageManager";
 import { AccessoriesPageManager } from "@/components/PageManager/AccessoryPageManager";
 import { requireAuth } from "@/lib/requireAuth";
 import { SheetFormAccessory } from "@/components/SheetForms/SheetFormAccessory";
-import { Button } from "@/components/ui/button";
-import { Headphones, Phone, Plus, Smartphone } from "lucide-react";
+import { Headphones, Smartphone } from "lucide-react";
 const session = await requireAuth(Astro);
 if (!session) return Astro.redirect("/login");
 const { auth, cookieHeader } = session;
 const authed = { headers: { cookie: cookieHeader } };
 
-const response = await serverApp.phone.all.get({ ...authed, query: { is_deleted: false } });
+const response = await serverApp.phone.all.get(authed);
 const data: any[] = Array.isArray(response.data) ? response.data : [];
     
 
@@ -31,7 +34,11 @@ const data: any[] = Array.isArray(response.data) ? response.data : [];
     <PhonesPageManager
         client:load
         initialData={data}
-        columns={phoneColumns}
+        phoneColumns={phoneColumns}
+        computerColumns={computerColumns}
+        tabletColumns={tabletColumns}
+        watchColumns={watchColumns}
+        headphoneColumns={headphoneColumns}
     />
 
     <h1 class="w-full text-3xl text-gray-700 font-bold mt-10">Accessorios</h1>

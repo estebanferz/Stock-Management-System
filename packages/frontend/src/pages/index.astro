@@ -1,565 +1,567 @@
 ---
 import LayoutLanding from '@/layouts/LayoutLanding.astro';
+import { requireAuth } from '@/lib/requireAuth';
 
-const APP_NAME = "Zuma+"
-const CTA_PRIMARY = "Empezar Gratis";
-const CTA_SECONDARY = "Ver Precios";
+const APP_NAME = "Zuma+";
+const CTA_PRIMARY = "Probar gratis";
+const CTA_SECONDARY = "Ver precios";
+const WHATSAPP_URL = "https://wa.me/5492234370460?text=Hola%20Zuma%2B%2C%20quiero%20saber%20más%20sobre%20el%20producto%20y%20los%20precios.";
+const SUPPORT_EMAIL = "support@zumaplus.com.ar";
+
+const session = await requireAuth(Astro);
+if (session) return Astro.redirect("/dashboard");
 ---
 
-<LayoutLanding title="Zuma+">
-    <!-- Header -->
-    <header class="sticky top-0 z-50 border-b border-zinc-200/70 bg-white/80 backdrop-blur">
-      <div class="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
-        <a href="#top" class="flex items-center gap-2 font-semibold tracking-tight">
-          <span class="inline-flex h-9 w-9 items-center justify-center rounded-xl border-zinc-200 bg-white">
-            <img src="/zuma-logo.png" ></img>
-          </span>
-          <span class="text-lg">{APP_NAME}</span>
+<LayoutLanding title={APP_NAME}>
+  <!-- Header -->
+  <header class="sticky top-0 z-50 border-b border-zinc-200/70 bg-white/80 backdrop-blur">
+    <div class="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
+      <a href="#top" class="flex items-center gap-2 font-semibold tracking-tight">
+        <span class="inline-flex h-9 w-9 items-center justify-center rounded-xl border-zinc-200 bg-white">
+          <img src="/zuma-logo.png" alt={`${APP_NAME} logo`} />
+        </span>
+        <span class="text-lg">{APP_NAME}</span>
+      </a>
+
+      <nav class="hidden items-center gap-6 text-sm text-zinc-700 md:flex">
+        <a class="hover:text-zinc-950" href="#producto">Producto</a>
+        <a class="hover:text-zinc-950" href="#casos-de-uso">Casos de uso</a>
+        <a class="hover:text-zinc-950" href="#como-funciona">Cómo funciona</a>
+        <a class="hover:text-zinc-950" href="#precio">Precio</a>
+        <a class="hover:text-zinc-950" href="#faq">FAQ</a>
+        <a class="hover:text-zinc-950" href="#contacto">Contacto</a>
+      </nav>
+
+      <div class="flex items-center gap-2">
+        <a
+          href="/dashboard"
+          class="rounded-xl px-4 py-2 text-sm font-medium text-zinc-800 hover:bg-zinc-100 inline-flex"
+        >
+          Ingresar
         </a>
-
-        <nav class="hidden items-center gap-6 text-sm text-zinc-700 md:flex">
-          <a class="hover:text-zinc-950" href="#caracteristicas">Características</a>
-          <a class="hover:text-zinc-950" href="#como-funciona">Cómo funciona</a>
-          <a class="hover:text-zinc-950" href="#testimonios">Testimonios</a>
-          <a class="hover:text-zinc-950" href="#precio">Precio</a>
-          <a class="hover:text-zinc-950" href="#contacto">Contacto</a>
-        </nav>
-
-        <div class="flex items-center gap-2">
-          <a
-            href="/dashboard"
-            class="rounded-xl px-4 py-2 text-sm font-medium text-zinc-800 hover:bg-zinc-100 inline-flex"
-          >
-            Ingresar
-          </a>
-          <a
-            href="#precio"
-            class="inline-flex items-center justify-center rounded-xl bg-zinc-900 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-zinc-800"
-          >
-            {CTA_PRIMARY}
-          </a>
-        </div>
+        <a
+          href="#precio"
+          class="inline-flex items-center justify-center rounded-xl bg-zinc-900 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-zinc-800"
+        >
+          {CTA_PRIMARY}
+        </a>
       </div>
-    </header>
+    </div>
+  </header>
 
-    <main id="top">
-      <!-- Hero -->
-      <section class="mx-auto max-w-6xl px-4 pt-14 pb-10">
-        <div class="grid items-center gap-10 md:grid-cols-2">
-          <div>
-            <div class="inline-flex items-center gap-2 rounded-full border border-zinc-200 bg-white px-3 py-1 text-xs text-zinc-700 shadow-sm">
-              <span class="font-semibold">Prueba gratis</span>
-              <span class="text-zinc-500">•</span>
-              <span>Configuración en minutos</span>
-            </div>
-
-            <h1 class="mt-4 text-4xl font-black tracking-tight md:text-5xl">
-              El sistema que tu negocio necesita
-            </h1>
-            <p class="mt-4 text-base leading-relaxed text-zinc-700 md:text-lg">
-              Control total de ventas, clientes, inventario y caja. Todo en un solo lugar, simple y profesional.
-            </p>
-
-            <div class="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
-              <a
-                href="#precio"
-                class="inline-flex items-center justify-center rounded-xl bg-zinc-900 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-zinc-800"
-              >
-                {CTA_PRIMARY}
-              </a>
-              <a
-                href="#precio"
-                class="inline-flex items-center justify-center rounded-xl border border-zinc-200 bg-white px-5 py-3 text-sm font-semibold text-zinc-900 hover:bg-zinc-50"
-              >
-                {CTA_SECONDARY}
-              </a>
-            </div>
-
-            <div class="mt-6 flex items-center gap-3 text-sm text-zinc-600">
-              <div class="flex -space-x-2">
-                {["MR","CG","LS","JP","AR"].map((x) => (
-                  <div class="flex h-9 w-9 items-center justify-center rounded-full border border-white bg-zinc-900 text-xs font-bold text-white shadow-sm">
-                    {x}
-                  </div>
-                ))}
-              </div>
-              <span><span class="font-semibold text-zinc-900">40+</span> negocios confían en nosotros</span>
-            </div>
+  <main id="top">
+    <!-- Hero -->
+    <section class="mx-auto max-w-6xl px-4 pt-14 pb-10">
+      <div class="grid items-center gap-10 md:grid-cols-2">
+        <div>
+          <div class="inline-flex items-center gap-2 rounded-full border border-zinc-200 bg-white px-3 py-1 text-xs text-zinc-700 shadow-sm">
+            <span class="font-semibold">Probalo gratis</span>
+            <span class="text-zinc-500">•</span>
+            <span>Listo en 10 minutos</span>
+            <span class="text-zinc-500">•</span>
+            <span>Soporte humano</span>
           </div>
 
-          <!-- Mockup -->
-          <div class="relative">
-            <div class="rounded-3xl border border-zinc-200 bg-white p-4 shadow-lg">
-              <div class="flex items-center justify-between">
-                <div class="flex items-center gap-2">
-                  <div class="h-3 w-3 rounded-full bg-zinc-200"></div>
-                  <div class="h-3 w-3 rounded-full bg-zinc-200"></div>
-                  <div class="h-3 w-3 rounded-full bg-zinc-200"></div>
-                </div>
-                <div class="text-xs text-zinc-500">zuma.app/dashboard</div>
-              </div>
+          <h1 class="mt-4 text-4xl font-black tracking-tight md:text-5xl">
+            Ordená tu negocio y ganá control real en un día.
+          </h1>
 
-              <div class="mt-4 grid gap-3 md:grid-cols-2">
-                <div class="rounded-2xl border border-zinc-200 bg-zinc-50 p-4">
-                  <div class="text-xs text-zinc-500">Balance total</div>
-                  <div class="mt-2 text-2xl font-black">$ 24.580</div>
-                  <div class="mt-2 inline-flex items-center gap-2 rounded-full bg-white px-2 py-1 text-xs text-zinc-700 ring-1 ring-zinc-200">
-                    <span class="h-2 w-2 rounded-full bg-emerald-500"></span>
-                    En vivo
-                  </div>
-                </div>
-
-                <div class="rounded-2xl border border-zinc-200 bg-white p-4">
-                  <div class="text-xs text-zinc-500">Ingresos hoy</div>
-                  <div class="mt-2 text-2xl font-black">$ 12.450</div>
-                  <div class="mt-2 text-xs text-emerald-700">+18% vs ayer</div>
-                </div>
-
-                <div class="rounded-2xl border border-zinc-200 bg-white p-4">
-                  <div class="text-xs text-zinc-500">Ventas</div>
-                  <div class="mt-2 text-2xl font-black">48</div>
-                  <div class="mt-2 text-xs text-zinc-600">Últimas 24 hs</div>
-                </div>
-
-                <div class="rounded-2xl border border-zinc-200 bg-white p-4">
-                  <div class="text-xs text-zinc-500">Clientes nuevos</div>
-                  <div class="mt-2 text-2xl font-black">12</div>
-                  <div class="mt-2 text-xs text-zinc-600">Semana actual</div>
-                </div>
-              </div>
-            </div>
-
-            <div class="pointer-events-none absolute -inset-6 -z-10 rounded-[2.5rem] bg-zinc-900/5 blur-2xl"></div>
-          </div>
-        </div>
-      </section>
-
-      <!-- ¿Es para vos? -->
-      <section class="mx-auto max-w-6xl px-4 py-12" id="para-vos">
-        <div class="rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm md:p-10">
-          <div class="grid gap-10 md:grid-cols-2">
-            <div>
-              <div class="text-sm font-semibold text-zinc-900">Descubrí si es para vos</div>
-              <h2 class="mt-2 text-3xl font-black tracking-tight">¿Es {APP_NAME} para vos?</h2>
-              <p class="mt-3 text-zinc-700">
-                Diseñado para resolver los problemas diarios de tu negocio, sin complicaciones.
-              </p>
-            </div>
-
-            <div class="grid gap-6 md:grid-cols-2">
-              <div class="rounded-2xl border border-zinc-200 bg-zinc-50 p-5">
-                <h3 class="font-bold">¿Te pasa esto?</h3>
-                <ul class="mt-3 space-y-2 text-sm text-zinc-700">
-                  <li>• Llevás todo en Excel y cuesta encontrar info</li>
-                  <li>• No sabés quién te debe y cuánto</li>
-                  <li>• No sabés cuánto ganaste este mes</li>
-                  <li>• Perdés tiempo buscando ventas/clientes</li>
-                  <li>• Se te descontrola el inventario</li>
-                </ul>
-              </div>
-
-              <div class="rounded-2xl border border-zinc-200 bg-white p-5">
-                <h3 class="font-bold">Con {APP_NAME}</h3>
-                <ul class="mt-3 space-y-2 text-sm text-zinc-700">
-                  <li>• Todo organizado en un solo lugar</li>
-                  <li>• Ves deudas y vencimientos al instante</li>
-                  <li>• Ganancias y gastos claros</li>
-                  <li>• Encontrás datos en segundos</li>
-                  <li>• Stock con alertas automáticas</li>
-                </ul>
-              </div>
-            </div>
-          </div>
-
-          <div class="mt-8 flex flex-wrap gap-2 text-sm text-zinc-700">
-            <span class="font-semibold text-zinc-900">Ideal para:</span>
-            <span class="rounded-full border border-zinc-200 bg-white px-3 py-1">Tiendas de celulares</span>
-            <span class="rounded-full border border-zinc-200 bg-white px-3 py-1">Compra-venta</span>
-            <span class="rounded-full border border-zinc-200 bg-white px-3 py-1">Reparación</span>
-            <span class="rounded-full border border-zinc-200 bg-white px-3 py-1">Venta de accesorios</span>
-          </div>
-        </div>
-      </section>
-
-      <!-- Funcionalidades -->
-      <section class="mx-auto max-w-6xl px-4 py-12" id="caracteristicas">
-        <div class="text-center">
-          <div class="text-sm font-semibold text-zinc-900">Funcionalidades</div>
-          <h2 class="mt-2 text-3xl font-black tracking-tight">Todo lo que necesitás</h2>
-          <p class="mt-3 text-zinc-700">
-            Herramientas simples y poderosas para llevar tu negocio de forma profesional.
+          <p class="mt-4 text-base leading-relaxed text-zinc-700 md:text-lg">
+            Ventas, stock, clientes, deudas y caja en un solo sistema. Menos Excel, menos errores y más decisiones con
+            números claros.
           </p>
-        </div>
 
-        <div class="mt-8 grid gap-4 md:grid-cols-3">
-          {[
-            ["Registro de Ventas", "Cargá cada venta en segundos: cliente, productos, precios y forma de pago."],
-            ["Gestión de Clientes", "Historial completo, contacto y saldo pendiente por cliente en un solo lugar."],
-            ["Control de Caja", "Ingresos, egresos y saldo real. Efectivo, transferencias y tarjetas separados."],
-            ["Reportes Claros", "Gráficos simples de ventas y resultados. Exportá a PDF o Excel."],
-            ["Control de Stock", "Inventario en tiempo real, compras a proveedores y alertas de reposición."],
-            ["Alertas Automáticas", "Recordatorios de pagos vencidos y alertas de stock bajo. El sistema trabaja por vos."],
-          ].map(([t, d]) => (
-            <div class="rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm hover:shadow-md transition-shadow">
-              <div class="flex items-start gap-3">
-                <div class="mt-1 inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-zinc-200 bg-zinc-50 font-black">
-                  +
-                </div>
-                <div>
-                  <h3 class="font-bold">{t}</h3>
-                  <p class="mt-2 text-sm leading-relaxed text-zinc-700">{d}</p>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <!-- Cómo funciona -->
-      <section class="mx-auto max-w-6xl px-4 py-12" id="como-funciona">
-        <div class="rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm md:p-10">
-          <div class="text-center">
-            <div class="text-sm font-semibold text-zinc-900">Simple y rápido</div>
-            <h2 class="mt-2 text-3xl font-black tracking-tight">Comenzá en minutos</h2>
-            <p class="mt-3 text-zinc-700">No necesitás conocimientos técnicos. Si usás WhatsApp, podés usar {APP_NAME}.</p>
-          </div>
-
-          <div class="mt-8 grid gap-4 md:grid-cols-4">
-            {[
-              ["1", "Registrate", "Creá tu cuenta gratis en menos de 2 minutos. Sin tarjeta de crédito."],
-              ["2", "Configurá", "Agregá productos, clientes y proveedores. Importá desde Excel si querés."],
-              ["3", "Vendé", "Registrá ventas y pagos. Todo queda organizado automáticamente."],
-              ["4", "Crece", "Analizá métricas en tiempo real y tomá mejores decisiones."],
-            ].map(([n, t, d]) => (
-              <div class="rounded-3xl border border-zinc-200 bg-zinc-50 p-6">
-                <div class="text-2xl font-black">{n}</div>
-                <div class="mt-2 font-bold">{t}</div>
-                <div class="mt-2 text-sm text-zinc-700">{d}</div>
-              </div>
-            ))}
-          </div>
-
-          <div class="mt-8 flex justify-center">
+          <div class="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
             <a
               href="#precio"
               class="inline-flex items-center justify-center rounded-xl bg-zinc-900 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-zinc-800"
             >
               {CTA_PRIMARY}
             </a>
+            <a
+              href="#precio"
+              class="inline-flex items-center justify-center rounded-xl border border-zinc-200 bg-white px-5 py-3 text-sm font-semibold text-zinc-900 hover:bg-zinc-50"
+            >
+              {CTA_SECONDARY}
+            </a>
+          </div>
+
+          <div class="mt-4 grid gap-2 text-sm text-zinc-600">
+            <div class="flex items-center gap-2">
+              <span class="inline-flex h-5 w-5 items-center justify-center rounded-full border border-zinc-200 bg-white text-[10px] font-black text-zinc-900">✓</span>
+              <span>Sin tarjeta para empezar</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="inline-flex h-5 w-5 items-center justify-center rounded-full border border-zinc-200 bg-white text-[10px] font-black text-zinc-900">✓</span>
+              <span>Funciona desde celular y computadora</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="inline-flex h-5 w-5 items-center justify-center rounded-full border border-zinc-200 bg-white text-[10px] font-black text-zinc-900">✓</span>
+              <span>Cancelás cuando quieras</span>
+            </div>
+          </div>
+
+          <div class="mt-6 flex items-center gap-3 text-sm text-zinc-600">
+            <div class="flex -space-x-2">
+              {["MR", "CG", "LS", "JP", "AR"].map((x) => (
+                <div class="flex h-9 w-9 items-center justify-center rounded-full border border-white bg-zinc-900 text-xs font-bold text-white shadow-sm">
+                  {x}
+                </div>
+              ))}
+            </div>
+            <span>
+              <span class="font-semibold text-zinc-900">Hecho para</span> negocios que venden y cobran todos los días
+            </span>
           </div>
         </div>
-      </section>
 
-      <!-- Resultados -->
-      <section class="mx-auto max-w-6xl px-4 py-12" id="resultados">
-        <div class="text-center">
-          <div class="text-sm font-semibold text-zinc-900">Resultados reales</div>
-          <h2 class="mt-2 text-3xl font-black tracking-tight">Números que respaldan la confianza</h2>
-          <p class="mt-3 text-zinc-700">Indicadores claros para decidir mejor, todos los días.</p>
+        <!-- Mockup -->
+        <div class="relative">
+          <div class="rounded-3xl border border-zinc-200 bg-white p-4 shadow-lg">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <div class="h-3 w-3 rounded-full bg-zinc-200"></div>
+                <div class="h-3 w-3 rounded-full bg-zinc-200"></div>
+                <div class="h-3 w-3 rounded-full bg-zinc-200"></div>
+              </div>
+              <div class="text-xs text-zinc-500">zuma.app/dashboard</div>
+            </div>
+
+            <div class="mt-4 grid gap-3 md:grid-cols-2">
+              <div class="rounded-2xl border border-zinc-200 bg-zinc-50 p-4">
+                <div class="text-xs text-zinc-500">Caja del día</div>
+                <div class="mt-2 text-2xl font-black">$ 24.580</div>
+                <div class="mt-2 inline-flex items-center gap-2 rounded-full bg-white px-2 py-1 text-xs text-zinc-700 ring-1 ring-zinc-200">
+                  <span class="h-2 w-2 rounded-full bg-emerald-500"></span>
+                  Actualizado
+                </div>
+              </div>
+
+              <div class="rounded-2xl border border-zinc-200 bg-white p-4">
+                <div class="text-xs text-zinc-500">Ventas hoy</div>
+                <div class="mt-2 text-2xl font-black">$ 12.450</div>
+                <div class="mt-2 text-xs text-zinc-600">Resumen automático</div>
+              </div>
+
+              <div class="rounded-2xl border border-zinc-200 bg-white p-4">
+                <div class="text-xs text-zinc-500">Operaciones</div>
+                <div class="mt-2 text-2xl font-black">48</div>
+                <div class="mt-2 text-xs text-zinc-600">Últimas 24 hs</div>
+              </div>
+
+              <div class="rounded-2xl border border-zinc-200 bg-white p-4">
+                <div class="text-xs text-zinc-500">Pendientes</div>
+                <div class="mt-2 text-2xl font-black">12</div>
+                <div class="mt-2 text-xs text-zinc-600">Cobros / tareas</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="pointer-events-none absolute -inset-6 -z-10 rounded-[2.5rem] bg-zinc-900/5 blur-2xl"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Problema -> Solución -->
+    <section class="mx-auto max-w-6xl px-4 py-12" id="producto">
+      <div class="rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm md:p-10">
+        <div class="grid gap-10 md:grid-cols-2">
+          <div>
+            <div class="text-sm font-semibold text-zinc-900">Lo que cambia con {APP_NAME}</div>
+            <h2 class="mt-2 text-3xl font-black tracking-tight">
+              Si hoy gestionás con Excel, WhatsApp y memoria… estás perdiendo control.
+            </h2>
+            <p class="mt-3 text-zinc-700">
+              El día a día te come y la info queda desordenada. {APP_NAME} ordena el flujo completo para que sepas qué
+              vendiste, qué te deben, cuánto ganaste y qué falta reponer.
+            </p>
+          </div>
+
+          <div class="grid gap-6 md:grid-cols-2">
+            <div class="rounded-2xl border border-zinc-200 bg-zinc-50 p-5">
+              <h3 class="font-bold">Lo que suele pasar</h3>
+              <ul class="mt-3 space-y-2 text-sm text-zinc-700">
+                <li>• Ventas anotadas en distintos lados</li>
+                <li>• Stock “aproximado” y sorpresas</li>
+                <li>• Deudas sin seguimiento real</li>
+                <li>• Caja que no cierra</li>
+                <li>• Buscar info te lleva minutos</li>
+              </ul>
+            </div>
+
+            <div class="rounded-2xl border border-zinc-200 bg-white p-5">
+              <h3 class="font-bold">Con {APP_NAME}</h3>
+              <ul class="mt-3 space-y-2 text-sm text-zinc-700">
+                <li>• Cada venta deja todo actualizado</li>
+                <li>• Stock en tiempo real + alertas</li>
+                <li>• Deudas con vencimientos y parciales</li>
+                <li>• Caja clara por método de pago</li>
+                <li>• Encontrás todo en segundos</li>
+              </ul>
+            </div>
+          </div>
         </div>
 
-        <div class="mt-8 grid gap-4 md:grid-cols-4">
+        <div class="mt-8 flex flex-wrap gap-2 text-sm text-zinc-700">
+          <span class="font-semibold text-zinc-900">Ideal para:</span>
+          <span class="rounded-full border border-zinc-200 bg-white px-3 py-1">Tiendas de celulares</span>
+          <span class="rounded-full border border-zinc-200 bg-white px-3 py-1">Compra-venta</span>
+          <span class="rounded-full border border-zinc-200 bg-white px-3 py-1">Reparación</span>
+          <span class="rounded-full border border-zinc-200 bg-white px-3 py-1">Accesorios</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Casos de uso -->
+    <section class="mx-auto max-w-6xl px-4 py-12" id="casos-de-uso">
+      <div class="text-center">
+        <div class="text-sm font-semibold text-zinc-900">Casos de uso</div>
+        <h2 class="mt-2 text-3xl font-black tracking-tight">Hecho para negocios que venden y cobran todos los días</h2>
+        <p class="mt-3 text-zinc-700">Elegí tu caso y empezá con lo esencial. El resto se acomoda solo.</p>
+      </div>
+
+      <div class="mt-8 grid gap-4 md:grid-cols-4">
+        {[
+          ["Tienda de celulares", "Registrá ventas rápido y mantené stock bajo control."],
+          ["Servicio técnico", "Organizá cobros, estados y pendientes sin perder seguimiento."],
+          ["Compra-venta", "Controlá costos y resultados por operación con claridad."],
+          ["Accesorios", "Rotación, reposición y control real del inventario."],
+        ].map(([t, d]) => (
+          <div class="rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm hover:shadow-md transition-shadow">
+            <div class="font-bold">{t}</div>
+            <p class="mt-2 text-sm leading-relaxed text-zinc-700">{d}</p>
+          </div>
+        ))}
+      </div>
+    </section>
+
+    <!-- Funcionalidades -->
+    <section class="mx-auto max-w-6xl px-4 py-12" id="caracteristicas">
+      <div class="text-center">
+        <div class="text-sm font-semibold text-zinc-900">Producto</div>
+        <h2 class="mt-2 text-3xl font-black tracking-tight">Lo que te da control (de verdad)</h2>
+        <p class="mt-3 text-zinc-700">Menos carga manual. Más orden. Mejor decisión.</p>
+      </div>
+
+      <div class="mt-8 grid gap-4 md:grid-cols-3">
+        {[
+          ["Vendé y registrá en segundos", "Cada venta actualiza cliente, stock, deuda y caja automáticamente."],
+          ["Stock que no te sorprende", "Inventario en tiempo real y alertas cuando toca reponer."],
+          ["Clientes con historial y saldo", "Compras, contactos y cuentas pendientes en un solo lugar."],
+          ["Caja clara por método", "Efectivo, transferencias y tarjetas separados, sin confusión."],
+          ["Reportes simples para decidir", "Ventas, resultados y evolución mensual sin fórmulas."],
+          ["Acceso desde cualquier dispositivo", "Tu negocio disponible desde celular o computadora."],
+        ].map(([t, d]) => (
+          <div class="rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm hover:shadow-md transition-shadow">
+            <div class="flex items-start gap-3">
+              <div class="mt-1 inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-zinc-200 bg-zinc-50 font-black">
+                +
+              </div>
+              <div>
+                <h3 class="font-bold">{t}</h3>
+                <p class="mt-2 text-sm leading-relaxed text-zinc-700">{d}</p>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+
+    <!-- Cómo funciona -->
+    <section class="mx-auto max-w-6xl px-4 py-12" id="como-funciona">
+      <div class="rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm md:p-10">
+        <div class="text-center">
+          <div class="text-sm font-semibold text-zinc-900">Simple y rápido</div>
+          <h2 class="mt-2 text-3xl font-black tracking-tight">Empezá en 3 pasos</h2>
+          <p class="mt-3 text-zinc-700">Sin vueltas. Si usás WhatsApp, podés usar {APP_NAME}.</p>
+        </div>
+
+        <div class="mt-8 grid gap-4 md:grid-cols-3">
           {[
-            ["70%", "Menos tiempo admin", "Reducí carga manual con automatizaciones."],
-            ["40+", "Negocios activos", "Creciendo mes a mes."],
-            ["24/7", "Siempre disponible", "Accedé desde cualquier dispositivo."],
-            ["99.9%", "Uptime", "Infra confiable con backups."],
-          ].map(([v, t, d]) => (
-            <div class="rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm">
-              <div class="text-3xl font-black">{v}</div>
+            ["1", "Creá tu cuenta", "En minutos. Sin tarjeta para empezar."],
+            ["2", "Cargá lo básico", "Productos, clientes y precios. Si ya tenés Excel, podés importar."],
+            ["3", "Operá y mirá tus números", "Vendés, cobrás y el sistema te deja todo listo para controlar."],
+          ].map(([n, t, d]) => (
+            <div class="rounded-3xl border border-zinc-200 bg-zinc-50 p-6">
+              <div class="text-2xl font-black">{n}</div>
               <div class="mt-2 font-bold">{t}</div>
               <div class="mt-2 text-sm text-zinc-700">{d}</div>
             </div>
           ))}
         </div>
-      </section>
 
-      <!-- Ventajas -->
-      <section class="mx-auto max-w-6xl px-4 py-12" id="beneficios">
-        <div class="grid gap-8 md:grid-cols-2">
-          <div>
-            <div class="text-sm font-semibold text-zinc-900">Nuestras ventajas</div>
-            <h2 class="mt-2 text-3xl font-black tracking-tight">Por qué elegir {APP_NAME}</h2>
-            <p class="mt-3 text-zinc-700">Herramientas profesionales que transforman la manera en que gestionás tu negocio.</p>
-
-            <div class="mt-6 space-y-4">
-              {[
-                ["Ahorrá tiempo", "Reducí el trabajo manual con flujos simples y rápidos."],
-                ["Aumentá ventas", "Detectá oportunidades con reportes y métricas claras."],
-                ["Datos seguros", "Buenas prácticas de seguridad y respaldos automáticos."],
-                ["Fácil de usar", "Interfaz intuitiva sin capacitaciones complicadas."],
-              ].map(([t, d]) => (
-                <div class="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
-                  <div class="font-bold">{t}</div>
-                  <div class="mt-1 text-sm text-zinc-700">{d}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div class="rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm">
-            <div class="text-sm font-semibold text-zinc-900">{APP_NAME} Dashboard</div>
-            <div class="mt-4 grid gap-3">
-              <div class="rounded-2xl border border-zinc-200 bg-zinc-50 p-4">
-                <div class="text-xs text-zinc-500">Balance total</div>
-                <div class="mt-2 text-2xl font-black">$ 24.580</div>
-              </div>
-              <div class="grid gap-3 md:grid-cols-2">
-                <div class="rounded-2xl border border-zinc-200 bg-white p-4">
-                  <div class="text-xs text-zinc-500">Ingresos hoy</div>
-                  <div class="mt-2 text-xl font-black">$ 12.450</div>
-                </div>
-                <div class="rounded-2xl border border-zinc-200 bg-white p-4">
-                  <div class="text-xs text-zinc-500">Ventas</div>
-                  <div class="mt-2 text-xl font-black">48</div>
-                </div>
-              </div>
-              <div class="rounded-2xl border border-zinc-200 bg-white p-4">
-                <div class="text-xs text-zinc-500">Clientes nuevos</div>
-                <div class="mt-2 text-xl font-black">12</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- Testimonios -->
-      <section class="mx-auto max-w-6xl px-4 py-12" id="testimonios">
-        <div class="text-center">
-          <div class="text-sm font-semibold text-zinc-900">Testimonios</div>
-          <h2 class="mt-2 text-3xl font-black tracking-tight">Clientes satisfechos</h2>
-          <p class="mt-3 text-zinc-700">Empresarios reales que transformaron su negocio.</p>
-        </div>
-
-        <div class="mt-8 grid gap-4 md:grid-cols-3">
-          {[
-            [
-              "Antes llevaba todo en cuadernos y Excel. Ahora tengo todo organizado y puedo ver mis ganancias en tiempo real.",
-              "María Rodríguez",
-              "Casa de Celulares",
-              "MR",
-            ],
-            [
-              "Lo mejor es ver qué productos se venden más y cuándo reabastecer. El control de pagos y deudas es excelente.",
-              "Carlos González",
-              "TecnoStore",
-              "CG",
-            ],
-            [
-              "Súper fácil de usar, no necesité capacitación. El soporte responde rápido. Ahorro horas cada semana.",
-              "Laura Sánchez",
-              "SmartPhone Plus",
-              "LS",
-            ],
-          ].map(([quote, name, biz, initials]) => (
-            <figure class="rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm">
-              <blockquote class="text-sm leading-relaxed text-zinc-700">“{quote}”</blockquote>
-              <figcaption class="mt-4 flex items-center gap-3">
-                <div class="flex h-10 w-10 items-center justify-center rounded-2xl bg-zinc-900 text-xs font-bold text-white">
-                  {initials}
-                </div>
-                <div>
-                  <div class="text-sm font-bold">{name}</div>
-                  <div class="text-xs text-zinc-600">{biz}</div>
-                </div>
-              </figcaption>
-            </figure>
-          ))}
-        </div>
-      </section>
-
-      <!-- FAQ -->
-      <section class="mx-auto max-w-6xl px-4 py-12" id="faq">
-        <div class="rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm md:p-10">
-          <div class="text-center">
-            <div class="text-sm font-semibold text-zinc-900">Resolvemos tus dudas</div>
-            <h2 class="mt-2 text-3xl font-black tracking-tight">Preguntas frecuentes</h2>
-            <p class="mt-3 text-zinc-700">Todo lo que necesitás saber antes de empezar.</p>
-          </div>
-
-          <div class="mt-8 grid gap-4 md:grid-cols-2">
-            {[
-              [
-                "¿Puedo registrar ventas desde el celular?",
-                `Sí. ${APP_NAME} funciona perfecto desde cualquier celular o computadora. Solo necesitás internet.`,
-              ],
-              [
-                "¿Sirve para saber quién me debe y cuánto?",
-                "Sí. Vas a ver pagos pendientes, vencimientos, pagos parciales y saldo restante por cliente.",
-              ],
-              [
-                "¿Es mejor que llevar todo en Excel?",
-                "Sí, porque todo se calcula automáticamente, tenés backups, acceso desde cualquier lugar y alertas.",
-              ],
-              [
-                "¿Mis datos están seguros?",
-                "Aplicamos buenas prácticas de seguridad y respaldos automáticos. (Podés ampliar esto con tu stack real.)",
-              ],
-            ].map(([q, a]) => (
-              <details class="group rounded-2xl border border-zinc-200 bg-zinc-50 p-5">
-                <summary class="cursor-pointer list-none font-bold text-zinc-900">
-                  <span class="select-none">{q}</span>
-                  <span class="float-right text-zinc-500 group-open:rotate-45 transition-transform">+</span>
-                </summary>
-                <p class="mt-3 text-sm text-zinc-700">{a}</p>
-              </details>
-            ))}
-          </div>
-
-          <div class="mt-8 flex flex-col items-center gap-3">
-            <div class="text-sm text-zinc-700">¿Tenés más preguntas?</div>
-            <a
-              href="https://wa.me/5490000000000"
-              class="inline-flex items-center justify-center rounded-xl border border-zinc-200 bg-white px-5 py-3 text-sm font-semibold text-zinc-900 hover:bg-zinc-50"
-              target="_blank"
-              rel="noreferrer"
-            >
-              Contactanos por WhatsApp
-            </a>
-          </div>
-        </div>
-      </section>
-
-      <!-- Precio -->
-      <section class="mx-auto max-w-6xl px-4 py-12" id="precio">
-        <div class="text-center">
-          <div class="text-sm font-semibold text-zinc-900">Prueba gratis</div>
-          <h2 class="mt-2 text-3xl font-black tracking-tight">Precio simple</h2>
-          <p class="mt-3 text-zinc-700">Sin costos ocultos. Sin compromiso. Cancelá cuando quieras.</p>
-        </div>
-
-        <div class="mt-8 grid gap-4 md:grid-cols-3">
-          <div class="rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm md:col-start-2">
-            <div class="flex items-start justify-between">
-              <div>
-                <div class="text-sm font-bold">{APP_NAME} Pro</div>
-                <div class="mt-1 text-xs text-zinc-600">Facturación mensual</div>
-              </div>
-              <span class="rounded-full border border-zinc-200 bg-zinc-50 px-3 py-1 text-xs font-semibold text-zinc-800">
-                3 días gratis
-              </span>
-            </div>
-
-            <div class="mt-6">
-              <div class="flex items-end gap-2">
-                <div class="text-4xl font-black">$30</div>
-                <div class="pb-1 text-sm text-zinc-600">USD / mes</div>
-              </div>
-              <div class="mt-2 text-sm text-zinc-600">Sin tarjeta de crédito para la prueba</div>
-            </div>
-
-            <ul class="mt-6 space-y-2 text-sm text-zinc-700">
-              <li>• Todas las funcionalidades</li>
-              <li>• Datos en la nube</li>
-              <li>• Soporte prioritario</li>
-              <li>• Actualizaciones gratis</li>
-              <li>• Capacitación incluida</li>
-            </ul>
-
-            <a
-              href="/signup"
-              class="mt-6 inline-flex w-full items-center justify-center rounded-xl bg-zinc-900 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-zinc-800"
-            >
-              {CTA_PRIMARY}
-            </a>
-          </div>
-        </div>
-      </section>
-
-      <!-- Contacto -->
-      <section class="mx-auto max-w-6xl px-4 py-12" id="contacto">
-        <div class="rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm md:p-10">
-          <div class="grid gap-8 md:grid-cols-2">
-            <div>
-              <h2 class="text-3xl font-black tracking-tight">Contactanos</h2>
-              <p class="mt-3 text-zinc-700">Estamos para ayudarte a transformar tu negocio.</p>
-              <div class="mt-6 space-y-4 text-sm text-zinc-700">
-                <div class="rounded-2xl border border-zinc-200 bg-zinc-50 p-5">
-                  <div class="font-bold">WhatsApp</div>
-                  <div class="mt-1 text-zinc-600">Lunes a Viernes, 9am - 6pm</div>
-                  <a class="mt-2 inline-flex font-semibold text-zinc-900 hover:underline" href="https://wa.me/5490000000000" target="_blank" rel="noreferrer">
-                    +54 9 0000 000000
-                  </a>
-                </div>
-                <div class="rounded-2xl border border-zinc-200 bg-zinc-50 p-5">
-                  <div class="font-bold">Email</div>
-                  <div class="mt-1 text-zinc-600">Respondemos en 24 horas</div>
-                  <a class="mt-2 inline-flex font-semibold text-zinc-900 hover:underline" href="mailto:support@zuma.app">
-                    support@zuma.app
-                  </a>
-                </div>
-              </div>
-            </div>
-
-            <div class="rounded-3xl border border-zinc-200 bg-zinc-50 p-6">
-              <div class="text-sm font-semibold text-zinc-900">¿Listo para empezar?</div>
-              <p class="mt-2 text-sm text-zinc-700">
-                Probá {APP_NAME} gratis y ordená ventas, stock y caja en un solo lugar.
-              </p>
-
-              <form class="mt-5 space-y-3" onsubmit="return false">
-                <input
-                  class="w-full rounded-xl border border-zinc-200 bg-white px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-zinc-900/10"
-                  type="text"
-                  placeholder="Tu nombre"
-                  name="name"
-                />
-                <input
-                  class="w-full rounded-xl border border-zinc-200 bg-white px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-zinc-900/10"
-                  type="email"
-                  placeholder="Tu email"
-                  name="email"
-                />
-                <button
-                  type="button"
-                  class="inline-flex w-full items-center justify-center rounded-xl bg-zinc-900 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-zinc-800"
-                >
-                  Quiero mi prueba gratis
-                </button>
-                <p class="text-xs text-zinc-500">
-                  *Esto es un placeholder de formulario. Conectalo a tu endpoint cuando quieras.
-                </p>
-              </form>
-            </div>
-          </div>
-        </div>
-      </section>
-    </main>
-
-    <!-- Footer -->
-    <footer class="border-t border-zinc-200/70 bg-white">
-      <div class="mx-auto grid max-w-6xl gap-8 px-4 py-10 md:grid-cols-4">
-        <div class="md:col-span-2">
-          <div class="flex items-center gap-2 font-semibold">
-            <span class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-zinc-200 bg-white shadow-sm">
-              <span class="text-base font-black">Z+</span>
-            </span>
-            <span>{APP_NAME}</span>
-          </div>
-          <p class="mt-3 max-w-md text-sm text-zinc-700">
-            La solución completa para gestionar tu negocio de forma profesional y eficiente.
-          </p>
-          <p class="mt-4 text-xs text-zinc-500">© {new Date().getFullYear()} {APP_NAME}. Todos los derechos reservados.</p>
-        </div>
-
-        <div>
-          <div class="text-sm font-bold">Producto</div>
-          <ul class="mt-3 space-y-2 text-sm text-zinc-700">
-            <li><a class="hover:underline" href="#caracteristicas">Características</a></li>
-            <li><a class="hover:underline" href="#beneficios">Beneficios</a></li>
-            <li><a class="hover:underline" href="#precio">Precio</a></li>
-          </ul>
-        </div>
-
-        <div>
-          <div class="text-sm font-bold">Contacto</div>
-          <ul class="mt-3 space-y-2 text-sm text-zinc-700">
-            <li><a class="hover:underline" href="mailto:support@zuma.app">support@zuma.app</a></li>
-            <li><a class="hover:underline" href="https://wa.me/5490000000000" target="_blank" rel="noreferrer">+54 9 0000 000000</a></li>
-            <li class="text-zinc-500">Argentina</li>
-          </ul>
+        <div class="mt-8 flex justify-center">
+          <a
+            href="#precio"
+            class="inline-flex items-center justify-center rounded-xl bg-zinc-900 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-zinc-800"
+          >
+            {CTA_PRIMARY}
+          </a>
         </div>
       </div>
-    </footer>
+    </section>
 
+    <!-- Seguridad -->
+    <section class="mx-auto max-w-6xl px-4 py-12" id="seguridad">
+      <div class="rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm md:p-10">
+        <div class="grid gap-8 md:grid-cols-2">
+          <div>
+            <div class="text-sm font-semibold text-zinc-900">Confianza</div>
+            <h2 class="mt-2 text-3xl font-black tracking-tight">Tus datos, seguros y disponibles</h2>
+            <p class="mt-3 text-zinc-700">
+              Tu info no depende de una compu ni de un archivo suelto. Todo queda organizado y accesible cuando lo
+              necesitás.
+            </p>
+          </div>
+
+          <div class="grid gap-4 md:grid-cols-2">
+            {[
+              ["Backups automáticos", "Respaldo para evitar pérdidas."],
+              ["Accesos por usuario", "Cada uno con su rol y permisos."],
+              ["Datos en la nube", "Accedé desde donde estés."],
+              ["Exportación", "Llevate tu info cuando lo necesites."],
+            ].map(([t, d]) => (
+              <div class="rounded-2xl border border-zinc-200 bg-zinc-50 p-5">
+                <div class="font-bold">{t}</div>
+                <div class="mt-1 text-sm text-zinc-700">{d}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Testimonios -->
+    <section class="mx-auto max-w-6xl px-4 py-12" id="testimonios">
+      <div class="text-center">
+        <div class="text-sm font-semibold text-zinc-900">Testimonios</div>
+        <h2 class="mt-2 text-3xl font-black tracking-tight">Menos lío. Más control.</h2>
+        <p class="mt-3 text-zinc-700">Negocios que dejaron Excel y ahora miran números claros.</p>
+      </div>
+
+      <div class="mt-8 grid gap-4 md:grid-cols-3">
+        {[
+          [
+            "Antes tenía ventas por todos lados. Ahora cierro el día y sé exactamente cuánto entró y cuánto queda por cobrar.",
+            "María Rodríguez",
+            "Casa de Celulares",
+            "MR",
+          ],
+          [
+            "Lo mejor es el stock y el seguimiento de deudas. Dejé de reponer tarde y de perder tiempo buscando info.",
+            "Carlos González",
+            "TecnoStore",
+            "CG",
+          ],
+          [
+            "Es directo y fácil. En una tarde lo configuré y ya estaba registrando ventas. El soporte responde rápido.",
+            "Laura Sánchez",
+            "SmartPhone Plus",
+            "LS",
+          ],
+        ].map(([quote, name, biz, initials]) => (
+          <figure class="rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm">
+            <blockquote class="text-sm leading-relaxed text-zinc-700">“{quote}”</blockquote>
+            <figcaption class="mt-4 flex items-center gap-3">
+              <div class="flex h-10 w-10 items-center justify-center rounded-2xl bg-zinc-900 text-xs font-bold text-white">
+                {initials}
+              </div>
+              <div>
+                <div class="text-sm font-bold">{name}</div>
+                <div class="text-xs text-zinc-600">{biz}</div>
+              </div>
+            </figcaption>
+          </figure>
+        ))}
+      </div>
+    </section>
+
+    <!-- FAQ -->
+    <section class="mx-auto max-w-6xl px-4 py-12" id="faq">
+      <div class="rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm md:p-10">
+        <div class="text-center">
+          <div class="text-sm font-semibold text-zinc-900">FAQ</div>
+          <h2 class="mt-2 text-3xl font-black tracking-tight">Resolvemos tus dudas</h2>
+          <p class="mt-3 text-zinc-700">Lo que normalmente preguntan antes de empezar.</p>
+        </div>
+
+        <div class="mt-8 grid gap-4 md:grid-cols-2">
+          {[
+            ["¿Puedo usarlo desde el celular?", `Sí. ${APP_NAME} funciona perfecto desde cualquier celular o computadora.`],
+            ["¿Puedo llevar deudas y pagos parciales?", "Sí. Podés ver saldos, vencimientos y registrar pagos parciales."],
+            ["¿Puedo exportar mis datos?", "Sí. Podés exportar la información cuando lo necesites."],
+            ["¿Necesito tarjeta para la prueba?", "No. Podés empezar gratis sin tarjeta y decidir después."],
+            ["¿Me ayudan a configurarlo?", "Sí. Si te trabás, te damos una mano para dejarlo listo."],
+            ["¿Qué pasa si cancelo?", "Cancelás cuando quieras. Tus datos quedan disponibles según tu plan y política de exportación."],
+          ].map(([q, a]) => (
+            <details class="group rounded-2xl border border-zinc-200 bg-zinc-50 p-5">
+              <summary class="cursor-pointer list-none font-bold text-zinc-900">
+                <span class="select-none">{q}</span>
+                <span class="float-right text-zinc-500 group-open:rotate-45 transition-transform">+</span>
+              </summary>
+              <p class="mt-3 text-sm text-zinc-700">{a}</p>
+            </details>
+          ))}
+        </div>
+
+        <div class="mt-8 flex flex-col items-center gap-3">
+          <div class="text-sm text-zinc-700">¿Tenés una consulta puntual?</div>
+          <a
+            href={WHATSAPP_URL}
+            class="inline-flex items-center justify-center rounded-xl border border-zinc-200 bg-white px-5 py-3 text-sm font-semibold text-zinc-900 hover:bg-zinc-50"
+            target="_blank"
+            rel="noreferrer"
+          >
+            Hablar por WhatsApp
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Precio -->
+    <section class="mx-auto max-w-6xl px-4 py-12" id="precio">
+      <div class="text-center">
+        <div class="text-sm font-semibold text-zinc-900">Precio</div>
+        <h2 class="mt-2 text-3xl font-black tracking-tight">Un precio. Todo incluido.</h2>
+        <p class="mt-3 text-zinc-700">Sin costos ocultos. Probalo gratis y decidí después.</p>
+      </div>
+
+      <div class="mt-8 grid gap-4 md:grid-cols-3">
+        <div class="rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm md:col-start-2">
+          <div class="flex items-start justify-between">
+            <div>
+              <div class="text-sm font-bold">{APP_NAME} Pro</div>
+              <div class="mt-1 text-xs text-zinc-600">Facturación mensual</div>
+            </div>
+            <span class="rounded-full border border-zinc-200 bg-zinc-50 px-3 py-1 text-xs font-semibold text-zinc-800">
+              7 días gratis
+            </span>
+          </div>
+
+          <div class="mt-6">
+            <div class="flex items-end gap-2">
+              <div class="text-4xl font-black">$45.000</div>
+              <div class="pb-1 text-sm text-zinc-600">ARS / mes</div>
+            </div>
+            <div class="mt-2 text-sm text-zinc-600">Sin tarjeta de crédito para la prueba</div>
+          </div>
+
+          <ul class="mt-6 space-y-2 text-sm text-zinc-700">
+            <li>• Sistema completo: ventas, stock, clientes, deudas y caja</li>
+            <li>• Datos en la nube</li>
+            <li>• Soporte</li>
+            <li>• Actualizaciones incluidas</li>
+          </ul>
+
+          <a
+            href="/signup"
+            class="mt-6 inline-flex w-full items-center justify-center rounded-xl bg-zinc-900 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-zinc-800"
+          >
+            {CTA_PRIMARY}
+          </a>
+
+          <div class="mt-3 text-center text-xs text-zinc-500">
+            Cancelás cuando quieras.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Contacto -->
+    <section class="mx-auto max-w-6xl px-4 py-12" id="contacto">
+      <div class="rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm md:p-10">
+        <div class="grid gap-8 md:grid-cols-2">
+          <div>
+            <h2 class="text-3xl font-black tracking-tight">Hablemos</h2>
+            <p class="mt-3 text-zinc-700">
+              Si querés, te ayudamos a dejar {APP_NAME} listo para que empieces a operar hoy.
+            </p>
+
+            <div class="mt-6 space-y-4 text-sm text-zinc-700">
+              <div class="rounded-2xl border border-zinc-200 bg-zinc-50 p-5">
+                <div class="font-bold">WhatsApp</div>
+                <div class="mt-1 text-zinc-600">Lunes a Viernes, 9am - 6pm</div>
+                <a class="mt-2 inline-flex font-semibold text-zinc-900 hover:underline" href={WHATSAPP_URL} target="_blank" rel="noreferrer">
+                  +54 9 2234 370460
+                </a>
+              </div>
+
+              <div class="rounded-2xl border border-zinc-200 bg-zinc-50 p-5">
+                <div class="font-bold">Email</div>
+                <div class="mt-1 text-zinc-600">Respondemos en 24 horas</div>
+                <a class="mt-2 inline-flex font-semibold text-zinc-900 hover:underline" href={`mailto:${SUPPORT_EMAIL}`}>
+                  {SUPPORT_EMAIL}
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <div class="rounded-3xl border border-zinc-200 bg-zinc-50 p-6">
+            <div class="text-sm font-semibold text-zinc-900">¿Listo para empezar?</div>
+            <p class="mt-2 text-sm text-zinc-700">
+              Probá {APP_NAME} gratis y ordená ventas, stock y caja en un solo lugar.
+            </p>
+
+            <form class="mt-5 space-y-3" onsubmit="return false">
+              <input
+                class="w-full rounded-xl border border-zinc-200 bg-white px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-zinc-900/10"
+                type="text"
+                placeholder="Tu nombre"
+                name="name"
+              />
+              <input
+                class="w-full rounded-xl border border-zinc-200 bg-white px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-zinc-900/10"
+                type="email"
+                placeholder="Tu email"
+                name="email"
+              />
+              <button
+                type="button"
+                class="inline-flex w-full items-center justify-center rounded-xl bg-zinc-900 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-zinc-800"
+              >
+                Quiero probar {APP_NAME}
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="border-t border-zinc-200/70 bg-white">
+    <div class="mx-auto grid max-w-6xl gap-8 px-4 py-10 md:grid-cols-4">
+      <div class="md:col-span-2">
+        <div class="flex items-center gap-2 font-semibold">
+          <span class="inline-flex h-9 w-9 items-center justify-center rounded-xl">
+          <img src="/zuma-logo.png" alt={`${APP_NAME} logo`} />
+          </span>
+          <span>{APP_NAME}</span>
+        </div>
+        <p class="mt-3 max-w-md text-sm text-zinc-700">
+          Ventas, stock, clientes, deudas y caja en un solo lugar. Hecho para el día a día de tu negocio.
+        </p>
+        <p class="mt-4 text-xs text-zinc-500">© {new Date().getFullYear()} {APP_NAME}. Todos los derechos reservados.</p>
+      </div>
+
+      <div>
+        <div class="text-sm font-bold">Producto</div>
+        <ul class="mt-3 space-y-2 text-sm text-zinc-700">
+          <li><a class="hover:underline" href="#producto">Producto</a></li>
+          <li><a class="hover:underline" href="#casos-de-uso">Casos de uso</a></li>
+          <li><a class="hover:underline" href="#precio">Precio</a></li>
+          <li><a class="hover:underline" href="#faq">FAQ</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <div class="text-sm font-bold">Contacto</div>
+        <ul class="mt-3 space-y-2 text-sm text-zinc-700">
+          <li><a class="hover:underline" href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</a></li>
+          <li><a class="hover:underline" href={WHATSAPP_URL} target="_blank" rel="noreferrer">+54 9 223 4370460</a></li>
+          <li class="text-zinc-500">Argentina</li>
+        </ul>
+      </div>
+    </div>
+  </footer>
 </LayoutLanding>

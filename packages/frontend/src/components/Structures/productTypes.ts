@@ -1,4 +1,7 @@
 export const productTypes = [
-  { value: "just-one", label: "Unitario"},
-  { value: "with-stock", label: "Con stock" },
+  { value: "phone", label: "Celular"},
+  { value: "computer", label: "Computadora"},
+  { value: "tablet", label: "Tablet"},
+  { value: "watch", label: "Reloj"},
+  { value: "headphone", label: "Audio"},
 ];
