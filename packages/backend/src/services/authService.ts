@@ -64,8 +64,23 @@ type ServiceResult =
     }
   | { ok: false; status: number; message: string };
 
-export async function register(emailRaw: string, password: string): Promise<ServiceResult> {
-  const email = normalizeEmail(emailRaw);
+type RegisterInput = {
+  email: string;
+  password: string;
+  userName: string;
+  tenantName: string;
+  currency: "ARS" | "USD" | "EUR" | "BRL";
+  logoKey?: string | null;
+  logoMime?: string | null;
+};
+
+const LOGO_ALLOWED_TYPES = ["image/png", "image/jpeg", "image/webp"] as const;
+function isAllowedLogoType(v: string): v is (typeof LOGO_ALLOWED_TYPES)[number] {
+  return (LOGO_ALLOWED_TYPES as readonly string[]).includes(v);
+}
+
+export async function register(input: RegisterInput): Promise<ServiceResult> {
+  const email = normalizeEmail(input.email);
 
   const existing = await db
     .select({ user_id: userTable.user_id })
@@ -77,13 +92,18 @@ export async function register(emailRaw: string, password: string): Promise<Serv
     return { ok: false, status: 409, message: "Email already in use" };
   }
 
-  const passwordHash = await hash(password, ROUNDS);
+  if (input.logoKey && input.logoMime && !isAllowedLogoType(input.logoMime)) {
+    return { ok: false, status: 400, message: "INVALID_LOGO_TYPE" };
+  }
+
+  const passwordHash = await hash(input.password, ROUNDS);
   const now = new Date();
   const expiresAt = addDays(now, SESSION_DAYS);
   const sessionId = makeSessionId();
   const trialEndsAt = addDays(now, 7);
 
   const result = await db.transaction(async (tx) => {
+    // 1) user
     const insertedUser = await tx
       .insert(userTable)
       .values({ email, password_hash: passwordHash })
@@ -99,9 +119,17 @@ export async function register(emailRaw: string, password: string): Promise<Serv
     const userRow = insertedUser[0];
     if (!userRow) throw new Error("Failed to create user");
 
+    // 2) user_settings (display_name)
+    await tx.insert(userSettingsTable).values({
+      user_id: userRow.user_id,
+      display_name: input.userName.trim(),
+      updated_at: now,
+    });
+
+    // 3) tenant con nombre real
     const insertedTenant = await tx
       .insert(tenantTable)
-      .values({ name: `Negocio de ${email}` })
+      .values({ name: input.tenantName.trim() })
       .returning({
         tenant_id: tenantTable.tenant_id,
         name: tenantTable.name,
@@ -113,24 +141,34 @@ export async function register(emailRaw: string, password: string): Promise<Serv
     const tenantRow = insertedTenant[0];
     if (!tenantRow) throw new Error("Failed to create tenant");
 
-    // Membership owner
+    // 4) membership owner
     await tx.insert(tenantMembershipTable).values({
       tenant_id: tenantRow.tenant_id,
       user_id: userRow.user_id,
       role: "owner",
     });
 
-    // Settings default (opcional pero prolijo)
+    // 5) tenant_settings inicial (currency + business_name + trial + logo opcional)
     await tx.insert(tenantSettingsTable).values({
       tenant_id: tenantRow.tenant_id,
-      display_currency: "ARS",
+      business_name: input.tenantName.trim(),
+      display_currency: input.currency,
       timezone: "America/Argentina/Buenos_Aires",
       low_stock_threshold_default: 3,
       subscription_status: "trial",
       trial_ends_at: trialEndsAt,
+      updated_at: now,
+
+      ...(input.logoKey
+        ? {
+            logo_key: input.logoKey,
+            logo_mime: input.logoMime ?? null,
+            logo_updated_at: now,
+          }
+        : {}),
     });
 
-    // Session con tenant_id (OBLIGATORIO)
+    // 6) session (con tenant_id)
     await tx.insert(sessionTable).values({
       session_id: sessionId,
       user_id: userRow.user_id,

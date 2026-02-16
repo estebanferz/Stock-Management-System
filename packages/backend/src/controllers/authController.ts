@@ -13,7 +13,17 @@ export const authController = new Elysia({ prefix: "/auth" })
     .post(
     "/register",
     async ({ body, set }) => {
-        const result = await register(body.email, body.password);
+        const result = await register({
+        email: body.email,
+        password: body.password,
+        userName: body.userName,
+        tenantName: body.tenantName,
+        currency: body.currency,
+
+        // opcional: si el front ya subió el logo con /tenant/logo/presign + PUT
+        logoKey: body.logoKey ?? null,
+        logoMime: body.logoMime ?? null,
+        });
 
         if (!result.ok) {
         set.status = result.status;
@@ -33,11 +43,15 @@ export const authController = new Elysia({ prefix: "/auth" })
         body: t.Object({
         email: t.String({ minLength: 5, maxLength: 255 }),
         password: t.String({ minLength: 8, maxLength: 200 }),
+
+        userName: t.String({ minLength: 2, maxLength: 120 }),
+        tenantName: t.String({ minLength: 2, maxLength: 255 }),
+        currency: t.Union([t.Literal("ARS"), t.Literal("USD"), t.Literal("EUR"), t.Literal("BRL")]),
+
+        logoKey: t.Optional(t.Union([t.String({ minLength: 1, maxLength: 1024 }), t.Null()])),
+        logoMime: t.Optional(t.Union([t.String({ minLength: 3, maxLength: 100 }), t.Null()])),
         }),
-        detail: {
-        summary: "Register a new user (optional)",
-        tags: ["auth"],
-        },
+        detail: { summary: "Register a new user", tags: ["auth"] },
     }
     )
     .post("/login", async ({ body, set }) => {
