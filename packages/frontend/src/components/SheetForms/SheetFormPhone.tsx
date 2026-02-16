@@ -349,11 +349,8 @@ return (
           <Input 
             id="imei"
             form="form-phone"
-            type="text"
-            inputMode="numeric"
-            pattern="[0-9]*"
             value={form.imei} 
-            onChange={(e) => setForm({...form, imei:  e.target.value.replace(/\D/g, "")})} 
+            onChange={(e) => setForm({...form, imei:  e.target.value})} 
             required />
         </div>
         
@@ -385,28 +382,12 @@ return (
             id="battery"
             form="form-phone"
             type="number" 
-            min={0}
-            max={100}
             step={1}
             value={form.battery_health} 
             onChange={(e) => {
-              const value = e.target.value;
-
-              // allow empty while typing
-              if (value === "") {
-                setForm({ ...form, battery_health: "" });
-                return;
+                setForm({ ...form, battery_health: e.target.value });
               }
-
-              const num = Number(value);
-
-              if (!Number.isNaN(num)) {
-                setForm({
-                  ...form,
-                  battery_health: String(Math.min(100, Math.max(0, num))),
-                });
-              }
-            }}
+            }
             />
         </div>
 
