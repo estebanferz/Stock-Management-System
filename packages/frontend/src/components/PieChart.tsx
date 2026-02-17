@@ -1,16 +1,15 @@
 import { Chart } from "react-google-charts";
 
 const customColors = [
-  "#204e22",
-  "#3d8f41",
-  "#53c259",
-  "#55d85d",
-  "#63ff6c",
+  "#038933",
+  "#028575",
+  "#028199",
+  "#007eae",
+  "#1c6ff4",
 ];
 
 export const options = {
   backgroundColor: "transparent",
-  pieHole: 0.25,
   is3D: false,
   colors: customColors,
   legend: {

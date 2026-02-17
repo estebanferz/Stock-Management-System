@@ -169,10 +169,10 @@ export function BillingBanner({
         }
       : banner.variant === "warn"
       ? {
-          wrap: "border-yellow-300 bg-yellow-100/30",
-          title: "text-amber-900/80",
-          desc: "text-amber-800/80",
-          pill: "bg-amber-100 text-amber-900 ring-1 ring-amber-200",
+          wrap: "border-[#fedf43] bg-[#fedf43]/10",
+          title: "text-[#242426]/80",
+          desc: "text-[#363638]/80",
+          pill: "bg-[#fedf43] text-[#242426] ring-1 ring-[#fedf43]",
           btnVariant: "outline" as const,
         }
       : {
@@ -201,14 +201,14 @@ export function BillingBanner({
 
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
             <a href={billingHref} className="w-full sm:w-auto">
-              <Button className="w-full" variant={styles.btnVariant}>
+              <Button className="w-full rounded-2xl" variant={styles.btnVariant}>
                 {banner.primaryCta}
               </Button>
             </a>
 
             {banner.secondaryCta ? (
               <Button
-                className="w-full sm:w-auto"
+                className="w-full sm:w-auto rounded-2xl"
                 variant="ghost"
                 onClick={banner.onSecondary ?? (() => (window.location.href = billingHref))}
               >

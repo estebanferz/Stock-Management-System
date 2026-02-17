@@ -212,8 +212,8 @@ console.log("deleted count", allData.filter(d => toBool((d as any).is_deleted)).
                 className={[
                   "rounded-lg py-6 px-6 text-sm font-medium transition shadow-md flex items-center justify-center gap-2",
                   active
-                    ? "bg-secondColor text-white border-0"
-                    : "bg-white border-2 text-gray-700 hover:border-0 hover:bg-mainColor/10",
+                    ? "bg-mainColor text-white border-0"
+                    : "bg-white border-2 text-gray-700 hover:border-0 hover:bg-secondColor/10",
                 ].join(" ")}
               >
                 <Icon size={22} />
