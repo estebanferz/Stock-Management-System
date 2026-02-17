@@ -98,7 +98,6 @@ export function SheetFormSeller({zIndex}: SheetFormSellerProps) {
 
     if (isSubmitting) return;
 
-    console.log(hireDate.toString().split("T")[0])
     const sellerData = {
         name: form.name,
         age: parseInt(form.age),

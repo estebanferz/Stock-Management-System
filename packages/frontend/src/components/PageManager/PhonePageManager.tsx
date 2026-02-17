@@ -46,9 +46,6 @@ export function PhonesPageManager({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  console.log("total", allData.length);
-console.log("deleted count", allData.filter(d => toBool((d as any).is_deleted)).length);
-
   const [filters, setFilters] = useState({
     device: "",
     imei: "",
@@ -135,9 +132,6 @@ console.log("deleted count", allData.filter(d => toBool((d as any).is_deleted)).
     return true;
   });
 }, [allData, filters]);
-
-console.log("total", allData.length);
-console.log("deleted count", allData.filter(d => toBool((d as any).is_deleted)).length);
 
   const columns = useMemo(() => {
     switch (selected) {

@@ -304,17 +304,6 @@ export function SheetFormSale({zIndex}:SheetFormSaleProps) {
       setIsSubmitting(true);
       const isEditing = !!editingSale;
 
-      console.log("payload sale:", payload);
-      console.log("types:", {
-        client_id: typeof payload.client_id,
-        seller_id: typeof payload.seller_id,
-        device_id: typeof payload.device_id,
-      });
-
-      console.log("trade_in_phone.datetime typeof:", typeof payload.trade_in_phone?.datetime);
-      console.log("trade_in_phone.datetime value:", payload.trade_in_phone?.datetime);
-      console.log("is Date:", payload.trade_in_phone?.datetime instanceof Date);
-
       const res = isEditing
         ? await clientApp.sale({ id: editingSale!.sale_id }).put(payload)
         : await clientApp.sale.post(payload);

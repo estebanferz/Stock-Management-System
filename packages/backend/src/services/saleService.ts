@@ -502,7 +502,6 @@ export const addSale = async (
   return await db.transaction(async (tx) => {
     let tradeInId: number | null = trade_in_device ?? null;
     if (!tradeInId && trade_in_phone) {
-      console.log(trade_in_phone)
       const values = {
         ...trade_in_phone,
         tenant_id: tenantId,

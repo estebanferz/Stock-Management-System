@@ -5,7 +5,7 @@ const customColors = [
   "#028575",
   "#028199",
   "#007eae",
-  "#1c6ff4",
+  "#007eae",
 ];
 
 export const options = {

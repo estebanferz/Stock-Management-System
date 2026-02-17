@@ -12,7 +12,6 @@ interface SaleTableManagerProps {
 export function SaleTableManager({ data, columns }: SaleTableManagerProps) {
 
   const handleEdit = useCallback((row: Sale) => {
-        console.log("ENTRA HANDLEEDIT")
       const ev = new CustomEvent("open-edit-sale", { detail: row });
       window.dispatchEvent(ev);
   }, []);

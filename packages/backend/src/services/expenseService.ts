@@ -136,7 +136,6 @@ export const addExpense = async (
     description: newExpense.description?.trim() ?? undefined,
   };
   
-  console.log("datetime typeof:", typeof (normalizedExpense as any).datetime, normalizedExpense.datetime);
   return await db.insert(expenseTable).values(normalizedExpense).returning();
 };
 

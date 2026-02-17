@@ -61,8 +61,6 @@ const data = sales.map((sale: any) => ({
   device_name: phoneLabelById.get(sale.device_id) ?? "—",
 }));
 
-console.log("Ventas:", data);
-
 ---
 
 <Layout title="Ventas" user={auth.user}>

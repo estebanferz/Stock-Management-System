@@ -13,9 +13,7 @@ export const currencyController = new Elysia({ prefix: "/currency" })
     }))
     .get("/metrics/overview", protectedController(async (ctx) => {
         const display: Currency = ctx.tenantSettings.display_currency ?? "ARS";
-        console.log("Display currency in currencyController:", display);
         const fx = await getFxSnapshotVenta();
-        console.log("FX in currencyController:", fx);
 
         const gross = await getGrossIncome(ctx.tenantId, display, fx);
         const net = await getNetIncome(ctx.tenantId, display, fx);

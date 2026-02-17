@@ -161,10 +161,10 @@ export function BillingBanner({
   const styles =
     banner.variant === "danger"
       ? {
-          wrap: "border-rose-200 bg-rose-50/30",
-          title: "text-rose-900/80",
-          desc: "text-rose-800/80",
-          pill: "bg-rose-100 text-rose-900 ring-1 ring-rose-200",
+          wrap: "border-[#ff6165] bg-[#ff6165]/10",
+          title: "text-[#242426]/80",
+          desc: "text-[#363638]/80",
+          pill: "bg-[#ff6165] text-white ring-1 ring-[#ff6165]",
           btnVariant: "default" as const,
         }
       : banner.variant === "warn"
