@@ -1,6 +1,7 @@
 ---
 import LayoutLanding from '@/layouts/LayoutLanding.astro';
 import { requireAuth } from '@/lib/requireAuth';
+import { MinusCircle, PlusCircle } from 'lucide-react';
 
 const APP_NAME = "Zuma+";
 const CTA_PRIMARY = "Probar gratis";
@@ -152,7 +153,7 @@ if (session) return Astro.redirect("/dashboard");
               <div class="rounded-2xl border border-zinc-200 bg-white p-4 hover:scale-105 hover:shadow-lg transition-transform">
                 <div class="text-xs text-zinc-500">Cobros por deuda</div>
                 <div class="mt-2 text-2xl font-black">12</div>
-                <div class="mt-2 text-xs text-zinc-600">Cobros</div>
+                <div class="mt-2 text-xs text-zinc-600">Cobros pendientes</div>
               </div>
             </div>
           </div>
@@ -163,53 +164,47 @@ if (session) return Astro.redirect("/dashboard");
     </section>
 
     <!-- Problema -> Solución -->
-    <section class="mx-auto max-w-7xl px-4 py-12" id="producto">
-      <div class="rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm md:p-10">
-        <div class="grid gap-10 md:grid-cols-2">
-          <div>
-            <div class="text-sm font-semibold text-zinc-900">Lo que cambia con {APP_NAME}</div>
-            <h2 class="mt-2 text-3xl font-black tracking-tight">
-              Si hoy gestionás con Excel, WhatsApp y memoria… estás perdiendo control.
-            </h2>
-            <p class="mt-3 text-zinc-700">
-              El día a día te come y la info queda desordenada. {APP_NAME} ordena el flujo completo para que sepas qué
-              vendiste, qué te deben, cuánto ganaste y qué falta reponer.
-            </p>
-          </div>
-
-          <div class="grid gap-6 md:grid-cols-2">
-            <div class="rounded-2xl border border-zinc-200 bg-zinc-50 p-5">
-              <h3 class="font-bold">Lo que suele pasar</h3>
-              <ul class="mt-3 space-y-2 text-sm text-zinc-700">
-                <li>• Ventas anotadas en distintos lados</li>
-                <li>• Stock “aproximado” y sorpresas</li>
-                <li>• Deudas sin seguimiento real</li>
-                <li>• Caja que no cierra</li>
-                <li>• Buscar info te lleva minutos</li>
-              </ul>
-            </div>
-
-            <div class="rounded-2xl border border-zinc-200 bg-white p-5">
-              <h3 class="font-bold">Con {APP_NAME}</h3>
-              <ul class="mt-3 space-y-2 text-sm text-zinc-700">
-                <li>• Cada venta deja todo actualizado</li>
-                <li>• Stock en tiempo real + alertas</li>
-                <li>• Deudas con vencimientos y parciales</li>
-                <li>• Caja clara por método de pago</li>
-                <li>• Encontrás todo en segundos</li>
-              </ul>
-            </div>
-          </div>
+    <section class="grid grid-cols-1 lg:grid-cols-3 mx-auto max-w-[1600px] px-4 py-12" id="producto">
+      <div class="col-span-1 rounded-3xl md:pl-10">
+        <div class="flex flex-col gap-2">
+          <div class="text-sm font-semibold text-[#363638]">Lo que cambia con {APP_NAME}</div>
+          <h2 class=" text-4xl text-[#242426] font-black tracking-tight">
+            Si hoy gestionás con Excel…<br/> <span class="text-white pl-2 pr-4 bg-[#ff383c]">estás perdiendo control.</span>
+          </h2>
+          <p class="mt-3 text-zinc-700">
+            El día a día te come y la info queda desordenada. {APP_NAME} ordena el flujo completo para que sepas qué
+            vendiste, qué te deben, cuánto ganaste y qué falta reponer.
+          </p>
         </div>
-
-        <div class="mt-8 flex flex-wrap gap-2 text-sm text-zinc-700">
-          <span class="font-semibold text-zinc-900">Ideal para:</span>
-          <span class="rounded-full border border-zinc-200 bg-white px-3 py-1">Tiendas de celulares</span>
-          <span class="rounded-full border border-zinc-200 bg-white px-3 py-1">Compra-venta</span>
-          <span class="rounded-full border border-zinc-200 bg-white px-3 py-1">Reparación</span>
-          <span class="rounded-full border border-zinc-200 bg-white px-3 py-1">Accesorios</span>
+        
+        <div class="grid mt-6 gap-4 md:grid-cols-2">
+          <div class="rounded-2xl border border-zinc-200 bg-zinc-50 p-5 hover:scale-105 hover:shadow-lg hover:shadow-[#ff383c]/20 transition-transform">
+            <h3 class="font-extrabold text-xl">Antes</h3>
+            <ul class="mt-3 space-y-2 text-sm text-zinc-700">
+              <li><MinusCircle height={16} width={16} className="inline mr-1 text-[#ff383c]" /> Ventas anotadas en distintos lados</li>
+              <li><MinusCircle height={16} width={16} className="inline mr-1 text-[#ff383c]" /> Stock “aproximado” y sorpresas</li>
+              <li><MinusCircle height={16} width={16} className="inline mr-1 text-[#ff383c]" /> Deudas sin seguimiento real</li>
+              <li><MinusCircle height={16} width={16} className="inline mr-1 text-[#ff383c]" /> Caja que no cierra</li>
+              <li><MinusCircle height={16} width={16} className="inline mr-1 text-[#ff383c]" /> Buscar info te lleva minutos</li>
+            </ul>
+          </div>
+          
+          <div class="rounded-2xl bg-gradient-to-tr from-mainColor to-fourthColor p-[4px] shadow-2xl shadow-secondColor/40 hover:scale-105 transition-transform">
+            <div class="rounded-xl group border border-zinc-200 bg-white p-5 hover:bg-gradient-to-tr hover:from-mainColor hover:to-fourthColor hover:text-white transition-colors duration-200 hover:border-0">
+              <h3 class="font-extrabold text-xl">{APP_NAME}</h3>
+              <ul class="mt-3 space-y-2 text-sm text-zinc-700 group-hover:text-white transition-colors duration-300">
+                <li><PlusCircle height={16} width={16} className="inline mr-1 text-[#34c759] group-hover:text-white" /> Cada venta deja todo actualizado</li>
+                <li><PlusCircle height={16} width={16} className="inline mr-1 text-[#34c759] group-hover:text-white" /> Stock en tiempo real + alertas</li>
+                <li><PlusCircle height={16} width={16} className="inline mr-1 text-[#34c759] group-hover:text-white" /> Deudas con vencimientos y parciales</li>
+                <li><PlusCircle height={16} width={16} className="inline mr-1 text-[#34c759] group-hover:text-white" /> Caja clara por método de pago</li>
+                <li><PlusCircle height={16} width={16} className="inline mr-1 text-[#34c759] group-hover:text-white" /> Encontrás todo en segundos</li>
+              </ul>
+            </div>
+          </div>
         </div>
       </div>
+
+      <img src="/macbook-inventory-landing.png" class="col-span-2 pt-8 lg:p-8 lg:pr-0 mt-3 lg:mt-0">
     </section>
 
 <!-- Cómo funciona -->
@@ -310,7 +305,7 @@ if (session) return Astro.redirect("/dashboard");
     <section class="mx-auto max-w-6xl px-4 py-12" id="caracteristicas">
       <div class="text-center">
         <div class="text-sm font-semibold text-zinc-900">Producto</div>
-        <h2 class="mt-2 text-3xl font-black tracking-tight">Lo que te da control (de verdad)</h2>
+        <h2 class="mt-2 text-3xl font-black tracking-tight">Confiabilidad que no falla</h2>
         <p class="mt-3 text-zinc-700">Menos carga manual. Más orden. Mejor decisión.</p>
       </div>
 
