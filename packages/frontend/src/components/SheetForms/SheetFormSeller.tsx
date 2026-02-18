@@ -216,7 +216,7 @@ return (
         </div>
 
         <div className="grid gap-3">
-          <Label>Comisión</Label>
+          <Label>Comisión (%)</Label>
           <Input
             id="commission"
             form="form-seller" 
