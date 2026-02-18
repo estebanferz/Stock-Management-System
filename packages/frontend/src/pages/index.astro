@@ -168,9 +168,10 @@ if (session) return Astro.redirect("/dashboard");
       <div class="col-span-1 rounded-3xl md:pl-10">
         <div class="flex flex-col gap-2">
           <div class="text-sm font-semibold text-[#363638]">Lo que cambia con {APP_NAME}</div>
-          <h2 class=" text-4xl text-[#242426] font-black tracking-tight">
-            Si hoy gestionás con Excel…<br/> <span class="text-white pl-2 pr-4 bg-[#ff383c]">estás perdiendo control.</span>
+          <h2 class="text-4xl text-[#242426] font-black tracking-tight">
+            Si hoy gestionás con Excel…<br/> 
           </h2>
+          <h2 class="text-4xl max-w-fit font-black tracking-tight text-white pl-2 pr-4  bg-[#ff383c]">estás perdiendo control.</h2>
           <p class="mt-3 text-zinc-700">
             El día a día te come y la info queda desordenada. {APP_NAME} ordena el flujo completo para que sepas qué
             vendiste, qué te deben, cuánto ganaste y qué falta reponer.
@@ -207,77 +208,6 @@ if (session) return Astro.redirect("/dashboard");
       <img src="/macbook-inventory-landing.png" class="col-span-2 pt-8 lg:p-8 lg:pr-0 mt-3 lg:mt-0">
     </section>
 
-<!-- Cómo funciona -->
-<section class="mx-auto max-w-7xl py-12" id="como-funciona">
-  <div class="rounded-3xl p-6 md:p-8">
-    <div class="text-center mb-5">
-      <div class="text-sm font-semibold text-[#363638]">Simple y rápido</div>
-      <h2 class="mt-2 text-4xl font-black tracking-tight text-[#242426]">
-        Empezá en 3 pasos
-      </h2>
-      <p class="mt-3 text-[#363638]">
-        Sin vueltas. Si usás WhatsApp, podés usar {APP_NAME}.
-      </p>
-    </div>
-
-    <div class="grid gap-8 lg:grid-cols-5 lg:items-center">
-
-      <!-- PASOS -->
-      <div class="order-1 lg:order-2 lg:col-span-3">
-        <!-- sm/md: 3 columnas | lg: vertical -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-5 lg:flex lg:flex-col">
-          {[
-            ["1", "Creá tu cuenta", "En minutos. Sin tarjeta para empezar."],
-            ["2", "Cargá lo básico", "Productos, clientes y precios."],
-            ["3", "Operá y mirá tus números", "Vendés, cobrás y el sistema te deja todo listo para controlar."],
-          ].map(([n, t, d]) => (
-            <div
-              data-step-card={n}
-              tabindex="0"
-              class="rounded-3xl border border-zinc-200 bg-zinc-50 p-6 py-8
-                     transform duration-200 hover:scale-105
-                     shadow-lg shadow-secondColor/40
-                     hover:border-0 hover:shadow-2xl
-                     hover:bg-gradient-to-tr hover:from-mainColor hover:to-fourthColor hover:text-white
-                     focus:scale-105 outline-none"
-            >
-              <div class="text-3xl font-black">{n}</div>
-              <div class="text-lg mt-2 font-bold">{t}</div>
-              <div class="mt-2 text-sm font-light">{d}</div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <!-- IMÁGENES -->
-      <div class="order-2 lg:order-1 lg:col-span-2">
-        <div class="relative mx-auto h-[520px] sm:h-[600px] lg:h-[720px] w-full max-w-[360px]">
-          <img
-            data-step-img="1"
-            src="/iphone-signup-landing.png"
-            class="how-img absolute inset-0 mx-auto h-full w-auto"
-            alt="Paso 1"
-          />
-          <img
-            data-step-img="2"
-            src="/iphone-addsale-landing.png"
-            class="how-img absolute inset-0 mx-auto h-full w-auto"
-            alt="Paso 2"
-          />
-          <img
-            data-step-img="3"
-            src="/iphone-dashboard-landing.png"
-            class="how-img absolute inset-0 mx-auto h-full w-auto"
-            alt="Paso 3"
-          />
-        </div>
-      </div>
-
-    </div>
-  </div>
-</section>
-
-
     <!-- Casos de uso -->
     <section class="mx-auto max-w-6xl px-4 py-12" id="casos-de-uso">
       <div class="text-center">
@@ -298,6 +228,76 @@ if (session) return Astro.redirect("/dashboard");
             <p class="mt-2 text-sm leading-relaxed text-zinc-700">{d}</p>
           </div>
         ))}
+      </div>
+    </section>
+
+    <!-- Cómo funciona -->
+    <section class="mx-auto max-w-7xl py-12" id="como-funciona">
+      <div class="rounded-3xl p-6 md:p-8">
+        <div class="text-center mb-5">
+          <div class="text-sm font-semibold text-[#363638]">Simple y rápido</div>
+          <h2 class="mt-2 text-4xl font-black tracking-tight text-[#242426]">
+            Empezá en 3 pasos
+          </h2>
+          <p class="mt-3 text-[#363638]">
+            Sin vueltas. Si usás WhatsApp, podés usar {APP_NAME}.
+          </p>
+        </div>
+
+        <div class="grid gap-8 lg:grid-cols-5 lg:items-center">
+
+          <!-- PASOS -->
+          <div class="order-1 lg:order-2 lg:col-span-3">
+            <!-- sm/md: 3 columnas | lg: vertical -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-5 lg:flex lg:flex-col">
+              {[
+                ["1", "Creá tu cuenta", "En minutos. Sin tarjeta para empezar."],
+                ["2", "Cargá lo básico", "Productos, clientes y precios."],
+                ["3", "Operá y mirá tus números", "Vendés, cobrás y el sistema te deja todo listo para controlar."],
+              ].map(([n, t, d]) => (
+                <div
+                  data-step-card={n}
+                  tabindex="0"
+                  class="rounded-3xl border border-zinc-200 bg-zinc-50 p-6 py-8
+                        transform duration-200 hover:scale-105
+                        shadow-lg shadow-secondColor/40
+                        hover:border-0 hover:shadow-2xl
+                        hover:bg-gradient-to-tr hover:from-mainColor hover:to-fourthColor hover:text-white
+                        focus:scale-105 outline-none"
+                >
+                  <div class="text-3xl font-black">{n}</div>
+                  <div class="text-lg mt-2 font-bold">{t}</div>
+                  <div class="mt-2 text-sm font-light">{d}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <!-- IMÁGENES -->
+          <div class="order-2 lg:order-1 lg:col-span-2">
+            <div class="relative mx-auto h-[520px] sm:h-[600px] lg:h-[720px] w-full max-w-[360px]">
+              <img
+                data-step-img="1"
+                src="/iphone-signup-landing.png"
+                class="how-img absolute inset-0 mx-auto h-full w-auto"
+                alt="Paso 1"
+              />
+              <img
+                data-step-img="2"
+                src="/iphone-addsale-landing.png"
+                class="how-img absolute inset-0 mx-auto h-full w-auto"
+                alt="Paso 2"
+              />
+              <img
+                data-step-img="3"
+                src="/iphone-dashboard-landing.png"
+                class="how-img absolute inset-0 mx-auto h-full w-auto"
+                alt="Paso 3"
+              />
+            </div>
+          </div>
+
+        </div>
       </div>
     </section>
 
