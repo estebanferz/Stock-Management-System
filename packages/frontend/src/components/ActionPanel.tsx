@@ -22,7 +22,13 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({ enabled = true }) => {
 
       <Button
         variant={mode === "edit" ? "default" : "outline"}
-        className="items-center gap-2 hidden lg:block"
+        className={`
+          items-center gap-2 hidden lg:block
+          ${mode === "edit"
+            ? "bg-mainColor text-white hover:bg-emerald-600 border-emerald-500"
+            : ""
+          }
+        `}
         onClick={() => setMode((m) => (m === "edit" ? null : "edit"))}
       >
         Editar
@@ -40,7 +46,13 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({ enabled = true }) => {
 
       <Button
         variant={mode === "delete" ? "destructive" : "outline"}
-        className="items-center gap-2 hidden lg:block"
+        className={`
+          items-center gap-2 hidden lg:block
+          ${mode === "delete"
+            ? "bg-[#ff383c] text-white hover:bg-[#ff383c]/90 border-[#ff383c]"
+            : ""
+          }
+        `}
         onClick={() => setMode((m) => (m === "delete" ? null : "delete"))}
       >
         Eliminar

@@ -206,7 +206,7 @@ export function PhonesPageManager({
                 className={[
                   "rounded-lg py-6 px-6 text-sm font-medium transition shadow-md flex items-center justify-center gap-2",
                   active
-                    ? "bg-mainColor text-white border-0"
+                    ? "bg-gradient-to-bl from-mainColor to-fourthColor from-1% text-white border-0"
                     : "bg-white border-2 text-gray-700 hover:border-0 hover:bg-secondColor/10",
                 ].join(" ")}
               >
