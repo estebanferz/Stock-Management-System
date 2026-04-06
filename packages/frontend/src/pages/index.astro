@@ -356,37 +356,7 @@ if (session) return Astro.redirect("/dashboard");
       </div>
     </section>
 
-    <!-- Seguridad -->
-    <section class="mx-auto max-w-7xl py-12" id="seguridad">
-      <div class="rounded-3xl p-6 md:p-10">
-        <div class="grid gap-8 md:grid-cols-2">
-          <div>
-            <div class="text-md font-semibold text-zinc-900">Confianza</div>
-            <h2 class="mt-2 text-4xl font-black tracking-tight text-[#242426]">Tus datos, seguros y disponibles</h2>
-            <p class="mt-3 text-zinc-700">
-              Tu información no depende de una computadora ni de un archivo suelto. Todo queda organizado y accesible cuando lo
-              necesitás.
-            </p>
-          </div>
-
-          <div class="grid gap-4 md:grid-cols-2">
-            {[
-              ["Backups automáticos", "Respaldo para evitar pérdidas."],
-              ["Accesos por usuario", "Cada uno con su rol y permisos."],
-              ["Datos en la nube", "Accedé desde donde estés."],
-              ["Exportación", "Llevate tu info cuando lo necesites."],
-            ].map(([t, d]) => (
-              <div class="rounded-2xl border border-zinc-200 bg-zinc-50 p-5">
-                <div class="font-bold">{t}</div>
-                <div class="mt-1 text-sm text-zinc-700">{d}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Testimonios -->
+    <!-- Testimonios
     <section class="mx-auto max-w-6xl px-4 py-12" id="testimonios">
       <div class="text-center">
         <div class="text-sm font-semibold text-zinc-900">Testimonios</div>
@@ -405,7 +375,7 @@ if (session) return Astro.redirect("/dashboard");
           [
             "Lo mejor es el stock y el seguimiento de deudas. Dejé de reponer tarde y de perder tiempo buscando info.",
             "Carlos González",
-            "TecnoStore",
+            "TecnoAppleMDP",
             "CG",
           ],
           [
@@ -429,46 +399,54 @@ if (session) return Astro.redirect("/dashboard");
           </figure>
         ))}
       </div>
-    </section>
+    </section> -->
 
     <!-- FAQ -->
-    <section class="mx-auto max-w-6xl px-4 py-12" id="faq">
-      <div class="rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm md:p-10">
-        <div class="text-center">
-          <div class="text-sm font-semibold text-zinc-900">FAQ</div>
-          <h2 class="mt-2 text-3xl font-black tracking-tight">Resolvemos tus dudas</h2>
-          <p class="mt-3 text-zinc-700">Lo que normalmente preguntan antes de empezar.</p>
-        </div>
+    <section class="mx-auto max-w-7xl px-4 py-12" id="faq">
+      <div class="relative overflow-hidden rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm md:p-10">
+        <img 
+          src="/question-mark.png" 
+          alt="Pregunta"
+          class="pointer-events-none absolute right-0 top-1/2 -translate-y-[45%] h-[1000px] w-auto opacity-10 z-0 select-none"
+        />
+        <div class="relative z-10">
+          <div class="text-center">
+            <div class="text-md font-semibold text-[#363638]">FAQ</div>
+            <h2 class="mt-2 text-4xl font-black tracking-tight text-[#242426]">Resolvemos tus dudas</h2>
+            <p class="mt-3 text-[#363638]">Lo que normalmente preguntan antes de empezar.</p>
+          </div>
 
-        <div class="mt-8 grid gap-4 md:grid-cols-2">
-          {[
-            ["¿Puedo usarlo desde el celular?", `Sí. ${APP_NAME} funciona perfecto desde cualquier celular o computadora.`],
-            ["¿Puedo llevar deudas y pagos parciales?", "Sí. Podés ver saldos, vencimientos y registrar pagos parciales."],
-            ["¿Puedo exportar mis datos?", "Sí. Podés exportar la información cuando lo necesites."],
-            ["¿Necesito tarjeta para la prueba?", "No. Podés empezar gratis sin tarjeta y decidir después."],
-            ["¿Me ayudan a configurarlo?", "Sí. Si te trabás, te damos una mano para dejarlo listo."],
-            ["¿Qué pasa si cancelo?", "Cancelás cuando quieras. Tus datos quedan disponibles según tu plan y política de exportación."],
-          ].map(([q, a]) => (
-            <details class="group rounded-2xl border border-zinc-200 bg-zinc-50 p-5">
-              <summary class="cursor-pointer list-none font-bold text-zinc-900">
-                <span class="select-none">{q}</span>
-                <span class="float-right text-zinc-500 group-open:rotate-45 transition-transform">+</span>
-              </summary>
-              <p class="mt-3 text-sm text-zinc-700">{a}</p>
-            </details>
-          ))}
-        </div>
+          <div class="mt-8 grid gap-4 md:grid-cols-2">
+            {[
+              ["¿Puedo usarlo desde el celular?", `Sí. ${APP_NAME} funciona perfecto desde cualquier celular o computadora.`],
+              ["¿Puedo llevar deudas y pagos parciales?", "Sí. Podés ver saldos, vencimientos y registrar pagos parciales."],
+              ["¿Puedo exportar mis datos?", "Sí. Podés exportar la información cuando lo necesites."],
+              ["¿Necesito tarjeta para la prueba?", "No. Podés empezar gratis sin tarjeta y decidir después."],
+              ["¿Me ayudan a configurarlo?", "Sí. Si te trabás, te damos una mano para dejarlo listo."],
+              ["¿Qué pasa si cancelo?", "Cancelás cuando quieras. Tus datos quedan disponibles según tu plan y política de exportación."],
+            ].map(([q, a]) => (
+              <details class="group rounded-2xl border border-zinc-200 bg-zinc-50 p-5">
+                <summary class="cursor-pointer list-none font-bold text-zinc-900">
+                  <span class="select-none">{q}</span>
+                  <span class="float-right text-zinc-500 group-open:rotate-45 transition-transform">+</span>
+                </summary>
+                <p class="mt-3 text-sm text-zinc-700">{a}</p>
+              </details>
+            ))}
+          </div>
 
-        <div class="mt-8 flex flex-col items-center gap-3">
-          <div class="text-sm text-zinc-700">¿Tenés una consulta puntual?</div>
-          <a
-            href={WHATSAPP_URL}
-            class="inline-flex items-center justify-center rounded-xl border border-zinc-200 bg-white px-5 py-3 text-sm font-semibold text-zinc-900 hover:bg-zinc-50"
-            target="_blank"
-            rel="noreferrer"
-          >
-            Hablar por WhatsApp
-          </a>
+          <div class="mt-8 flex flex-col items-center gap-3">
+            <div class="text-md text-zinc-700">¿Tenés una consulta puntual?</div>
+            <a
+              href={WHATSAPP_URL}
+              class="inline-flex items-center justify-center rounded-xl border border-zinc-200 bg-[#34c759]/80 px-5 py-3 gap-2 text-sm font-semibold text-[#242426] hover:bg-[#34c759]"
+              target="_blank"
+              rel="noreferrer"
+            >
+              <img src={whatsappIcon} alt="WhatsApp logo" class="h-6 w-6">
+              WhatsApp
+            </a>
+          </div>
         </div>
       </div>
     </section>
