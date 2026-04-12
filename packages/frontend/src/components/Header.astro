@@ -1,8 +1,10 @@
 ---
+import { Speech } from "lucide-react";
 import { CurrencyConverterCard } from "./CurrencyConverterCard";
 import { UserMenu } from "./UserMenu";
-
 //import SearchBar from "../components/SearchBar.astro";
+
+const WHATSAPP_URL = "https://wa.me/5492234370460?text=Hola%20Zuma%2B%2C%20quiero%20saber%20más%20sobre%20el%20producto%20y%20los%20precios.";
 const { user, dolarBlue, tenantDisplayName, tenantLogoUrl, roleInTenant } = Astro.props;
 const compra = dolarBlue?.compra;
 const venta = dolarBlue?.venta;
@@ -20,43 +22,63 @@ const fecha = dolarBlue?.fechaActualizacion
   id="header"
   class="fixed left-0 right-0 top-0 z-30 flex h-[var(--header-height)] bg-white shadow-lg transition-transform duration-300"
 >
-<div class="relative flex w-full items-center justify-between md:justify-around p-5">
+  <div class="relative flex w-full items-center justify-between md:justify-around p-5">
 
-  <button
-    id="menu-toggle"
-    class="absolute left-2 md:left-4 lg:left-10 z-30 h-10 w-10 flex justify-center items-center text-2xl pb-1 rounded-md text-gray-700 hover:bg-gray-50 focus:outline-none"
-  >
-    <svg xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24" width="20" height="20">
-      <path d="M24,12c0,.276-.224,.5-.5,.5H.5c-.276,0-.5-.224-.5-.5s.224-.5,.5-.5H23.5c.276,0,.5,.224,.5,.5ZM.5,5H23.5c.276,0,.5-.224,.5-.5s-.224-.5-.5-.5H.5c-.276,0-.5,.224-.5,.5s.224,.5,.5,.5Zm23,14H.5c-.276,0-.5,.224-.5,.5s.224,.5,.5,.5H23.5c.276,0,.5-.224,.5-.5s-.224-.5-.5-.5Z"/>
-    </svg>
-  </button>
-  <div class="flex items-center space-x-4">
-    <a href="/dashboard" class="translate-y-[28px] translate-x-10 md:translate-x-6 h-24 w-24 text-xl z-20 font-bold text-gray-800">
-    <img
-      src="/zumaplus-logo-borde.png"
-    />
-    </a>
-  </div>
+    <button
+      id="menu-toggle"
+      class="absolute left-2 md:left-4 lg:left-10 z-30 h-10 w-10 flex justify-center items-center text-2xl pb-1 rounded-md text-gray-700 hover:bg-gray-50 focus:outline-none"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24" width="20" height="20">
+        <path d="M24,12c0,.276-.224,.5-.5,.5H.5c-.276,0-.5-.224-.5-.5s.224-.5,.5-.5H23.5c.276,0,.5,.224,.5,.5ZM.5,5H23.5c.276,0,.5-.224,.5-.5s-.224-.5-.5-.5H.5c-.276,0-.5,.224-.5,.5s.224,.5,.5,.5Zm23,14H.5c-.276,0-.5,.224-.5,.5s.224,.5,.5,.5H23.5c.276,0,.5-.224,.5-.5s-.224-.5-.5-.5Z"/>
+      </svg>
+    </button>
+    <div class="flex items-center space-x-4">
+      <a href="/dashboard" class="translate-y-[28px] translate-x-10 md:translate-x-6 h-24 w-24 text-xl z-20 font-bold text-gray-800">
+      <img
+        src="/zumaplus-logo-borde.png"
+      />
+      </a>
+    </div>
 
-  <div class="text-xs border rounded-lg px-4 py-1 flex gap-3 hidden md:block">
-    <div class="flex flex-row items-center justify-center gap-1 md:gap-2 lg:gap-10">
-      <div class="flex flex-row items-center justify-center gap-4">
-        <svg class="opacity-70" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24" width="24" height="24"><path d="M19.5,0H4.5C2.019,0,0,2.019,0,4.5v15c0,2.481,2.019,4.5,4.5,4.5h15c2.481,0,4.5-2.019,4.5-4.5V4.5c0-2.481-2.019-4.5-4.5-4.5Zm3.5,19.5c0,1.93-1.57,3.5-3.5,3.5H4.5c-1.93,0-3.5-1.57-3.5-3.5V4.5c0-1.93,1.57-3.5,3.5-3.5h15c1.93,0,3.5,1.57,3.5,3.5v15Zm-7-5.126c0,1.448-1.178,2.626-2.626,2.626h-.874v1.5c0,.276-.224,.5-.5,.5s-.5-.224-.5-.5v-1.5h-.926c-.979,0-1.893-.526-2.382-1.375-.139-.239-.057-.545,.183-.683,.238-.14,.544-.057,.683,.183,.312,.54,.894,.875,1.517,.875h2.8c.896,0,1.626-.729,1.626-1.626,0-.803-.575-1.478-1.368-1.605l-3.422-.55c-1.28-.206-2.21-1.296-2.21-2.593,0-1.448,1.178-2.626,2.626-2.626h.874v-1.5c0-.276,.224-.5,.5-.5s.5,.224,.5,.5v1.5h.926c.979,0,1.892,.527,2.382,1.375,.139,.239,.057,.545-.183,.683-.236,.136-.545,.057-.683-.183-.312-.54-.894-.875-1.517-.875h-2.8c-.896,0-1.626,.729-1.626,1.626,0,.803,.575,1.478,1.368,1.605l3.422,.55c1.28,.206,2.21,1.297,2.21,2.593Z"/></svg>
-        <div class="flex flex-col text-left">  
-          <span class="font-medium">Dolar Blue</span>
-          <span class="text-gray-500">{fecha}</span>
+    <div class="text-xs border rounded-lg px-4 py-1 flex gap-3 hidden md:block">
+      <div class="flex flex-row items-center justify-center gap-1 md:gap-2 lg:gap-10">
+        <div class="flex flex-row items-center justify-center gap-4">
+          <svg class="opacity-70" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24" width="24" height="24"><path d="M19.5,0H4.5C2.019,0,0,2.019,0,4.5v15c0,2.481,2.019,4.5,4.5,4.5h15c2.481,0,4.5-2.019,4.5-4.5V4.5c0-2.481-2.019-4.5-4.5-4.5Zm3.5,19.5c0,1.93-1.57,3.5-3.5,3.5H4.5c-1.93,0-3.5-1.57-3.5-3.5V4.5c0-1.93,1.57-3.5,3.5-3.5h15c1.93,0,3.5,1.57,3.5,3.5v15Zm-7-5.126c0,1.448-1.178,2.626-2.626,2.626h-.874v1.5c0,.276-.224,.5-.5,.5s-.5-.224-.5-.5v-1.5h-.926c-.979,0-1.893-.526-2.382-1.375-.139-.239-.057-.545,.183-.683,.238-.14,.544-.057,.683,.183,.312,.54,.894,.875,1.517,.875h2.8c.896,0,1.626-.729,1.626-1.626,0-.803-.575-1.478-1.368-1.605l-3.422-.55c-1.28-.206-2.21-1.296-2.21-2.593,0-1.448,1.178-2.626,2.626-2.626h.874v-1.5c0-.276,.224-.5,.5-.5s.5,.224,.5,.5v1.5h.926c.979,0,1.892,.527,2.382,1.375,.139,.239,.057,.545-.183,.683-.236,.136-.545,.057-.683-.183-.312-.54-.894-.875-1.517-.875h-2.8c-.896,0-1.626,.729-1.626,1.626,0,.803,.575,1.478,1.368,1.605l3.422,.55c1.28,.206,2.21,1.297,2.21,2.593Z"/></svg>
+          <div class="flex flex-col text-left">  
+            <span class="font-medium">Dolar Blue</span>
+            <span class="text-gray-500">{fecha}</span>
+          </div>
+        </div>
+        <div class="left-1/2 h-full border-r"></div>
+        <div class="flex flex-row md:gap-6 lg:gap-8">
+          <p class="text-center font-light w-12">COMPRA <br><strong class="font-bold">$ {compra}</strong></p>
+          <p class="text-center font-light w-12">VENTA <br><strong class="font-bold">$ {venta}</strong></p>
         </div>
       </div>
-      <div class="left-1/2 h-full border-r"></div>
-      <div class="flex flex-row md:gap-6 lg:gap-8">
-        <p class="text-center font-light w-12">COMPRA <br><strong class="font-bold">$ {compra}</strong></p>
-        <p class="text-center font-light w-12">VENTA <br><strong class="font-bold">$ {venta}</strong></p>
-      </div>
     </div>
-  </div>
     <!-- <SearchBar /> -->
 
-    <UserMenu client:load name={user.name} email={user.email} roleInTenant={roleInTenant} settingsHref="/profile" />
+    <div class="flex flex-row items-center gap-4 text-gray-600">
+      <UserMenu client:load name={user.name} email={user.email} roleInTenant={roleInTenant} settingsHref="/profile" />
+      <div class="border border-r-1 h-6"/>
+      <a
+        href={WHATSAPP_URL}
+        class="group relative inline-flex items-center justify-center rounded-full hover:bg-gray-50 p-2 gap-2 text-sm"
+        target="_blank"
+        rel="noreferrer"
+      >
+        <span 
+          class="absolute top-full right-0 mt-2 whitespace-nowrap rounded-md border bg-white px-4 py-2 
+                text-sm shadow-md font-normal 
+                opacity-0 scale-95 transition-all duration-200 
+                group-hover:opacity-100 group-hover:scale-100
+                pointer-events-none"
+        >
+          Soporte por WhatsApp
+        </span>
+        <Speech className="mx-2" />
+      </a>
+    </div>
   </div>
 </header>
 
