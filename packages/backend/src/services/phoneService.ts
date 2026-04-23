@@ -106,7 +106,7 @@ export const addPhone = async (newPhone: {
     imei: newPhone.imei.trim(),
     price: newPhone.price,
     buy_cost: newPhone.buy_cost,
-    deposit: newPhone.deposit,
+    deposit: normalizeShortString(newPhone.deposit),
   };
 
   return await db.insert(phoneTable).values(normalizedPhone).returning();
@@ -142,7 +142,7 @@ export async function updatePhone(
     imei: phone_upd.imei.trim(),
     price: phone_upd.price,
     buy_cost: phone_upd.buy_cost,
-    deposit: phone_upd.deposit,
+    deposit: phone_upd.deposit ? normalizeShortString(phone_upd.deposit) : undefined,
   };
 
   const result = await db
