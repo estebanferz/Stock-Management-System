@@ -87,6 +87,9 @@ export function SheetFormPhone({isOpen, onClose, zIndex, depth=0, mode="persist"
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingPhone, setEditingPhone] = useState<Phone | null>(null);
+  const [depositsList, setDepositsList] = useState<{deposit_id: number, name: string}[]>([]);
+  const [isLoadingDeposits, setIsLoadingDeposits] = useState(false);
+
   const [form, setForm] = useState({
     datetime: "",
     name: "",
@@ -105,6 +108,26 @@ export function SheetFormPhone({isOpen, onClose, zIndex, depth=0, mode="persist"
     sold: false,
     trade_in: false,
   });
+
+  useEffect(() => {
+    const fetchDeposits = async () => {
+      setIsLoadingDeposits(true);
+      try {
+        const response = await clientApp.deposit.all.get(); 
+        if (response.data && Array.isArray(response.data)) {
+          setDepositsList(response.data);
+        }
+      } catch (error) {
+        console.error("Error al cargar depósitos:", error);
+      } finally {
+        setIsLoadingDeposits(false);
+      }
+    };
+
+    if (controlledOpen) {
+      fetchDeposits();
+    }
+  }, [controlledOpen]);
 
   useEffect(() => {
     const onEdit = (e: CustomEvent<Phone>) => {
@@ -210,6 +233,10 @@ export function SheetFormPhone({isOpen, onClose, zIndex, depth=0, mode="persist"
 
     if (isSubmitting) return;
 
+    if (!form.deposit || form.deposit === "Seleccionar depósito") {
+      alert("Por favor, selecciona un depósito antes de guardar."); 
+      return;
+    }
 
     const datetime = `${date}T${time}:00Z`;
     const phoneData = {
@@ -511,13 +538,33 @@ return (
         </div>
 
         <div className="grid gap-3">
-          <Label>Deposito</Label>
-          <Input 
-            id="deposit"
-            form="form-phone"
-            value={form.deposit} 
-            onChange={(e) => setForm({...form, deposit: e.target.value})} 
-            required />
+          <Label>Depósito</Label>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button 
+                variant="outline" 
+                className={`ml-auto w-full justify-between font-normal `}
+              >
+                {isLoadingDeposits ? "Cargando..." : form.deposit === '' ? 'Seleccionar depósito' : generalStringFormat(form.deposit)} <ChevronDown />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-full min-w-[200px]">
+              {depositsList.length > 0 ? (
+                depositsList.map((dep) => (
+                  <DropdownMenuItem 
+                    key={dep.deposit_id} 
+                    onClick={() => setForm({...form, deposit: dep.name})}
+                  >
+                    {generalStringFormat(dep.name)}
+                  </DropdownMenuItem>
+                ))
+              ) : (
+                <DropdownMenuItem disabled>
+                  {isLoadingDeposits ? "Cargando depósitos..." : "No hay depósitos creados"}
+                </DropdownMenuItem>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
 
         <div className="flex items-center justify-between gap-3">

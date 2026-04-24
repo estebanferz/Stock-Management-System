@@ -239,6 +239,13 @@
       "when": 1770867682148,
       "tag": "0033_bent_terrax",
       "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1776967295337,
+      "tag": "0034_magenta_vin_gonzales",
+      "breakpoints": true
     }
   ]
 }

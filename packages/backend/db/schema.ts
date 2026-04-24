@@ -247,6 +247,19 @@ export const providerTable = pgTable("provider", {
 }));
 export type Provider = InferSelectModel<typeof providerTable>;
 
+export const depositTable = pgTable("deposit", {
+  deposit_id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  name: varchar({ length: 255 }).notNull(),
+  address: varchar({ length: 255 }),
+  is_deleted: boolean().default(false),
+  
+  tenant_id: integer("tenant_id")
+    .notNull()
+    .references(() => tenantTable.tenant_id, { onDelete: "cascade" }),
+}, (t) => ({
+  tenantDeletedIdx: index("deposit_tenant_deleted_idx").on(t.tenant_id, t.is_deleted),
+}));
+export type Deposit = InferSelectModel<typeof depositTable>;
 
 export const expenseTable = pgTable("expense", {
   expense_id: integer().primaryKey().generatedAlwaysAsIdentity(),
@@ -296,6 +309,7 @@ export const phoneTable = pgTable("phone", {
   currency_buy: varchar({ length: 8 }).notNull().default("USD"), 
   currency_sale: varchar({ length: 8 }).notNull().default("USD"), 
   deposit: varchar({ length: 255 }).notNull(),
+  //deposit_id: integer().references(() => depositTable.deposit_id)
   sold: boolean().default(false).notNull(),
   trade_in: boolean().default(false),
   is_deleted: boolean().default(false),
@@ -326,6 +340,7 @@ export const headphoneTable = pgTable("headphone", {
   currency_buy: varchar({ length: 8 }).notNull().default("USD"), 
   currency_sale: varchar({ length: 8 }).notNull().default("USD"), 
   deposit: varchar({ length: 255 }).notNull(),
+  //deposit_id: integer().references(() => depositTable.deposit_id)s
   sold: boolean().default(false).notNull(),
   trade_in: boolean().default(false),
   is_deleted: boolean().default(false),
@@ -355,6 +370,7 @@ export const accessoryTable = pgTable("accessory", {
   currency_buy: varchar({ length: 8 }).notNull().default("USD"),
   currency_sale: varchar({ length: 8 }).notNull().default("USD"), 
   deposit: varchar({ length: 255 }).notNull(),
+  //deposit_id: integer().references(() => depositTable.deposit_id)
   gift: boolean().default(false).notNull(),
   is_deleted: boolean().default(false),
 

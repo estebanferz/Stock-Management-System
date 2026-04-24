@@ -5,15 +5,20 @@ import { SheetFormProvider } from "@/components/SheetForms/SheetFormProvider";
 import { serverApp } from "@/lib/serverAPI";
 import { providerColumns } from "@/config/ProviderColumnConfig";
 import { ProviderPageManager } from "@/components/PageManager/ProviderPageManager";
+import { DepositsCarousel } from "@/components/DepositCarousel";
 import { requireAuth } from "@/lib/requireAuth";
-import { Truck } from "lucide-react";
+import { PlusIcon, Truck } from "lucide-react";
+import { NewDepositSheet } from "@/components/NewDepositSheet";
 
 const session = await requireAuth(Astro);
 if (!session) return Astro.redirect("/login");
 const { auth, cookieHeader } = session;
 const authed = { headers: { cookie: cookieHeader } };
 
-const response = await serverApp.provider.all.get({ query: { is_deleted: false }});
+const responseDeposit = await serverApp.deposit.all.get(authed);
+const depositsData = responseDeposit.data || [];
+
+const response = await serverApp.provider.all.get({ ...authed, query: { is_deleted: false }});
 const data = Array.isArray(response.data)
     ? response.data
     : [];
@@ -22,8 +27,20 @@ const data = Array.isArray(response.data)
 
 <Layout title="Proveedores" user={auth.user}>
 
-    <h1 class="w-full text-3xl text-gray-700 font-bold mt-5">Proveedores</h1>
-    <p class="mb-5 text-sm text-gray-600 font-medium">Proveedores asociados a la empresa</p>
+  <div class="flex justify-end flex-row mt-5">
+    <h1 class="w-full text-3xl text-gray-700 font-bold">Depósitos</h1>
+    <button id="btn-new-deposit" class="bg-white p-2 px-10 rounded-xl shadow-lg hover:bg-mainColor hover:opacity-90 hover:text-white"> <PlusIcon> </button>
+  </div>
+  <p class="mb-5 text-sm text-gray-600 font-medium">Depósitos y lugares de almacenamiento</p>
+
+  <DepositsCarousel 
+    client:load 
+    deposits={depositsData} 
+  />
+  <NewDepositSheet client:load />
+
+  <h1 class="w-full text-3xl text-gray-700 font-bold mt-5">Proveedores</h1>
+  <p class="mb-5 text-sm text-gray-600 font-medium">Proveedores asociados a la empresa</p>
 
   <ProviderPageManager
     client:load
@@ -65,5 +82,9 @@ const data = Array.isArray(response.data)
 <script is:inline>
 document.getElementById("btn-new-provider")?.addEventListener("click", () => {
     window.dispatchEvent(new CustomEvent("open-new-provider"));
+});
+
+document.getElementById("btn-new-deposit")?.addEventListener("click", () => {
+    window.dispatchEvent(new CustomEvent("open-new-deposit"));
 });
 </script>

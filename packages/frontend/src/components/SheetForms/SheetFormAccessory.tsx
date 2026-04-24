@@ -19,6 +19,7 @@ import { accessoryCategories } from "../Structures/accessoryCategories";
 import { deposits } from "../Structures/deposits";
 import { currencies } from "../Structures/currencies";
 import { SheetClose } from "../ui/sheet";
+import { generalStringFormat } from "@/utils/formatters";
 
 interface SheetFormAccessoryProps {
   isOpen?: boolean;
@@ -40,6 +41,8 @@ export function SheetFormAccessory({
 }: SheetFormAccessoryProps) {
   const [internalOpen, setInternalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [depositsList, setDepositsList] = useState<{deposit_id: number, name: string}[]>([]);
+  const [isLoadingDeposits, setIsLoadingDeposits] = useState(false);
   const controlledOpen = isOpen !== undefined ? isOpen : internalOpen;
 
   const handleOpenChange = (open: boolean) => {
@@ -83,6 +86,26 @@ export function SheetFormAccessory({
     if (!cost || cost <= 0) return;
     setIsExpenseSheetOpen(true);
   }
+
+  useEffect(() => {
+    const fetchDeposits = async () => {
+      setIsLoadingDeposits(true);
+      try {
+        const response = await clientApp.deposit.all.get(); 
+        if (response.data && Array.isArray(response.data)) {
+          setDepositsList(response.data);
+        }
+      } catch (error) {
+        console.error("Error al cargar depósitos:", error);
+      } finally {
+        setIsLoadingDeposits(false);
+      }
+    };
+
+    if (controlledOpen) {
+      fetchDeposits();
+    }
+  }, [controlledOpen]);
 
   useEffect(() => {
     const onEdit = (e: CustomEvent<Accessory>) => {
@@ -158,6 +181,11 @@ export function SheetFormAccessory({
     e.stopPropagation();
 
     if (isSubmitting) return;
+
+    if (!form.deposit || form.deposit === "Seleccionar depósito") {
+      alert("Por favor, selecciona un depósito antes de guardar."); 
+      return;
+    }
 
 
     const datetime = `${date}T${time}:00Z`;
@@ -419,42 +447,35 @@ export function SheetFormAccessory({
             </Button>
           </div>
 
-          <div className="grid gap-3">
-            <Label>Depósito</Label>
-
-            {Array.isArray(deposits) && deposits.length ? (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className="ml-auto w-full justify-between font-normal"
-                    type="button"
+        <div className="grid gap-3">
+          <Label>Depósito</Label>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button 
+                variant="outline" 
+                className={`ml-auto w-full justify-between font-normal `}
+              >
+                {isLoadingDeposits ? "Cargando..." : form.deposit === '' ? 'Seleccionar depósito' : generalStringFormat(form.deposit)} <ChevronDown />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-full min-w-[200px]">
+              {depositsList.length > 0 ? (
+                depositsList.map((dep) => (
+                  <DropdownMenuItem 
+                    key={dep.deposit_id} 
+                    onClick={() => setForm({...form, deposit: dep.name})}
                   >
-                    {form.deposit} <ChevronDown />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  {deposits.map((d: any) => (
-                    <DropdownMenuItem
-                      key={d.value}
-                      onClick={() => setForm({ ...form, deposit: d.value })}
-                    >
-                      {d.label}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            ) : (
-              <Input
-                id="deposit"
-                form="form-accessory"
-                value={form.deposit === "Deposito" ? "" : form.deposit}
-                placeholder="Depósito"
-                onChange={(e) => setForm({ ...form, deposit: e.target.value })}
-                required
-              />
-            )}
-          </div>
+                    {generalStringFormat(dep.name)}
+                  </DropdownMenuItem>
+                ))
+              ) : (
+                <DropdownMenuItem disabled>
+                  {isLoadingDeposits ? "Cargando depósitos..." : "No hay depósitos creados"}
+                </DropdownMenuItem>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
 
           <div className="flex items-center justify-between gap-3">
             <Label>Es regalo</Label>

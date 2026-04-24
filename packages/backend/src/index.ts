@@ -17,6 +17,7 @@ import { uploadsController } from "./controllers/uploadController";
 import { currencyController } from "./controllers/currencyController";
 import { mpWebhookController } from "./controllers/mpWebhookController";
 import { billingController } from "./controllers/billingController";
+import { depositController } from "./controllers/depositController";
 
 const port = Number(process.env.PORT ?? 3000);
 
@@ -44,6 +45,7 @@ const app = new Elysia({prefix: '/api'})
   .use(currencyController)
   .use(mpWebhookController)
   .use(billingController)
+  .use(depositController)
   
   .listen({
     hostname: "0.0.0.0",
